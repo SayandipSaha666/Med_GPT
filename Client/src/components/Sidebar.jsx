@@ -26,14 +26,20 @@ function Sidebar(props) {
       } else {
         return chat.name
           .toLowerCase()
-          .includes(search.toLowerCase());border-gray-300
+          .includes(search.toLowerCase());
       }
     });
   })();
+
+  const handleNewChat = () => {
+    setSelectedChat(null);
+    navigate('/main/chat');
+  }
+
   return (
     <div className={`px-3 py-3 flex flex-col h-screen min-w-72 p- bg-linear-to-b from-[#F3EEF8] to-[#E8E0F0] text-[#2D2535] border-r-2 border-[#D4C5E2] dark:from-[#242124]/30 dark:to-[#000000]/30 dark:text-white dark:border-[#80609F]/30 backdrop-blur-3xl transition-all duration-500 max-md:absolute left-0 z-1 ${!isMenuOpen && 'max-md:-translate-x-full'}`}>
       <img src={theme === 'light' ? assets.logo_full_dark : assets.logo_full} alt="" className='w-full max-w-48'/>
-      <button className='flex justify-center items-center w-full py-2 mt-10 text-black dark:text-white bg-linear-to-r from=[#A456F7] to-[#3D81F6] text-sm rounded-md cursor-pointer'>
+      <button onClick={handleNewChat} className='flex justify-center items-center w-full py-2 mt-10 text-black dark:text-white bg-linear-to-r from-[#A456F7] to-[#3D81F6] text-sm rounded-md cursor-pointer'>
         <span className='mr-2 text-xl'>+</span> New Chat
       </button>
       {/* Search Conversations */}
@@ -56,7 +62,7 @@ function Sidebar(props) {
                 //     return chat.name.toLowerCase().includes(search.toLowerCase())
                 //   }
                 // })
-                processedChats.map((chat,index)=>{
+                processedChats.map((chat)=>{
                   let displayText
                   if(chat.messages.length > 0){
                     displayText = chat.messages[0].content.slice(0,32);
@@ -64,12 +70,12 @@ function Sidebar(props) {
                     displayText = chat.name;
                   }
                   return (
-                    <div key={chat._id} onClick={()=>{navigate('/');setSelectedChat(chat);setIsMenuOpen(false)}} className='p-2 px-4 dark:bg-[#57317C]/10 border border-black-800 dark:border-[#80609F]/15 rounded-md cursor-pointer flex justify-between group'>
+                    <div key={chat._id} onClick={()=>{navigate(`/main/chat/${chat._id}`);setSelectedChat(chat);setIsMenuOpen(false)}} className='p-2 px-4 dark:bg-[#57317C]/10 border border-black-800 dark:border-[#80609F]/15 rounded-md cursor-pointer flex justify-between group'>
                       <div>
                         <p className='truncate w-full'>
                           {displayText}
                         </p>
-                        <p className='text-xs text-gray-500 dark: text-[#B1A6C0]'>
+                        <p className='text-xs text-gray-500 dark:text-purple-300'>
                           {moment(chat.updatedAt).fromNow()}
                         </p>
                       </div>
@@ -84,14 +90,14 @@ function Sidebar(props) {
         }
       </div>
       {/* Community Page */}
-      <div onClick={()=>{navigate('/community');setIsMenuOpen(false)}} className='flex items-center gap-2 p-3 mt-4 border border-black-800 dark:border-white/15 rounded-md cursor-pointer hover:scale-103 transition-all'>
+      <div onClick={()=>{navigate('/main/community');setIsMenuOpen(false)}} className='flex items-center gap-2 p-3 mt-4 border border-black-800 dark:border-white/15 rounded-md cursor-pointer hover:scale-103 transition-all'>
         <img src={assets.gallery_icon} className='w-4.5 not-dark:invert' alt="" />
         <div className='flex flex-col text-sm'>
           <p>Community Posts</p>
         </div>
       </div>
       {/* Credit purchase */}
-      <div onClick={()=>{navigate('/credits');setIsMenuOpen(false)}} className='flex items-center gap-2 p-3 mt-4 border border-black-800 dark:border-white/15 rounded-md cursor-pointer hover:scale-103 transition-all'>
+      <div onClick={()=>{navigate('/main/credits');setIsMenuOpen(false)}} className='flex items-center gap-2 p-3 mt-4 border border-black-800 dark:border-white/15 rounded-md cursor-pointer hover:scale-103 transition-all'>
         <img src={assets.credit_icon} className='w-4.5 not-dark:invert' />
         <div className='flex flex-col text-sm'>
           <p>Credits : {user?.credits || 0}</p>
@@ -111,12 +117,12 @@ function Sidebar(props) {
         </label>
       </div>
       {/* User Icon */}
-      <div onClick={()=>navigate(user ? '/profile' : '/auth')} className='flex items-center gap-2 p-3 mt-4 border border-black-800 dark:border-white/15 rounded-md cursor-pointer group'>
+      <div onClick={()=>navigate(user ? '/main/profile' : '/auth')} className='flex items-center gap-2 p-3 mt-4 border border-black-800 dark:border-white/15 rounded-md cursor-pointer group'>
         <img src={assets.user_icon} className='w-7 rounded-full' alt="" />
         <p className='flex-1 text-sm dark:text-primary truncate'>
           {user ? user.name : 'Login to continue'}
         </p>
-        {user && <img src={assets.logout_icon} className='h-5 cursor-pointer hidden not-dark: invert group-hover: block' onClick={(e)=>{e.stopPropagation();setUser(null);}}/>}
+        {user && <img src={assets.logout_icon} className='h-5 cursor-pointer group-hover:block hidden not-dark:invert' onClick={(e)=>{e.stopPropagation();setUser(null);}}/>}
       </div>
       {/* Sidebar Closing option */}
       <img src={assets.close_icon} className='absolute top-3 right-3 w-5 h-5 cursor-pointer md:hidden not-dark:invert' onClick={()=>setIsMenuOpen(false)} />

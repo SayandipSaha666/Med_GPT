@@ -79,7 +79,7 @@ function HomePage() {
             </button>
           )}
           <button
-            onClick={() => navigate('/credits')}
+            onClick={() => navigate('/main/credits')}
             className='px-6 py-2.5 rounded-md border border-[#D4C5E2] dark:border-[#80609F]/50 bg-white/80 dark:bg-[#242124]/80 text-[#2D2535] dark:text-white font-medium text-sm hover:bg-white/90 dark:hover:bg-[#242124] transition-colors'
           >
             View Plans
@@ -176,7 +176,7 @@ function HomePage() {
             </button>
           ) : (
             <button
-              onClick={() => navigate('/chat')}
+              onClick={() => navigate('/main/chat')}
               className='px-8 py-3 rounded-md bg-linear-to-r from-[#A456F7] to-[#3D81F6] text-white font-semibold text-sm hover:opacity-90 transition-opacity'
             >
               Start Chatting

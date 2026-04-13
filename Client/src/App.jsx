@@ -10,6 +10,8 @@ import Community from './pages/Community.jsx'
 import AuthPage from './pages/AuthPage.jsx'
 import HomePage from './pages/HomePage.jsx'
 import {assets} from './assets/assets.js'
+import Layout from './pages/Layout.jsx'
+import ChatDetails from './components/ChatDetails.jsx'
 import './assets/prism.css'
 function App() {
   const {pathname} = useLocation()
@@ -22,30 +24,42 @@ function App() {
         element: <HomePage/>
       },
       {
-        path: '/chat',
-        element: <Chatbox/>
-      },
-      {
         path: '/auth',
         element: <AuthPage/>
       },
       {
-        path: '/credits',
-        element: <Credits/>
-      },
-      {
-        path: '/community',
-        element: <Community/>
+        path: '/main',
+        element: <Layout/>,
+        children: [
+          {
+            path: 'chat',
+            element: <Chatbox/>,
+            children: [
+              {
+                path: ':id',
+                element: <ChatDetails/>
+              }
+            ]
+          },
+          {
+            path: 'credits',
+            element: <Credits/>
+          },
+          {
+            path: 'community',
+            element: <Community/>
+          }
+        ]
       }
     ])
     return routes
   }
   return (
     <>
-      {!isMenuOpen && <img src={assets.menu_icon} className='absolute top-3 left-3 w-8 h-8 cursor-pointer md:hidden not-dark: invert' onClick={()=>setIsMenuOpen(true)}/>}
+      {!isMenuOpen && <img src={assets.menu_icon} className='absolute top-3 left-3 w-8 h-8 cursor-pointer md:hidden not-dark: invert z-50' onClick={()=>setIsMenuOpen(true)}/>}
       <div  className='bg-linear-to-b from-[#F8F6FA] to-[#EDE8F2] text-[#2D2535] dark:from-[#242124] dark:to-[#000000] dark:text-white transition-colors duration-500'>
         <div className='flex h-screen w-screen'>
-          <Sidebar isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen}/>
+          {pathname !== '/' && pathname !== '/auth' && <Sidebar isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen}/>}
           <CustomRoutes/>
         </div>
       </div>
