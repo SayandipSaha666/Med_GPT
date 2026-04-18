@@ -7,7 +7,7 @@ const formTypes = {
     TEXTAREA: "textarea",
 };
 
-function CommonForm({ handleSubmit, buttonText, formControls = [], formData, onChange }) {
+function CommonForm({ handleSubmit, buttonText, formControls = [], formData = {}, onChange }) {
     const renderFormItem = (formInput) => {
         let content = null;
         switch (formInput?.component_type) {
@@ -19,7 +19,7 @@ function CommonForm({ handleSubmit, buttonText, formControls = [], formData, onC
                         label={formInput.label}
                         placeholder={formInput.placeholder}
                         type={formInput.type}
-                        value={formData[formInput.name]}
+                        value={formData?.[formInput.name]}
                         onChange={onChange}
                         key={formInput.id}
                     />
@@ -27,20 +27,21 @@ function CommonForm({ handleSubmit, buttonText, formControls = [], formData, onC
                 break;
             case formTypes.SELECT:
                 content = (
-                    <Select
+                    <select
                         name={formInput.name}
                         id={formInput.id}
-                        value={formData[formInput.name]}
+                        value={formData?.[formInput.name]}
                         onChange={onChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#A456F7] dark:bg-[#1A1A1A] dark:border-gray-700 dark:text-white"
                     >
                         {formInput?.options?.map((option)=>{
                             return (
-                                <Option key={option.value} value={option.value}>
+                                <option key={option.value} value={option.value}>
                                     {option.label}
-                                </Option>
+                                </option>
                             )
                         })}
-                    </Select>
+                    </select>
                 );
                 break;
             case formTypes.TEXTAREA:
@@ -48,7 +49,7 @@ function CommonForm({ handleSubmit, buttonText, formControls = [], formData, onC
                     <textarea
                         name={formInput.name}
                         id={formInput.id}
-                        value={formData[formInput.name]}
+                        value={formData?.[formInput.name]}
                         onChange={onChange}
                         placeholder={formInput.placeholder}
                         rows={formInput.rows || 3}
@@ -63,7 +64,7 @@ function CommonForm({ handleSubmit, buttonText, formControls = [], formData, onC
                         label={formInput.label}
                         placeholder={formInput.placeholder}
                         type={formInput.type}
-                        value={formData[formInput.name]}
+                        value={formData?.[formInput.name]}
                         onChange={onChange}
                         key={formInput.id}
                     />

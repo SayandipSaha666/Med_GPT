@@ -10,28 +10,35 @@ const initialState = {
 };
 
 function SignUp() {
-  const [signupData, setSignupData] = useState(initialState)
+  const [signupData, setSignupData] = useState(null)
+  const [formData,setFormData] = useState(initialState)
 
   const onChange = (e) => {
     const {name,value} = e.target
-    setSignupData({...signupData,
-      [name] : value
+    setFormData({...formData,
+      [name]: value
     })
   }
 
-  const handleSubmit = (e) => {
+  async function handleSubmit(e){
     e.preventDefault();
-    console.log(signupData);
-    setSignupData(signupData);
+    try {
+      // DB calls
+      console.log("Data:", formData);
+      setSignupData(formData)
+    } catch (error) {
+      console.log(error?.message || error?.details[0]?.message)
+    }
+    setFormData(initialState)
   }
 
   return (
     <div>
       <CommonForm
-        onSubmit = {handleSubmit}
+        handleSubmit = {handleSubmit}
         buttonText="Sign Up"
         formControls={SignupControls}
-        formData={signupData}
+        formData={formData}
         onChange={onChange}
       />
     </div>

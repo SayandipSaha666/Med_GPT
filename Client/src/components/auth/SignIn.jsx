@@ -8,27 +8,30 @@ function SignIn() {
     email: "",
     password: ""
   }
-  const [loginData, setLoginData] = useState(initialState)
+  const [loginData, setLoginData] = useState(null)
+  const [formData,setFormData] = useState(initialState)
   const onChange = (e) => {
     const {name, value} = e.target
-    setLoginData({
-      ...loginData,
+    setFormData({
+      ...formData,
       [name] : value
     })
   }
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(loginData)
-    setLoginData(initialState);
+    // DB Calls
+    console.log("Data:", formData)
+    setLoginData(formData)
+    setFormData(initialState)
   }
   return (
     <div>
       <CommonForm
-        onSubmit={handleSubmit}
+        handleSubmit={handleSubmit}
         onChange={onChange}
         formControls={LoginControls}
         buttonText="Login"
-        formData={loginData}
+        formData={formData}
       />
     </div>
   )
