@@ -12,6 +12,7 @@ import HomePage from './pages/HomePage.jsx'
 import {assets} from './assets/assets.js'
 import Layout from './pages/Layout.jsx'
 import ChatDetails from './components/ChatDetails.jsx'
+import Profile from './components/Profile.jsx'
 import './assets/prism.css'
 function App() {
   const {pathname} = useLocation()
@@ -48,6 +49,10 @@ function App() {
           {
             path: 'community',
             element: <Community/>
+          },
+          {
+            path: 'profile',
+            element: <Profile/>
           }
         ]
       }
