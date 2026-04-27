@@ -1,6 +1,6 @@
+require("dotenv").config();
 const express = require("express");
 const { connectDB } = require("./src/lib/prisma.js");
-require("dotenv").config();
 const app = express();
 app.use(express.json());
 
@@ -12,8 +12,8 @@ app.use('/api/user',userRouter)
 const chatRouter = require('./src/routes/chatRoutes');
 app.use('/api/chat',chatRouter)
 
-app.use('/api',(req,res) => {
-    res.status(200).json({message: "Hello Express"});
+app.use('/api', (req, res) => {
+    res.status(404).json({ success: false, message: "Route not found" });
 });
 
 const startServer = async () => {
