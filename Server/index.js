@@ -1,6 +1,6 @@
-import express from "express";
-import { connectDB } from "./src/lib/prisma.js";
-import "dotenv/config";
+const express = require("express");
+const { connectDB } = require("./src/lib/prisma.js");
+require("dotenv").config();
 
 const app = express();
 app.use(express.json());
