@@ -37,12 +37,12 @@ const registerUser = async (req, res, next) => {
             if (newUser) {
                 const token = generateToken(newUser.id);
                 res.cookie('token', token, {
-                    httpOnly: true,
+                    httpOinly: true,
                     secure: true,
                     sameSite: 'none',
                     maxAge: 24 * 60 * 60 * 1000
                 })
-                res.status(201).json({
+                return res.status(201).json({
                     success: true,
                     message: 'User registered successfully',
                     data: {
@@ -52,7 +52,7 @@ const registerUser = async (req, res, next) => {
                     },
                     token: token
                 })
-                // next()
+                next()
             }
         }
     } catch (error) {
@@ -91,16 +91,17 @@ const loginUser = async (req, res, next) => {
             sameSite: 'none',
             maxAge: 24 * 60 * 60 * 1000
         })
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             message: 'User logged in successfully',
             data: {
                 id: user.id,
                 name: user.name,
                 email: user.email
-            }
+            },
+            token: token
         })
-        // next()
+        next()
     } catch (error) {
         console.log(error)
         return res.status(500).json({
@@ -117,11 +118,11 @@ const logoutUser = async (req, res, next) => {
         sameSite: 'none',
         maxAge: 0
     })
-    res.status(200).json({
+    return res.status(200).json({
         success: true,
         message: 'User logged out successfully'
     })
-    // next()
+    next()
 }
 
 module.exports = { registerUser, loginUser, logoutUser }

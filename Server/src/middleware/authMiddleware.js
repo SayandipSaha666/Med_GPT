@@ -18,15 +18,12 @@ const authMiddleware = async (req,res,next)=>{
                     message: "Unauthorized - Invalid token"
                 })
             }
-            return res.status(200).json({
-                success: true,
-                message: "User authorized successfully",
-                data: {
-                    id: user.id,
-                    name: user.name,
-                    email: user.email
-                }
-            })
+            req.user = {
+                id: user.id,
+                name: user.name,
+                email: user.email
+            };
+            next();
         } catch (error) {
             console.log(error)
             return res.status(500).json({

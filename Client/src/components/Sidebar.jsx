@@ -63,11 +63,9 @@ function Sidebar(props) {
                 //   }
                 // })
                 processedChats.map((chat)=>{
-                  let displayText
-                  if(chat.messages.length > 0){
+                  let displayText = chat.title;
+                  if(chat.title === 'New Chat' && chat.messages.length > 0){
                     displayText = chat.messages[0].content.slice(0,32);
-                  }else{
-                    displayText = chat.name;
                   }
                   return (
                     <div key={chat._id} onClick={()=>{navigate(`/main/chat/${chat._id}`);setSelectedChat(chat);setIsMenuOpen(false)}} className='p-2 px-4 dark:bg-[#57317C]/10 border border-black-800 dark:border-[#80609F]/15 rounded-md cursor-pointer flex justify-between group'>
