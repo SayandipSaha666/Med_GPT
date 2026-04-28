@@ -27,7 +27,7 @@ model Chat {
   id Int @id @default(autoincrement())
   userId Int
   user User @relation(fields: [userId], references: [id])
-  title String
+  title String @default("New Chat")
   messages Message[]
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -36,7 +36,7 @@ model Chat {
 model Message {
   id Int @id @default(autoincrement())
   chatId Int
-  chat Chat @relation(fields: [chatId], references: [id])
+  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
   role String
   content String
   isImage Boolean @default(false)
