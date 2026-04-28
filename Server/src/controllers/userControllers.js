@@ -37,7 +37,7 @@ const registerUser = async (req, res, next) => {
             if (newUser) {
                 const token = generateToken(newUser.id);
                 res.cookie('token', token, {
-                    httpOinly: true,
+                    httpOnly: true,
                     secure: true,
                     sameSite: 'none',
                     maxAge: 24 * 60 * 60 * 1000

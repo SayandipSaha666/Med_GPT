@@ -39,7 +39,5 @@ model Message {
   chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
   role String
   content String
-  isImage Boolean @default(false)
-  isPublished Boolean @default(false)
   timestamp DateTime @default(now())
 }
