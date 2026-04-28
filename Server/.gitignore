@@ -1,7 +1,7 @@
 node_modules/
 .env
 /src/generated/prisma
-services/
+# services/
 .gitignore
 .pycache__/
-messageController.js
+# messageController.js
