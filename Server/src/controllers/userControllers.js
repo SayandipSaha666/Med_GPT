@@ -52,7 +52,6 @@ const registerUser = async (req, res, next) => {
                     },
                     token: token
                 })
-                next()
             }
         }
     } catch (error) {
@@ -101,7 +100,6 @@ const loginUser = async (req, res, next) => {
             },
             token: token
         })
-        next()
     } catch (error) {
         console.log(error)
         return res.status(500).json({
@@ -122,7 +120,6 @@ const logoutUser = async (req, res, next) => {
         success: true,
         message: 'User logged out successfully'
     })
-    next()
 }
 
 module.exports = { registerUser, loginUser, logoutUser }

@@ -4,16 +4,16 @@ const joi = require('joi');
 const RAG_SERVICE_URL = process.env.RAG_SERVICE_URL || 'http://localhost:8000';
 
 const sendMessageSchema = joi.object({
-    userId: joi.number().required(),
     content: joi.string().required().min(1).max(5000),
 });
 
 const sendMessage = async (req, res, next) => {
     const chatId = parseInt(req.params.id);
-    const { userId, content } = req.body;
+    const userId = req.user.id;
+    const { content } = req.body;
 
     // Validate input
-    const { error } = sendMessageSchema.validate({ userId, content });
+    const { error } = sendMessageSchema.validate({ content });
     if (error) {
         return res.status(422).json({ success: false, message: error.details[0].message });
     }

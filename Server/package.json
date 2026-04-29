@@ -14,6 +14,7 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
+    "axios": "^1.15.2",
     "bcryptjs": "^3.0.3",
     "body-parser": "^2.2.2",
     "cookie-parser": "^1.4.7",
@@ -22,7 +23,9 @@
     "express": "^5.2.1",
     "joi": "^18.1.2",
     "jsonwebtoken": "^9.0.3",
-    "pg": "^8.20.0"
+    "pg": "^8.20.0",
+    "razorpay": "^2.9.6",
+    "svix": "^1.92.2"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",
