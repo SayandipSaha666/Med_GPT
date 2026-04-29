@@ -4,6 +4,12 @@ const cookieParser = require("cookie-parser");
 const { connectDB } = require("./src/lib/prisma.js");
 const { authMiddleware } = require("./src/middleware/authMiddleware");
 const app = express();
+
+// Razorpay webhook route — mounted BEFORE express.json() to receive raw body
+// for HMAC signature verification. Does NOT use authMiddleware (server-to-server).
+const { handleWebhook } = require('./src/controllers/transactionController');
+app.post('/api/billing/webhook', express.raw({ type: 'application/json' }), handleWebhook);
+
 app.use(express.json());
 app.use(cookieParser());
 
