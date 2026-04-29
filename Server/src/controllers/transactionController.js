@@ -1,7 +1,7 @@
 const { prisma } = require('../lib/prisma');
 const Joi = require('joi');
 const { razorpay } = require('../../config/razorpay');
-const { validatePaymentVerification } = require('razorpay/dist/utils/razorpay-utils');
+const { validateWebhookSignature } = require('razorpay/dist/utils/razorpay-utils');
 
 // ─── Fetch all available plans ───────────────────────────────────────────────
 const getPlans = async (req, res) => {
@@ -101,36 +101,128 @@ const createOrder = async (req, res) => {
     }
 };
 
-// ─── Step 2: Verify payment signature and grant credits ──────────────────────
-const verifyPayment = async (req, res) => {
+// ─── Step 2: Razorpay webhook handler (server-to-server) ─────────────────────
+// This endpoint is called by Razorpay's servers when a payment event occurs.
+// It is NOT called by the frontend and does NOT use authMiddleware.
+// The route is mounted in index.js with express.raw() to receive the raw body.
+const handleWebhook = async (req, res) => {
     try {
-        // Validate request body
-        const schema = Joi.object({
-            razorpay_order_id: Joi.string().required(),
-            razorpay_payment_id: Joi.string().required(),
-            razorpay_signature: Joi.string().required(),
-        });
-        const { error, value } = schema.validate(req.body);
-        if (error) {
+        const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+        const signature = req.headers['x-razorpay-signature'];
+
+        if (!signature) {
             return res.status(400).json({
                 success: false,
-                message: error.details[0].message,
+                message: "Missing X-Razorpay-Signature header",
             });
         }
 
-        const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = value;
+        // req.body is a Buffer because we use express.raw() for this route
+        const rawBody = req.body.toString('utf-8');
 
-        // Verify the payment signature using the official Razorpay SDK utility
-        const isValid = validatePaymentVerification(
-            { order_id: razorpay_order_id, payment_id: razorpay_payment_id },
-            razorpay_signature,
-            process.env.RAZORPAY_KEY_SECRET
-        );
+        // Verify the webhook signature using the official Razorpay SDK utility
+        const isValid = validateWebhookSignature(rawBody, signature, webhookSecret);
+        if (!isValid) {
+            console.error("Webhook signature verification failed");
+            return res.status(400).json({
+                success: false,
+                message: "Invalid webhook signature",
+            });
+        }
 
-        // Find the transaction linked to this order
+        // Parse the verified payload
+        const event = JSON.parse(rawBody);
+
+        // Handle the payment.captured event
+        if (event.event === 'payment.captured') {
+            const paymentEntity = event.payload.payment.entity;
+            const razorpayOrderId = paymentEntity.order_id;
+            const razorpayPaymentId = paymentEntity.id;
+
+            // Find the transaction linked to this order
+            const transaction = await prisma.transaction.findUnique({
+                where: { razorpayOrderId: razorpayOrderId },
+            });
+
+            if (!transaction) {
+                console.error(`Webhook: No transaction found for order ${razorpayOrderId}`);
+                // Return 200 so Razorpay doesn't retry for an unknown order
+                return res.status(200).json({ success: true, message: "No matching transaction" });
+            }
+
+            // Idempotency guard — if already processed, skip but return 200
+            if (transaction.isPaid) {
+                console.log(`Webhook: Transaction ${transaction.id} already processed, skipping`);
+                return res.status(200).json({ success: true, message: "Already processed" });
+            }
+
+            // Atomically update the transaction and add credits to the user
+            await prisma.$transaction([
+                prisma.transaction.update({
+                    where: { id: transaction.id },
+                    data: {
+                        isPaid: true,
+                        status: "success",
+                        razorpayPaymentId: razorpayPaymentId,
+                    },
+                }),
+                prisma.user.update({
+                    where: { id: transaction.userId },
+                    data: {
+                        credits: { increment: transaction.credits },
+                    },
+                }),
+            ]);
+
+            console.log(`Webhook: Payment captured for transaction ${transaction.id}, credits added`);
+        }
+
+        // Handle the payment.failed event
+        if (event.event === 'payment.failed') {
+            const paymentEntity = event.payload.payment.entity;
+            const razorpayOrderId = paymentEntity.order_id;
+
+            const transaction = await prisma.transaction.findUnique({
+                where: { razorpayOrderId: razorpayOrderId },
+            });
+
+            if (transaction && !transaction.isPaid) {
+                await prisma.transaction.update({
+                    where: { id: transaction.id },
+                    data: { status: "failed" },
+                });
+                console.log(`Webhook: Payment failed for transaction ${transaction.id}`);
+            }
+        }
+
+        // Always return 200 to Razorpay to acknowledge receipt
+        return res.status(200).json({ success: true, message: "Webhook received" });
+    } catch (error) {
+        console.error("handleWebhook error:", error);
+        // Return 200 even on internal errors to prevent infinite retries
+        // The error is logged for debugging
+        return res.status(200).json({ success: true, message: "Webhook received" });
+    }
+};
+
+// ─── Payment status polling endpoint (for frontend) ──────────────────────────
+// After Razorpay Checkout closes, the frontend polls this endpoint to check
+// whether the webhook has processed the payment yet.
+const getPaymentStatus = async (req, res) => {
+    try {
+        const { orderId } = req.query;
+
+        if (!orderId) {
+            return res.status(400).json({
+                success: false,
+                message: "orderId query parameter is required",
+            });
+        }
+
         const transaction = await prisma.transaction.findUnique({
-            where: { razorpayOrderId: razorpay_order_id },
+            where: { razorpayOrderId: orderId },
         });
+
         if (!transaction) {
             return res.status(404).json({
                 success: false,
@@ -138,46 +230,25 @@ const verifyPayment = async (req, res) => {
             });
         }
 
-        if (!isValid) {
-            // Signature verification failed — mark as failed
-            await prisma.transaction.update({
-                where: { id: transaction.id },
-                data: { status: "failed" },
-            });
-            return res.status(400).json({
+        // Ensure the authenticated user owns this transaction
+        if (transaction.userId !== req.user.id) {
+            return res.status(403).json({
                 success: false,
-                message: "Payment verification failed!",
+                message: "Unauthorized access to this transaction",
             });
         }
 
-        // Signature verified — update transaction and add credits
-        const [updatedTransaction, updatedUser] = await prisma.$transaction([
-            prisma.transaction.update({
-                where: { id: transaction.id },
-                data: {
-                    isPaid: true,
-                    status: "success",
-                    razorpayPaymentId: razorpay_payment_id,
-                },
-            }),
-            prisma.user.update({
-                where: { id: transaction.userId },
-                data: {
-                    credits: { increment: transaction.credits },
-                },
-            }),
-        ]);
-
         return res.status(200).json({
             success: true,
-            message: "Payment verified successfully!",
             data: {
-                transaction: updatedTransaction,
-                credits: updatedUser.credits,
+                status: transaction.status,
+                isPaid: transaction.isPaid,
+                credits: transaction.credits,
+                amount: transaction.amount,
             },
         });
     } catch (error) {
-        console.error("verifyPayment error:", error);
+        console.error("getPaymentStatus error:", error);
         return res.status(500).json({
             success: false,
             message: "Internal server error!",
@@ -185,4 +256,4 @@ const verifyPayment = async (req, res) => {
     }
 };
 
-module.exports = { getPlans, createOrder, verifyPayment };
+module.exports = { getPlans, createOrder, handleWebhook, getPaymentStatus };
