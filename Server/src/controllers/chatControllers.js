@@ -2,17 +2,17 @@ const { prisma } = require('../lib/prisma');
 const joi = require('joi');
 
 const createChatSchema = joi.object({
-    userId: joi.number().required(),
-    title: joi.string().required() // from frontend
+    title: joi.string().required()
 })
 
 const createChat = async (req,res,next) => {
-    const {title, userId} = req.body;
+    const userId = req.user.id;
+    const {title} = req.body;
     const content = {
         userId: userId,
         title: title
     }
-    const {error} = createChatSchema.validate(content);
+    const {error} = createChatSchema.validate({title});
     if(error){
         console.log(error)
         return res.status(422).json({success: false, message: "Insufficient data!"})
@@ -34,8 +34,7 @@ const createChat = async (req,res,next) => {
 }
 
 const fetchChats = async (req,res,next) => {
-    const {userId} = req.body;
-    if(!userId) return res.status(422).json({success: false, message: "Insufficient data!"})
+    const userId = req.user.id;
     try {
         const chats = await prisma.chat.findMany({
             where: {
@@ -64,8 +63,8 @@ const fetchChats = async (req,res,next) => {
 
 const fetchChat = async (req,res,next) => {
     const chatId = parseInt(req.params.id);
-    const {userId} = req.body;
-    if(!chatId || !userId) return res.status(422).json({success: false, message: "Insufficient data!"})
+    const userId = req.user.id;
+    if(!chatId) return res.status(422).json({success: false, message: "Insufficient data!"})
     try {
         const chat = await prisma.chat.findUnique({
             where: {
@@ -90,8 +89,8 @@ const fetchChat = async (req,res,next) => {
 
 const deleteChat = async (req,res,next) => {
     const chatId = parseInt(req.params.id);
-    const {userId} = req.body;
-    if(!chatId || !userId) return res.status(422).json({success: false, message: "Insufficient data!"})
+    const userId = req.user.id;
+    if(!chatId) return res.status(422).json({success: false, message: "Insufficient data!"})
     try {
         const chat = await prisma.chat.findUnique({
             where: {
@@ -117,9 +116,10 @@ const deleteChat = async (req,res,next) => {
 }
 
 const updateChatTitle = async (req,res,next) => {
-    const {userId, title} = req.body;
+    const userId = req.user.id;
+    const {title} = req.body;
     const chatId = parseInt(req.params.id);
-    if(!chatId || !userId || !title) return res.status(422).json({success: false, message: "Insufficient data!"})
+    if(!chatId || !title) return res.status(422).json({success: false, message: "Insufficient data!"})
     try {
         const chat = await prisma.chat.findUnique({
             where: {

@@ -19,6 +19,7 @@ model User {
   name String
   credits Float @default(200.0)
   chats Chat[]
+  transactions Transaction[]
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 }
@@ -40,4 +41,30 @@ model Message {
   role String
   content String
   timestamp DateTime @default(now())
+}
+
+model Transaction {
+  id Int @id @default(autoincrement())
+  userId Int
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount Float 
+  planId Int 
+  plan Plans @relation(fields: [planId], references: [id], onDelete: Cascade)
+  razorpayOrderId String @unique
+  razorpayPaymentId String?
+  isPaid Boolean @default(false)
+  status String @default("pending")
+  credits Float @default(200.0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model Plans {
+  id Int @id @default(autoincrement())
+  name String @default("Free")
+  price Float @default(0.0)
+  credits Int @default(200)
+  features String[]
+  transactions Transaction[]
+  createdAt DateTime @default(now())
 }

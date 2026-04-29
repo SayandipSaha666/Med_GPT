@@ -143,9 +143,30 @@ exports.Prisma.MessageScalarFieldEnum = {
   chatId: 'chatId',
   role: 'role',
   content: 'content',
-  isImage: 'isImage',
-  isPublished: 'isPublished',
   timestamp: 'timestamp'
+};
+
+exports.Prisma.TransactionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  amount: 'amount',
+  planId: 'planId',
+  razorpayOrderId: 'razorpayOrderId',
+  razorpayPaymentId: 'razorpayPaymentId',
+  isPaid: 'isPaid',
+  status: 'status',
+  credits: 'credits',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.PlansScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  price: 'price',
+  credits: 'credits',
+  features: 'features',
+  createdAt: 'createdAt'
 };
 
 exports.Prisma.SortOrder = {
@@ -158,11 +179,18 @@ exports.Prisma.QueryMode = {
   insensitive: 'insensitive'
 };
 
+exports.Prisma.NullsOrder = {
+  first: 'first',
+  last: 'last'
+};
+
 
 exports.Prisma.ModelName = {
   User: 'User',
   Chat: 'Chat',
-  Message: 'Message'
+  Message: 'Message',
+  Transaction: 'Transaction',
+  Plans: 'Plans'
 };
 
 /**
