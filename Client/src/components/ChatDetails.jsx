@@ -1,17 +1,19 @@
-import {useContext, useEffect} from 'react'
+import {useContext, useEffect, useState} from 'react'
 import {GlobalContext} from '../context/context'
 import {assets} from '../assets/assets'
 import Message from './Message'
 import PromptInput from './PromptInput'
 import { useParams } from 'react-router-dom'
+import { sendMessageApi } from '../services/api_services'
 
 function ChatDetails() {
-  const {selectedChat, setSelectedChat, theme, chats} = useContext(GlobalContext)
+  const {theme, chats} = useContext(GlobalContext)
+  const [selectedChat, setSelectedChat] = useState(null)
   const { id } = useParams()
 
   useEffect(() => {
     if (id && chats.length > 0) {
-      const chat = chats.find(c => c._id === id)
+      const chat = chats.find(c => c.id === id)
       if (chat) {
         setSelectedChat(chat)
       }
@@ -40,8 +42,9 @@ function ChatDetails() {
         ))}
       </div>
 
-      <PromptInput onSend={(prompt, mode) => {
+      <PromptInput onSend={async (prompt, mode='text') => {
         // Handle sending - this would connect to your backend
+        const response = await sendMessageApi(prompt, mode)
         console.log(prompt, mode)
       }}/>
     </div>

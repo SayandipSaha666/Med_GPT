@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useContext, useState } from 'react'
 import './App.css'
 import { useRoutes, Routes, Route, useLocation } from 'react-router-dom'
 // import Login from './pages/Login.jsx'
@@ -13,11 +13,14 @@ import {assets} from './assets/assets.js'
 import Layout from './pages/Layout.jsx'
 import ChatDetails from './components/ChatDetails.jsx'
 import Profile from './components/Profile.jsx'
+import { GlobalContext } from './context/context.jsx'
+import {Toaster} from 'react-hot-toast';
 import './assets/prism.css'
 function App() {
   const {pathname} = useLocation()
   const [isMenuOpen,setIsMenuOpen] = useState(false)
-  if(pathname === '/loading') return <Loading/>
+  const {loading, user} = useContext(GlobalContext)
+  if(pathname === '/loading' || loading) return <Loading/>
   function CustomRoutes(){
     const routes = useRoutes([
       {
@@ -61,6 +64,7 @@ function App() {
   }
   return (
     <>
+      <Toaster/>
       {!isMenuOpen && <img src={assets.menu_icon} className='absolute top-3 left-3 w-8 h-8 cursor-pointer md:hidden not-dark: invert z-50' onClick={()=>setIsMenuOpen(true)}/>}
       <div  className='bg-linear-to-b from-[#F8F6FA] to-[#EDE8F2] text-[#2D2535] dark:from-[#242124] dark:to-[#000000] dark:text-white transition-colors duration-500'>
         <div className='flex h-screen w-screen'>

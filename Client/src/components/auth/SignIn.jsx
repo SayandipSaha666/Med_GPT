@@ -1,15 +1,19 @@
 import React from 'react'
 import CommonForm from '../CommonForm'
-import {useState} from 'react';
+import {useState,useContext} from 'react';
 import { LoginControls } from './config';
+import { callLoginUserApi } from '../../services/api_services';
+import { GlobalContext } from '../../context/context';
+import {useNavigate} from 'react-router-dom'
 
 function SignIn() {
   const initialState = {
     email: "",
     password: ""
   }
-  const [loginData, setLoginData] = useState(null)
   const [formData,setFormData] = useState(initialState)
+  const {setUser} = useContext(GlobalContext)
+  const navigate = useNavigate()
   const onChange = (e) => {
     const {name, value} = e.target
     setFormData({
@@ -17,11 +21,15 @@ function SignIn() {
       [name] : value
     })
   }
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     // DB Calls
     console.log("Data:", formData)
-    setLoginData(formData)
+    const response = await callLoginUserApi(formData)
+    if(response.success){
+      setUser(response.data)
+      navigate("/main")
+    }
     setFormData(initialState)
   }
   return (

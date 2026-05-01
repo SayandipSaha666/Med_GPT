@@ -1,9 +1,19 @@
 require("dotenv").config();
 const express = require("express");
+const cors = require('cors')
 const cookieParser = require("cookie-parser");
+const bodyparser = require('body-parser')
 const { connectDB } = require("./src/lib/prisma.js");
 const { authMiddleware } = require("./src/middleware/authMiddleware");
 const app = express();
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+  : [];
+app.use(cors({
+    origin: allowedOrigins,
+    methods: ['GET','POST','PUT','DELETE'],
+    credentials: true
+}))
 
 // Razorpay webhook route — mounted BEFORE express.json() to receive raw body
 // for HMAC signature verification. Does NOT use authMiddleware (server-to-server).
@@ -12,6 +22,7 @@ app.post('/api/billing/webhook', express.raw({ type: 'application/json' }), hand
 
 app.use(express.json());
 app.use(cookieParser());
+app.use(bodyparser.json())
 
 const PORT = process.env.PORT || 3000;
 
