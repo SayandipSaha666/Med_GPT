@@ -8,8 +8,8 @@ function Credits() {
   const [plans, setPlans] = useState([])
   const [loading, setLoading] = useState(true)
   const [purchasingId, setPurchasingId] = useState(null)
-  const { setUser } = useContext(GlobalContext)
-  
+  const { user,setUser } = useContext(GlobalContext)
+
   const fetchPlans = async () => {
     try {
       const response = await getPlansApi()
@@ -28,10 +28,15 @@ function Credits() {
   }, [])
 
   const handlePurchase = async (plan) => {
+    if (plan.price === 0) {
+      toast.error('Already used');
+      return;
+    }
+    
     try {
       setPurchasingId(plan.id)
       const orderResponse = await createOrderApi(plan.id)
-      
+
       if (!orderResponse.success) {
         toast.error('Failed to create order')
         setPurchasingId(null)
@@ -44,7 +49,7 @@ function Credits() {
         key: keyId,
         amount: amount,
         currency: currency,
-        name: "Research_GPT",
+        name: "MedGPT",
         description: `Purchase of ${plan.name} plan`,
         order_id: orderId,
         handler: function (response) {
@@ -52,7 +57,7 @@ function Credits() {
           verifyPayment(orderId)
         },
         modal: {
-          ondismiss: function() {
+          ondismiss: function () {
             setPurchasingId(null)
             toast.error('Payment cancelled')
           }
@@ -79,7 +84,7 @@ function Credits() {
   const verifyPayment = async (orderId) => {
     let attempts = 0
     const maxAttempts = 10
-    
+
     const pollStatus = async () => {
       try {
         const response = await getPaymentStatusApi(orderId)
@@ -92,7 +97,7 @@ function Credits() {
           setPurchasingId(null)
           return
         }
-        
+
         attempts++
         if (attempts < maxAttempts) {
           setTimeout(pollStatus, 2000)
@@ -110,11 +115,11 @@ function Credits() {
         }
       }
     }
-    
+
     pollStatus()
   }
 
-  if (loading) return <Loading/>
+  if (loading) return <Loading />
 
   return (
     <div className='max-w-7xl h-screen overflow-y-scroll mx-auto px-4 sm:px-6 lg:px-8 py-12'>
@@ -124,15 +129,15 @@ function Credits() {
           <div key={plan.id} className={`border border-gray-200
             dark:border-purple-700 rounded-lg shadow hover:shadow-lg
             transition-shadow p-6 min-w-[300px] flex flex-col justify-between ${plan.id === 2 ?
-            "bg-purple-50 dark:bg-purple-900" : "bg-white dark:bg-transparent"}`}>
-            
+              "bg-purple-50 dark:bg-purple-900" : "bg-white dark:bg-transparent"}`}>
+
             <div className='flex-1'>
               <h3 className='text-xl font-semibold text-gray-900 dark:text-white mb-2'>
                 {plan.name}
               </h3>
 
               <p className='text-2xl font-bold text-purple-600 dark:text-purple-300 mb-4'>
-                ${plan.price}
+                Rs.{plan.price}
                 <span className='text-sm text-gray-500 dark:text-gray-400'>{' '}/ {plan.credits} credits</span>
               </p>
               <ul className='list-disc list-inside text-sm text-gray-700 dark:text-purple-200 space-y-2 mb-6'>
@@ -141,17 +146,23 @@ function Credits() {
                 ))}
               </ul>
             </div>
-            
-            <button 
+
+            <button
               onClick={() => handlePurchase(plan)}
               disabled={purchasingId === plan.id}
               className={`w-full py-2.5 rounded-lg text-white font-medium transition-colors ${
-                purchasingId === plan.id 
-                  ? 'bg-gray-400 cursor-not-allowed' 
+                plan.price === 0
+                  ? 'bg-green-600 hover:bg-green-700'
+                  : purchasingId === plan.id
+                  ? 'bg-gray-400 cursor-not-allowed'
                   : 'bg-linear-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700'
-              }`}
+                }`}
             >
-              {purchasingId === plan.id ? 'Processing...' : 'Purchase Plan'}
+              {plan.price === 0
+                ? 'Current Plan' 
+                : purchasingId === plan.id 
+                ? 'Processing...' 
+                : 'Purchase Plan'}
             </button>
           </div>
         ))}

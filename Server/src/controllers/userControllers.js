@@ -114,4 +114,25 @@ const logoutUser = async (req, res, next) => {
     })
 }
 
-module.exports = { registerUser, loginUser, logoutUser }
+const updateProfile = async (req, res) => {
+    const { name } = req.body;
+    if (!name || name.trim() === "") {
+        return res.status(400).json({ success: false, message: "Name cannot be empty" });
+    }
+    try {
+        const updatedUser = await prisma.user.update({
+            where: { id: req.user.id },
+            data: { name }
+        });
+        return res.status(200).json({
+            success: true,
+            message: "Profile updated successfully",
+            data: updatedUser
+        });
+    } catch (error) {
+        console.log("Error updating profile:", error);
+        return res.status(500).json({ success: false, message: "Internal server error" });
+    }
+}
+
+module.exports = { registerUser, loginUser, logoutUser, updateProfile }

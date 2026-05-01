@@ -1,11 +1,15 @@
-import React, { useContext } from 'react'
+import React, { useContext, useState } from 'react'
 import { GlobalContext } from '../context/context.jsx'
 import { assets } from '../assets/assets.js'
 import { useNavigate } from 'react-router-dom'
+import { updateProfileApi } from '../services/api_services.js'
+import toast from 'react-hot-toast'
 
 function Profile() {
   const { user, setUser } = useContext(GlobalContext)
   const navigate = useNavigate()
+  const [isEditing, setIsEditing] = useState(false)
+  const [editName, setEditName] = useState('')
 
   if (!user) return null;
 
@@ -14,6 +18,32 @@ function Profile() {
   const handleLogout = () => {
     setUser(null)
     navigate('/auth')
+  }
+
+  const handleEditToggle = () => {
+    if (!isEditing) {
+      setEditName(user.name)
+    }
+    setIsEditing(!isEditing)
+  }
+
+  const handleSaveProfile = async () => {
+    if (editName.trim() === '') {
+      toast.error('Name cannot be empty')
+      return
+    }
+    try {
+      const response = await updateProfileApi(editName)
+      if (response.success) {
+        toast.success('Profile updated successfully')
+        setUser({ ...user, name: response.data.name })
+        setIsEditing(false)
+      } else {
+        toast.error(response.message || 'Failed to update profile')
+      }
+    } catch (error) {
+      toast.error('Error updating profile')
+    }
   }
 
   return (
@@ -34,9 +64,33 @@ function Profile() {
             </div>
             
             <div className='text-center md:text-left flex-1'>
-              <h1 className='text-4xl font-bold text-gray-900 dark:text-white mb-2 tracking-tight'>
-                {user.name}
-              </h1>
+              {isEditing ? (
+                <div className='flex items-center gap-3 mb-2 justify-center md:justify-start'>
+                  <input
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    className='text-2xl font-bold text-gray-900 dark:text-white bg-transparent border-b-2 border-purple-500 focus:outline-hidden py-1 px-2'
+                    autoFocus
+                  />
+                  <button 
+                    onClick={handleSaveProfile}
+                    className='px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded-md text-sm font-medium transition-colors'
+                  >
+                    Save
+                  </button>
+                  <button 
+                    onClick={handleEditToggle}
+                    className='px-3 py-1 bg-gray-500 hover:bg-gray-600 text-white rounded-md text-sm font-medium transition-colors'
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <h1 className='text-4xl font-bold text-gray-900 dark:text-white mb-2 tracking-tight'>
+                  {user.name}
+                </h1>
+              )}
               <p className='text-gray-500 dark:text-gray-400 text-lg mb-4'>
                 {user.email}
               </p>
@@ -129,9 +183,14 @@ function Profile() {
             <p className='text-sm text-gray-500 dark:text-gray-400'>
               Manage your personal information and preferences.
             </p>
-            <button className='px-6 py-2 bg-linear-to-r from-purple-600 to-blue-600 text-white rounded-xl font-medium shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 transition-all hover:scale-105 active:scale-95'>
-              Edit Profile
-            </button>
+            {!isEditing && (
+              <button 
+                onClick={handleEditToggle}
+                className='px-6 py-2 bg-linear-to-r from-purple-600 to-blue-600 text-white rounded-xl font-medium shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 transition-all hover:scale-105 active:scale-95'
+              >
+                Edit Profile
+              </button>
+            )}
           </div>
         </div>
 

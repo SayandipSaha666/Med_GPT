@@ -1,73 +1,74 @@
-import {useContext} from 'react'
-import {GlobalContext} from '../context/context'
-import {assets} from '../assets/assets'
+import { useContext } from 'react'
+import { GlobalContext } from '../context/context'
+import { assets } from '../assets/assets'
 import { useNavigate } from 'react-router-dom'
 
 const features = [
   {
     icon: assets.diamond_icon,
-    title: 'AI-Powered Research',
-    description: 'Get intelligent responses powered by advanced language models trained on vast research data.'
+    title: 'Symptom Analysis',
+    description: 'Describe your symptoms and receive instant AI-driven insights regarding potential conditions.'
   },
   {
-    icon: assets.gallery_icon,
-    title: 'Image Generation',
-    description: 'Transform your ideas into stunning visuals with our AI image generation capabilities.'
+    icon: assets.search_icon,
+    title: 'Treatment Basics',
+    description: 'Learn about standard treatment protocols, home remedies, and when to seek professional medical help.'
   },
   {
     icon: assets.credit_icon,
-    title: 'Credit System',
-    description: 'Flexible credit-based pricing that scales with your needs. Purchase only what you use.'
+    title: 'Secure & Private',
+    description: 'Your health data and queries are processed securely with privacy as our top priority.'
   },
   {
     icon: assets.user_icon,
-    title: 'Community Showcase',
-    description: 'Share your creations with a vibrant community and explore inspired work from others.'
+    title: '24/7 Availability',
+    description: 'Access medical knowledge and guidance at any time, from anywhere, whenever you need it.'
   }
 ]
 
 const testimonials = [
   {
     name: 'Sarah Chen',
-    role: 'Researcher',
-    text: 'Research_GPT has transformed how I conduct literature reviews. The AI understands context and provides relevant insights.',
+    role: 'Patient',
+    text: 'MedGPT helped me understand my symptoms before visiting the doctor. The insights were accurate and incredibly reassuring.',
     avatar: assets.user_icon
   },
   {
     name: 'Marcus Johnson',
-    role: 'Content Creator',
-    text: 'The image generation feature is incredible. I can visualize concepts quickly and share them with my audience.',
+    role: 'Healthcare Professional',
+    text: 'A fantastic tool for patients to get preliminary information. It bridges the gap between waiting room and consultation.',
     avatar: assets.user_icon
   },
   {
     name: 'Elena Rodriguez',
     role: 'Student',
-    text: 'As a graduate student, having an AI research assistant has been invaluable for my thesis work.',
+    text: 'The ability to quickly look up treatment basics and understand medical jargon has been a lifesaver for my health awareness.',
     avatar: assets.user_icon
   }
 ]
 
 function HomePage() {
-  const {theme, user} = useContext(GlobalContext)
+  const { theme, user } = useContext(GlobalContext)
   const navigate = useNavigate()
 
   return (
     <div className='flex-1 px-4 sm:px-6 lg:px-8 py-12 overflow-y-scroll'>
       {/* Hero Section */}
       <div className='max-w-6xl mx-auto text-center mb-16'>
-        <div className='mb-6'>
+        <div className='mb-8 flex items-center justify-center gap-4'>
           <img
             src={theme === 'dark' ? assets.logo_full : assets.logo_full_dark}
-            alt='Research_GPT'
-            className='w-full max-w-64 mx-auto'
+            alt='MedGPT Logo'
+            className='h-20 sm:h-24 md:h-28 w-auto object-contain drop-shadow-lg transition-transform hover:scale-105 duration-300'
           />
+          <span className='text-5xl sm:text-6xl md:text-7xl font-extrabold text-black dark:text-white tracking-tight drop-shadow-sm'>MedGPT</span>
         </div>
         <h1 className='text-3xl sm:text-4xl font-bold mb-4 text-[#2D2535] dark:text-white'>
-          Your AI-Powered Research Companion
+          Your AI-Powered Medical Companion
         </h1>
         <p className='text-base text-gray-600 dark:text-purple-200 mb-8 max-w-2xl mx-auto'>
-          Ask questions, generate images, and explore ideas with cutting-edge AI technology.
-          Join thousands of researchers, creators, and learners who trust Research_GPT.
+          Ask any medical related queries
+Your AI-powered medical assistant. Get instant, reliable answers to your health questions — from symptoms and medications to wellness tips — all in a secure, private conversation.
         </p>
         <div className='flex flex-wrap justify-center gap-4'>
           {!user && (
@@ -90,7 +91,7 @@ function HomePage() {
       {/* Features Grid */}
       <div className='max-w-6xl mx-auto mb-16'>
         <h2 className='text-2xl font-semibold text-center mb-8 text-gray-800 dark:text-purple-100'>
-          Everything You Need for Research
+          Everything You Need for Health Guidance
         </h2>
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'>
           {features.map((feature, index) => (
@@ -119,9 +120,9 @@ function HomePage() {
         </h2>
         <div className='flex flex-col sm:flex-row justify-center items-center gap-6 sm:gap-8'>
           {[
-            { step: '1', title: 'Ask Your Question', desc: 'Type anything you want to research or explore' },
-            { step: '2', title: 'AI Processes', desc: 'Our models analyze and generate insightful responses' },
-            { step: '3', title: 'Get Results', desc: 'Receive detailed answers and generated images' }
+            { step: '1', title: 'Describe Symptoms', desc: 'Type in your symptoms, health queries, or medical conditions' },
+            { step: '2', title: 'AI Analyzes', desc: 'Our advanced models process your query against medical literature' },
+            { step: '3', title: 'Get Insights', desc: 'Receive structured, easy-to-understand health guidance' }
           ].map((item, index) => (
             <div key={index} className='flex flex-col items-center text-center max-w-48'>
               <div className='w-12 h-12 rounded-full bg-linear-to-r from-[#A456F7] to-[#3D81F6] text-white font-bold flex items-center justify-center mb-3'>
@@ -165,7 +166,7 @@ function HomePage() {
             Ready to Start Your Research Journey?
           </h2>
           <p className='text-gray-600 dark:text-purple-200 mb-6'>
-            Join thousands of users who are already exploring ideas with Research_GPT.
+            Join thousands of users who are already exploring ideas with MedGPT.
           </p>
           {!user ? (
             <button
