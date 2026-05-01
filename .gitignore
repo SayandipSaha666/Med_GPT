@@ -1,1 +1,4 @@
 graphify-out
+.env
+node_modules
+.gitignore

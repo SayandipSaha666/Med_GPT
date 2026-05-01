@@ -1,7 +1,10 @@
 import React from 'react'
-import {useState} from 'react';
+import {useState,useContext} from 'react';
 import { SignupControls } from './config';
 import CommonForm from '../CommonForm';
+import { callRegisterUserApi } from '../../services/api_services';
+import { GlobalContext } from '../../context/context';
+import { useNavigate } from 'react-router-dom';
 
 const initialState = {
   name: "",
@@ -12,6 +15,8 @@ const initialState = {
 function SignUp() {
   const [signupData, setSignupData] = useState(null)
   const [formData,setFormData] = useState(initialState)
+  const {setUser} = useContext(GlobalContext)
+  const navigate = useNavigate()
 
   const onChange = (e) => {
     const {name,value} = e.target
@@ -25,11 +30,17 @@ function SignUp() {
     try {
       // DB calls
       console.log("Data:", formData);
-      setSignupData(formData)
+      await setSignupData(formData)
+      setFormData(initialState)
+      const response = await callRegisterUserApi(signupData)
+      if(response.success){
+        setUser(response.data)
+        navigate("/main")
+      }
     } catch (error) {
       console.log(error?.message || error?.details[0]?.message)
     }
-    setFormData(initialState)
+    // setFormData(initialState)
   }
 
   return (

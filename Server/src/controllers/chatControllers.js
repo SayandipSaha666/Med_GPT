@@ -1,22 +1,24 @@
 const { prisma } = require('../lib/prisma');
 const joi = require('joi');
-
+/*
 const createChatSchema = joi.object({
     title: joi.string().required()
 })
-
+*/
 const createChat = async (req,res,next) => {
     const userId = req.user.id;
-    const {title} = req.body;
+    // const {title} = req.body;
     const content = {
         userId: userId,
-        title: title
+        // title: title
     }
-    const {error} = createChatSchema.validate({title});
-    if(error){
-        console.log(error)
-        return res.status(422).json({success: false, message: "Insufficient data!"})
-    }
+    /*
+        const {error} = createChatSchema.validate({title});
+        if(error){
+            console.log(error)
+            return res.status(422).json({success: false, message: "Insufficient data!"})
+        }
+    */
     try {
         const chat = await prisma.chat.create({
             data: content
@@ -25,7 +27,7 @@ const createChat = async (req,res,next) => {
         return res.status(201).json({
             success: true,
             message: 'Chat created successfully!',
-            chat
+            data: chat
         })
     } catch (error) {
         console.log(error);
@@ -34,7 +36,8 @@ const createChat = async (req,res,next) => {
 }
 
 const fetchChats = async (req,res,next) => {
-    const userId = req.user.id;
+    const userId = req?.user?.id;
+    if(!userId) return res.status(401).json({success: false, message: "Unauthorized!"})
     try {
         const chats = await prisma.chat.findMany({
             where: {
@@ -53,7 +56,7 @@ const fetchChats = async (req,res,next) => {
         return res.status(200).json({
             success: true,
             message: 'Chats fetched successfully!',
-            chats
+            data: chats
         })
     } catch (error) {
         console.log(error);
@@ -79,7 +82,7 @@ const fetchChat = async (req,res,next) => {
         return res.status(200).json({
             success: true,
             message: 'Chat fetched successfully!',
-            chat
+            data: chat
         })
     } catch (error) {
         console.log(error);
@@ -88,7 +91,8 @@ const fetchChat = async (req,res,next) => {
 }
 
 const deleteChat = async (req,res,next) => {
-    const chatId = parseInt(req.params.id);
+    // const chatId = parseInt(req.params.id);
+    const {chatId} = req.body;
     const userId = req.user.id;
     if(!chatId) return res.status(422).json({success: false, message: "Insufficient data!"})
     try {
@@ -107,7 +111,6 @@ const deleteChat = async (req,res,next) => {
         return res.status(200).json({
             success: true,
             message: 'Chat deleted successfully!',
-            chat
         })
     } catch (error) {
         console.log(error);
@@ -115,10 +118,10 @@ const deleteChat = async (req,res,next) => {
     }
 }
 
-const updateChatTitle = async (req,res,next) => {
+const updateChatTitle = async (req,res) => {
     const userId = req.user.id;
-    const {title} = req.body;
-    const chatId = parseInt(req.params.id);
+    const {title,chatId} = req.body;
+    // const chatId = parseInt(req.params.id);
     if(!chatId || !title) return res.status(422).json({success: false, message: "Insufficient data!"})
     try {
         const chat = await prisma.chat.findUnique({
@@ -139,7 +142,7 @@ const updateChatTitle = async (req,res,next) => {
         return res.status(200).json({
             success: true,
             message: 'Chat title updated successfully!',
-            chat
+            data: chat
         })
     } catch (error) {
         console.log(error);

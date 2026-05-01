@@ -1,7 +1,7 @@
 const jwt  = require('jsonwebtoken');
 const {prisma} = require('../lib/prisma');
 
-const authMiddleware = async (req,res,next)=>{
+const authMiddleware = async (req,res)=>{
     const token = req.cookies.token;
     if(!token){
         return res.status(401).json({
@@ -23,7 +23,11 @@ const authMiddleware = async (req,res,next)=>{
                 name: user.name,
                 email: user.email
             };
-            next();
+            return res.status(200).json({
+                success: true,
+                message: "Authorized - User found",
+                data: req.user
+            });
         } catch (error) {
             console.log(error)
             return res.status(500).json({

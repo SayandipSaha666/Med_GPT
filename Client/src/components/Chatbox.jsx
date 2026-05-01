@@ -13,16 +13,18 @@ export default function Chatbox() {
   const containerRef = useRef(null)
 
   const handleSend = useCallback((prompt, mode)=>{
-    setMessages(prev=>[...prev,{isImage: mode === 'image', isPublished: false,content:prompt,role:'user',timestamp:new Date()}])
+    setMessages(prev=>[...prev,{content:prompt,role:'user',timestamp:new Date()}])
     setLoading(true)
   },[])
 
   useEffect(()=>{
     if(selectedChat){
-      setMessages(selectedChat.messages)
+      setMessages(selectedChat.messages || [])
+    } else {
+      setMessages([])
     }
   },[selectedChat])
-  console.log(messages)
+  // console.log(messages)
 
   useEffect(()=>{
     if(containerRef.current){
