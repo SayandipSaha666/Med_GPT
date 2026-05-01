@@ -20,7 +20,7 @@ function Sidebar(props) {
         if (response.success) {
           setChats(prev => prev.filter(c => c.id !== chatId));
           if (location.pathname === `/main/chat/${chatId}`) {
-             navigate('/main/chat');
+            navigate('/main/chat');
           }
         }
       } catch (error) {
@@ -111,8 +111,11 @@ function Sidebar(props) {
 
   return (
     <div className={`px-3 py-3 flex flex-col h-screen min-w-72 p- bg-linear-to-b from-[#F3EEF8] to-[#E8E0F0] text-[#2D2535] border-r-2 border-[#D4C5E2] dark:from-[#242124]/30 dark:to-[#000000]/30 dark:text-white dark:border-[#80609F]/30 backdrop-blur-3xl transition-all duration-500 max-md:absolute left-0 z-1 ${!isMenuOpen && 'max-md:-translate-x-full'}`}>
-      <img src={theme === 'light' ? assets.logo_full_dark : assets.logo_full} alt="" className='w-full max-w-48' />
-      <button onClick={handleNewChat} className='flex justify-center items-center w-full py-2 mt-10 text-black dark:text-white bg-linear-to-r from-[#A456F7] to-[#3D81F6] text-sm rounded-md cursor-pointer'>
+      <div className='flex items-center justify-start gap-3 mb-6 mt-2 pl-1'>
+        <img src={theme === 'light' ? assets.logo_full_dark : assets.logo_full} alt="MedGPT Logo" className='w-auto h-12 object-contain drop-shadow-md' />
+        <span className='text-3xl font-bold text-black dark:text-white tracking-wide'>MedGPT</span>
+      </div>
+      <button onClick={handleNewChat} className='flex justify-center items-center w-full py-2.5 text-black dark:text-white bg-linear-to-r from-[#A456F7] to-[#3D81F6] hover:from-[#933df5] hover:to-[#2b71ec] transition-all text-sm rounded-md cursor-pointer font-medium shadow-md'>
         <span className='mr-2 text-xl'>+</span> New Chat
       </button>
       {/* Search Conversations */}
@@ -153,10 +156,10 @@ function Sidebar(props) {
                         </div>
                         <div className='flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity' onClick={(e) => e.stopPropagation()}>
                           <button onClick={(e) => handleEdit(e, chat, displayText)} className='text-gray-500 hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-400 transition-colors' title="Edit chat">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
                           </button>
                           <button onClick={(e) => handleDelete(e, chat.id)} className='text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 transition-colors' title="Delete chat">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /><line x1="10" x2="10" y1="11" y2="17" /><line x1="14" x2="14" y1="11" y2="17" /></svg>
                           </button>
                         </div>
                       </div>
@@ -169,13 +172,13 @@ function Sidebar(props) {
             <p className='text-sm mt-4 shrink-0'>No Recent Chats</p>
         }
       </div>
-      
+
       {/* Credit purchase */}
       <div onClick={() => { navigate('/main/credits'); setIsMenuOpen(false) }} className='flex items-center gap-2 p-3 mt-4 border border-black-800 dark:border-white/15 rounded-md cursor-pointer hover:scale-103 transition-all'>
         <img src={assets.credit_icon} className='w-4.5 not-dark:invert' />
         <div className='flex flex-col text-sm'>
           <p>Credits : {user?.credits || 0}</p>
-          <p className='text-xs text-gray-400'>Purchase credits to use Research_GPT</p>
+          <p className='text-xs text-gray-400'>Purchase credits to use MedGPT</p>
         </div>
       </div>
       {/* Toggle Theme Mode */}

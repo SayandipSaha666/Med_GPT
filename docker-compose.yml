@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./Client
+      dockerfile: Dockerfile
+    container_name: research_gpt_frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_BACKEND_URL=http://localhost:5000
+    depends_on:
+      - backend
+    volumes:
+      - ./Client/src:/app/src
+      - ./Client/public:/app/public
+
+  backend:
+    build:
+      context: ./Server
+      dockerfile: Dockerfile
+    container_name: research_gpt_backend
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./Server/.env
+    depends_on:
+      - rag-service
+    volumes:
+      - ./Server/src:/app/src
+      - ./Server/prisma:/app/prisma
+
+  rag-service:
+    build:
+      context: ./Server/services
+      dockerfile: Dockerfile
+    container_name: research_gpt_rag
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./Server/.env
+    volumes:
+      - ./Server/services:/app

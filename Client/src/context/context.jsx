@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect } from "react";
-import { assets,dummyChats,dummyUserData,dummyPlans } from "../assets/assets";
+import { assets } from "../assets/assets";
 import { useNavigate, useLocation } from "react-router";
 import { callAuthUserApi,fetchChatsApi } from "../services/api_services";
 export const GlobalContext = createContext(null)

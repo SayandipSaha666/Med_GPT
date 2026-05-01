@@ -92,3 +92,10 @@ export const getPaymentStatusApi = async (orderId) => {
     })
     return response?.data;
 }
+
+export const updateProfileApi = async (name) => {
+    const response = await axios.put(`${API_BASE_URL}/api/user/profile`, { name }, {
+        withCredentials: true,
+    })
+    return response?.data;
+}
