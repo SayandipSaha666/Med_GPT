@@ -37,8 +37,11 @@ function App() {
         children: [
           {
             path: 'chat',
-            element: <Chatbox/>,
             children: [
+              {
+                index: true,
+                element: <Chatbox/>
+              },
               {
                 path: ':id',
                 element: <ChatDetails/>
@@ -48,10 +51,6 @@ function App() {
           {
             path: 'credits',
             element: <Credits/>
-          },
-          {
-            path: 'community',
-            element: <Community/>
           },
           {
             path: 'profile',

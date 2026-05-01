@@ -85,10 +85,10 @@ export const createOrderApi = async (planId) => {
     return response?.data;
 }
 
-export const getPaymentStatusApi = async (transactionId) => {
+export const getPaymentStatusApi = async (orderId) => {
     const response = await axios.get(`${API_BASE_URL}/api/billing/payment-status`,{
         withCredentials: true,
-        params: { transactionId }
+        params: { orderId }
     })
     return response?.data;
 }

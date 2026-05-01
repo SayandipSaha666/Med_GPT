@@ -91,8 +91,7 @@ const fetchChat = async (req,res,next) => {
 }
 
 const deleteChat = async (req,res,next) => {
-    // const chatId = parseInt(req.params.id);
-    const {chatId} = req.body;
+    const chatId = parseInt(req.params.id);
     const userId = req.user.id;
     if(!chatId) return res.status(422).json({success: false, message: "Insufficient data!"})
     try {
