@@ -7,11 +7,11 @@ const router = express.Router();
 // Auth middleware is applied at the router level in index.js
 // so req.user is available in all these handlers
 
-router.get('/',          createChat)        // GET    — create a new chat
+router.get('/create',    createChat)        // GET    — create a new chat
 router.get('/all',        fetchChats)       // GET    — list all user chats
 router.post('/:id/message', sendMessage)    // POST   — send message & get AI response
 router.get('/:id',        fetchChat)        // GET    — fetch a single chat
-router.delete('/',     deleteChat)          // DELETE — delete a chat
-router.put('/',  updateChatTitle)           // PUT    — update chat title
+router.delete('/:id',     deleteChat)          // DELETE — delete a chat
+router.put('/update',  updateChatTitle)           // PUT    — update chat title
 
 module.exports = router;

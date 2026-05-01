@@ -1,17 +1,15 @@
 import React, { useContext } from 'react'
 import { GlobalContext } from '../context/context.jsx'
-import { assets, dummyUserData, dummyPlans } from '../assets/assets.js'
+import { assets } from '../assets/assets.js'
 import { useNavigate } from 'react-router-dom'
 
 function Profile() {
   const { user, setUser } = useContext(GlobalContext)
   const navigate = useNavigate()
 
-  // Use real user data if available, otherwise use dummy data
-  const userData = user || dummyUserData
-  
-  // Find the plan based on credits or just default to Basic for display
-  const currentPlan = dummyPlans.find(plan => plan.credits === userData.credits) || dummyPlans[0]
+  if (!user) return null;
+
+  const currentPlan = user.plan || { name: 'Free', features: ['Basic features'] };
 
   const handleLogout = () => {
     setUser(null)
@@ -37,17 +35,14 @@ function Profile() {
             
             <div className='text-center md:text-left flex-1'>
               <h1 className='text-4xl font-bold text-gray-900 dark:text-white mb-2 tracking-tight'>
-                {userData.name}
+                {user.name}
               </h1>
               <p className='text-gray-500 dark:text-gray-400 text-lg mb-4'>
-                {userData.email}
+                {user.email}
               </p>
               <div className='flex flex-wrap gap-3 justify-center md:justify-start'>
                 <span className='px-4 py-1.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-sm font-medium border border-purple-200 dark:border-purple-800/50'>
-                  Premium Member
-                </span>
-                <span className='px-4 py-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-sm font-medium border border-blue-200 dark:border-blue-800/50'>
-                  Verified Account
+                  {currentPlan.name} Member
                 </span>
               </div>
             </div>
@@ -63,7 +58,7 @@ function Profile() {
         </div>
 
         {/* Stats Grid */}
-        <div className='grid grid-cols-1 md:grid-cols-3 gap-6 mb-8'>
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mb-8'>
           <div className='bg-white/40 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl p-6 shadow-xl hover:translate-y-[-4px] transition-all duration-300 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100'>
             <div className='flex items-center gap-4 mb-4'>
               <div className='p-3 bg-purple-500/10 rounded-xl'>
@@ -71,8 +66,7 @@ function Profile() {
               </div>
               <h3 className='text-gray-500 dark:text-gray-400 font-medium'>Available Credits</h3>
             </div>
-            <p className='text-3xl font-bold text-gray-900 dark:text-white'>{userData.credits}</p>
-            <p className='text-xs text-purple-600 dark:text-purple-400 mt-2 font-medium'>+12% from last month</p>
+            <p className='text-3xl font-bold text-gray-900 dark:text-white'>{user.credits}</p>
           </div>
 
           <div className='bg-white/40 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl p-6 shadow-xl hover:translate-y-[-4px] transition-all duration-300 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-200'>
@@ -83,18 +77,6 @@ function Profile() {
               <h3 className='text-gray-500 dark:text-gray-400 font-medium'>Membership</h3>
             </div>
             <p className='text-3xl font-bold text-gray-900 dark:text-white'>{currentPlan.name}</p>
-            <p className='text-xs text-blue-600 dark:text-blue-400 mt-2 font-medium'>Expires in 24 days</p>
-          </div>
-
-          <div className='bg-white/40 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl p-6 shadow-xl hover:translate-y-[-4px] transition-all duration-300 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-300'>
-            <div className='flex items-center gap-4 mb-4'>
-              <div className='p-3 bg-green-500/10 rounded-xl'>
-                <img src={assets.gallery_icon} alt="" className='w-6 h-6 not-dark:invert' />
-              </div>
-              <h3 className='text-gray-500 dark:text-gray-400 font-medium'>Total Posts</h3>
-            </div>
-            <p className='text-3xl font-bold text-gray-900 dark:text-white'>24</p>
-            <p className='text-xs text-green-600 dark:text-green-400 mt-2 font-medium'>Active in community</p>
           </div>
         </div>
 
@@ -110,32 +92,34 @@ function Profile() {
               <div>
                 <label className='block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1'>User ID</label>
                 <div className='p-3 bg-gray-100/50 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/5 font-mono text-sm text-gray-700 dark:text-gray-300 break-all'>
-                  {userData._id}
+                  {user.id}
                 </div>
               </div>
               <div>
                 <label className='block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1'>Join Date</label>
-                <div className='text-gray-900 dark:text-white font-medium'>August 24, 2024</div>
+                <div className='text-gray-900 dark:text-white font-medium'>
+                  {user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Unknown'}
+                </div>
               </div>
             </div>
 
             <div className='space-y-6'>
               <div>
-                <label className='block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1'>Account Security</label>
-                <div className='flex items-center gap-2 text-green-600 dark:text-green-400 font-medium'>
-                  <span className='w-2 h-2 bg-green-600 dark:bg-green-400 rounded-full'></span>
-                  Two-Factor Authentication Active
-                </div>
-              </div>
-              <div>
                 <label className='block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1'>Current Plan Perks</label>
                 <ul className='space-y-2'>
-                  {currentPlan.features.slice(0, 3).map((feature, index) => (
-                    <li key={index} className='flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300'>
+                  {currentPlan.features?.length > 0 ? (
+                    currentPlan.features.slice(0, 3).map((feature, index) => (
+                      <li key={index} className='flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300'>
+                        <div className='w-1 h-1 bg-purple-500 rounded-full'></div>
+                        {feature}
+                      </li>
+                    ))
+                  ) : (
+                    <li className='flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300'>
                       <div className='w-1 h-1 bg-purple-500 rounded-full'></div>
-                      {feature}
+                      Standard Chat Access
                     </li>
-                  ))}
+                  )}
                 </ul>
               </div>
             </div>

@@ -1,18 +1,18 @@
-const jwt  = require('jsonwebtoken');
-const {prisma} = require('../lib/prisma');
+const jwt = require('jsonwebtoken');
+const { prisma } = require('../lib/prisma');
 
-const authMiddleware = async (req,res)=>{
+const authMiddleware = async (req, res, next) => {
     const token = req.cookies.token;
-    if(!token){
+    if (!token) {
         return res.status(401).json({
             success: false,
             message: 'Unauthorized - No token provided'
         })
-    }else{
+    } else {
         try {
-            const decode = jwt.verify(token,process.env.JWT_SECRET_KEY);
-            const user = await prisma.user.findUnique({where: {id: decode.id}});
-            if(!user){
+            const decode = jwt.verify(token, process.env.JWT_SECRET_KEY);
+            const user = await prisma.user.findUnique({ where: { id: decode.id } });
+            if (!user) {
                 return res.status(401).json({
                     success: false,
                     message: "Unauthorized - Invalid token"
@@ -21,13 +21,11 @@ const authMiddleware = async (req,res)=>{
             req.user = {
                 id: user.id,
                 name: user.name,
-                email: user.email
+                email: user.email,
+                credits: user.credits,
+                plan: user.planId
             };
-            return res.status(200).json({
-                success: true,
-                message: "Authorized - User found",
-                data: req.user
-            });
+            next();
         } catch (error) {
             console.log(error)
             return res.status(500).json({
@@ -38,4 +36,4 @@ const authMiddleware = async (req,res)=>{
     }
 }
 
-module.exports = {authMiddleware};
+module.exports = { authMiddleware };

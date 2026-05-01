@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 @custom-variant dark (&:where(.dark, .dark *));
 
 * {
@@ -14,9 +15,7 @@
   display: none;
 }
 
-.reset-tw :not(pre):not(code) {
-  all: revert
-}
+
 
 .loader div:nth-child(2){
   animation-delay: 0.2s;
