@@ -1302,10 +1302,12 @@ export namespace Prisma {
 
   export type PlansCountOutputType = {
     transactions: number
+    users: number
   }
 
   export type PlansCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     transactions?: boolean | PlansCountOutputTypeCountTransactionsArgs
+    users?: boolean | PlansCountOutputTypeCountUsersArgs
   }
 
   // Custom InputTypes
@@ -1324,6 +1326,13 @@ export namespace Prisma {
    */
   export type PlansCountOutputTypeCountTransactionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: TransactionWhereInput
+  }
+
+  /**
+   * PlansCountOutputType without action
+   */
+  export type PlansCountOutputTypeCountUsersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: UserWhereInput
   }
 
 
@@ -1346,11 +1355,13 @@ export namespace Prisma {
   export type UserAvgAggregateOutputType = {
     id: number | null
     credits: number | null
+    planId: number | null
   }
 
   export type UserSumAggregateOutputType = {
     id: number | null
     credits: number | null
+    planId: number | null
   }
 
   export type UserMinAggregateOutputType = {
@@ -1359,6 +1370,7 @@ export namespace Prisma {
     password: string | null
     name: string | null
     credits: number | null
+    planId: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -1369,6 +1381,7 @@ export namespace Prisma {
     password: string | null
     name: string | null
     credits: number | null
+    planId: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -1379,6 +1392,7 @@ export namespace Prisma {
     password: number
     name: number
     credits: number
+    planId: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -1388,11 +1402,13 @@ export namespace Prisma {
   export type UserAvgAggregateInputType = {
     id?: true
     credits?: true
+    planId?: true
   }
 
   export type UserSumAggregateInputType = {
     id?: true
     credits?: true
+    planId?: true
   }
 
   export type UserMinAggregateInputType = {
@@ -1401,6 +1417,7 @@ export namespace Prisma {
     password?: true
     name?: true
     credits?: true
+    planId?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -1411,6 +1428,7 @@ export namespace Prisma {
     password?: true
     name?: true
     credits?: true
+    planId?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -1421,6 +1439,7 @@ export namespace Prisma {
     password?: true
     name?: true
     credits?: true
+    planId?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -1518,6 +1537,7 @@ export namespace Prisma {
     password: string
     name: string
     credits: number
+    planId: number
     createdAt: Date
     updatedAt: Date
     _count: UserCountAggregateOutputType | null
@@ -1547,10 +1567,12 @@ export namespace Prisma {
     password?: boolean
     name?: boolean
     credits?: boolean
+    planId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     chats?: boolean | User$chatsArgs<ExtArgs>
     transactions?: boolean | User$transactionsArgs<ExtArgs>
+    plan?: boolean | PlansDefaultArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -1560,8 +1582,10 @@ export namespace Prisma {
     password?: boolean
     name?: boolean
     credits?: boolean
+    planId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    plan?: boolean | PlansDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -1570,8 +1594,10 @@ export namespace Prisma {
     password?: boolean
     name?: boolean
     credits?: boolean
+    planId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    plan?: boolean | PlansDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectScalar = {
@@ -1580,24 +1606,31 @@ export namespace Prisma {
     password?: boolean
     name?: boolean
     credits?: boolean
+    planId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "password" | "name" | "credits" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "password" | "name" | "credits" | "planId" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     chats?: boolean | User$chatsArgs<ExtArgs>
     transactions?: boolean | User$transactionsArgs<ExtArgs>
+    plan?: boolean | PlansDefaultArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
-  export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
-  export type UserIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    plan?: boolean | PlansDefaultArgs<ExtArgs>
+  }
+  export type UserIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    plan?: boolean | PlansDefaultArgs<ExtArgs>
+  }
 
   export type $UserPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "User"
     objects: {
       chats: Prisma.$ChatPayload<ExtArgs>[]
       transactions: Prisma.$TransactionPayload<ExtArgs>[]
+      plan: Prisma.$PlansPayload<ExtArgs>
     }
     scalars: $Extensions.GetPayloadResult<{
       id: number
@@ -1605,6 +1638,7 @@ export namespace Prisma {
       password: string
       name: string
       credits: number
+      planId: number
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["user"]>
@@ -2003,6 +2037,7 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     chats<T extends User$chatsArgs<ExtArgs> = {}>(args?: Subset<T, User$chatsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ChatPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     transactions<T extends User$transactionsArgs<ExtArgs> = {}>(args?: Subset<T, User$transactionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    plan<T extends PlansDefaultArgs<ExtArgs> = {}>(args?: Subset<T, PlansDefaultArgs<ExtArgs>>): Prisma__PlansClient<$Result.GetResult<Prisma.$PlansPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2037,6 +2072,7 @@ export namespace Prisma {
     readonly password: FieldRef<"User", 'String'>
     readonly name: FieldRef<"User", 'String'>
     readonly credits: FieldRef<"User", 'Float'>
+    readonly planId: FieldRef<"User", 'Int'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
   }
@@ -2293,6 +2329,10 @@ export namespace Prisma {
      */
     data: UserCreateManyInput | UserCreateManyInput[]
     skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserIncludeCreateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -2363,6 +2403,10 @@ export namespace Prisma {
      * Limit how many Users to update.
      */
     limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -6140,6 +6184,7 @@ export namespace Prisma {
     features?: boolean
     createdAt?: boolean
     transactions?: boolean | Plans$transactionsArgs<ExtArgs>
+    users?: boolean | Plans$usersArgs<ExtArgs>
     _count?: boolean | PlansCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["plans"]>
 
@@ -6173,6 +6218,7 @@ export namespace Prisma {
   export type PlansOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "price" | "credits" | "features" | "createdAt", ExtArgs["result"]["plans"]>
   export type PlansInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     transactions?: boolean | Plans$transactionsArgs<ExtArgs>
+    users?: boolean | Plans$usersArgs<ExtArgs>
     _count?: boolean | PlansCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type PlansIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -6182,6 +6228,7 @@ export namespace Prisma {
     name: "Plans"
     objects: {
       transactions: Prisma.$TransactionPayload<ExtArgs>[]
+      users: Prisma.$UserPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: number
@@ -6585,6 +6632,7 @@ export namespace Prisma {
   export interface Prisma__PlansClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     transactions<T extends Plans$transactionsArgs<ExtArgs> = {}>(args?: Subset<T, Plans$transactionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    users<T extends Plans$usersArgs<ExtArgs> = {}>(args?: Subset<T, Plans$usersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -7037,6 +7085,30 @@ export namespace Prisma {
   }
 
   /**
+   * Plans.users
+   */
+  export type Plans$usersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    where?: UserWhereInput
+    orderBy?: UserOrderByWithRelationInput | UserOrderByWithRelationInput[]
+    cursor?: UserWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: UserScalarFieldEnum | UserScalarFieldEnum[]
+  }
+
+  /**
    * Plans without action
    */
   export type PlansDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -7075,6 +7147,7 @@ export namespace Prisma {
     password: 'password',
     name: 'name',
     credits: 'credits',
+    planId: 'planId',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -7237,10 +7310,12 @@ export namespace Prisma {
     password?: StringFilter<"User"> | string
     name?: StringFilter<"User"> | string
     credits?: FloatFilter<"User"> | number
+    planId?: IntFilter<"User"> | number
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     chats?: ChatListRelationFilter
     transactions?: TransactionListRelationFilter
+    plan?: XOR<PlansScalarRelationFilter, PlansWhereInput>
   }
 
   export type UserOrderByWithRelationInput = {
@@ -7249,10 +7324,12 @@ export namespace Prisma {
     password?: SortOrder
     name?: SortOrder
     credits?: SortOrder
+    planId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     chats?: ChatOrderByRelationAggregateInput
     transactions?: TransactionOrderByRelationAggregateInput
+    plan?: PlansOrderByWithRelationInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -7264,10 +7341,12 @@ export namespace Prisma {
     password?: StringFilter<"User"> | string
     name?: StringFilter<"User"> | string
     credits?: FloatFilter<"User"> | number
+    planId?: IntFilter<"User"> | number
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     chats?: ChatListRelationFilter
     transactions?: TransactionListRelationFilter
+    plan?: XOR<PlansScalarRelationFilter, PlansWhereInput>
   }, "id" | "email">
 
   export type UserOrderByWithAggregationInput = {
@@ -7276,6 +7355,7 @@ export namespace Prisma {
     password?: SortOrder
     name?: SortOrder
     credits?: SortOrder
+    planId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: UserCountOrderByAggregateInput
@@ -7294,6 +7374,7 @@ export namespace Prisma {
     password?: StringWithAggregatesFilter<"User"> | string
     name?: StringWithAggregatesFilter<"User"> | string
     credits?: FloatWithAggregatesFilter<"User"> | number
+    planId?: IntWithAggregatesFilter<"User"> | number
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
   }
@@ -7516,6 +7597,7 @@ export namespace Prisma {
     features?: StringNullableListFilter<"Plans">
     createdAt?: DateTimeFilter<"Plans"> | Date | string
     transactions?: TransactionListRelationFilter
+    users?: UserListRelationFilter
   }
 
   export type PlansOrderByWithRelationInput = {
@@ -7526,6 +7608,7 @@ export namespace Prisma {
     features?: SortOrder
     createdAt?: SortOrder
     transactions?: TransactionOrderByRelationAggregateInput
+    users?: UserOrderByRelationAggregateInput
   }
 
   export type PlansWhereUniqueInput = Prisma.AtLeast<{
@@ -7539,6 +7622,7 @@ export namespace Prisma {
     features?: StringNullableListFilter<"Plans">
     createdAt?: DateTimeFilter<"Plans"> | Date | string
     transactions?: TransactionListRelationFilter
+    users?: UserListRelationFilter
   }, "id">
 
   export type PlansOrderByWithAggregationInput = {
@@ -7576,6 +7660,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     chats?: ChatCreateNestedManyWithoutUserInput
     transactions?: TransactionCreateNestedManyWithoutUserInput
+    plan?: PlansCreateNestedOneWithoutUsersInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -7584,6 +7669,7 @@ export namespace Prisma {
     password: string
     name: string
     credits?: number
+    planId?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     chats?: ChatUncheckedCreateNestedManyWithoutUserInput
@@ -7599,6 +7685,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     chats?: ChatUpdateManyWithoutUserNestedInput
     transactions?: TransactionUpdateManyWithoutUserNestedInput
+    plan?: PlansUpdateOneRequiredWithoutUsersNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -7607,6 +7694,7 @@ export namespace Prisma {
     password?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     credits?: FloatFieldUpdateOperationsInput | number
+    planId?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     chats?: ChatUncheckedUpdateManyWithoutUserNestedInput
@@ -7619,6 +7707,7 @@ export namespace Prisma {
     password: string
     name: string
     credits?: number
+    planId?: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -7638,6 +7727,7 @@ export namespace Prisma {
     password?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     credits?: FloatFieldUpdateOperationsInput | number
+    planId?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -7850,6 +7940,7 @@ export namespace Prisma {
     features?: PlansCreatefeaturesInput | string[]
     createdAt?: Date | string
     transactions?: TransactionCreateNestedManyWithoutPlanInput
+    users?: UserCreateNestedManyWithoutPlanInput
   }
 
   export type PlansUncheckedCreateInput = {
@@ -7860,6 +7951,7 @@ export namespace Prisma {
     features?: PlansCreatefeaturesInput | string[]
     createdAt?: Date | string
     transactions?: TransactionUncheckedCreateNestedManyWithoutPlanInput
+    users?: UserUncheckedCreateNestedManyWithoutPlanInput
   }
 
   export type PlansUpdateInput = {
@@ -7869,6 +7961,7 @@ export namespace Prisma {
     features?: PlansUpdatefeaturesInput | string[]
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     transactions?: TransactionUpdateManyWithoutPlanNestedInput
+    users?: UserUpdateManyWithoutPlanNestedInput
   }
 
   export type PlansUncheckedUpdateInput = {
@@ -7879,6 +7972,7 @@ export namespace Prisma {
     features?: PlansUpdatefeaturesInput | string[]
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     transactions?: TransactionUncheckedUpdateManyWithoutPlanNestedInput
+    users?: UserUncheckedUpdateManyWithoutPlanNestedInput
   }
 
   export type PlansCreateManyInput = {
@@ -7967,6 +8061,11 @@ export namespace Prisma {
     none?: TransactionWhereInput
   }
 
+  export type PlansScalarRelationFilter = {
+    is?: PlansWhereInput
+    isNot?: PlansWhereInput
+  }
+
   export type ChatOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -7981,6 +8080,7 @@ export namespace Prisma {
     password?: SortOrder
     name?: SortOrder
     credits?: SortOrder
+    planId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -7988,6 +8088,7 @@ export namespace Prisma {
   export type UserAvgOrderByAggregateInput = {
     id?: SortOrder
     credits?: SortOrder
+    planId?: SortOrder
   }
 
   export type UserMaxOrderByAggregateInput = {
@@ -7996,6 +8097,7 @@ export namespace Prisma {
     password?: SortOrder
     name?: SortOrder
     credits?: SortOrder
+    planId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -8006,6 +8108,7 @@ export namespace Prisma {
     password?: SortOrder
     name?: SortOrder
     credits?: SortOrder
+    planId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -8013,6 +8116,7 @@ export namespace Prisma {
   export type UserSumOrderByAggregateInput = {
     id?: SortOrder
     credits?: SortOrder
+    planId?: SortOrder
   }
 
   export type IntWithAggregatesFilter<$PrismaModel = never> = {
@@ -8187,11 +8291,6 @@ export namespace Prisma {
     not?: NestedBoolFilter<$PrismaModel> | boolean
   }
 
-  export type PlansScalarRelationFilter = {
-    is?: PlansWhereInput
-    isNot?: PlansWhereInput
-  }
-
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
@@ -8289,6 +8388,16 @@ export namespace Prisma {
     isEmpty?: boolean
   }
 
+  export type UserListRelationFilter = {
+    every?: UserWhereInput
+    some?: UserWhereInput
+    none?: UserWhereInput
+  }
+
+  export type UserOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
   export type PlansCountOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
@@ -8338,6 +8447,12 @@ export namespace Prisma {
     connectOrCreate?: TransactionCreateOrConnectWithoutUserInput | TransactionCreateOrConnectWithoutUserInput[]
     createMany?: TransactionCreateManyUserInputEnvelope
     connect?: TransactionWhereUniqueInput | TransactionWhereUniqueInput[]
+  }
+
+  export type PlansCreateNestedOneWithoutUsersInput = {
+    create?: XOR<PlansCreateWithoutUsersInput, PlansUncheckedCreateWithoutUsersInput>
+    connectOrCreate?: PlansCreateOrConnectWithoutUsersInput
+    connect?: PlansWhereUniqueInput
   }
 
   export type ChatUncheckedCreateNestedManyWithoutUserInput = {
@@ -8396,6 +8511,14 @@ export namespace Prisma {
     update?: TransactionUpdateWithWhereUniqueWithoutUserInput | TransactionUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: TransactionUpdateManyWithWhereWithoutUserInput | TransactionUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: TransactionScalarWhereInput | TransactionScalarWhereInput[]
+  }
+
+  export type PlansUpdateOneRequiredWithoutUsersNestedInput = {
+    create?: XOR<PlansCreateWithoutUsersInput, PlansUncheckedCreateWithoutUsersInput>
+    connectOrCreate?: PlansCreateOrConnectWithoutUsersInput
+    upsert?: PlansUpsertWithoutUsersInput
+    connect?: PlansWhereUniqueInput
+    update?: XOR<XOR<PlansUpdateToOneWithWhereWithoutUsersInput, PlansUpdateWithoutUsersInput>, PlansUncheckedUpdateWithoutUsersInput>
   }
 
   export type IntFieldUpdateOperationsInput = {
@@ -8551,11 +8674,25 @@ export namespace Prisma {
     connect?: TransactionWhereUniqueInput | TransactionWhereUniqueInput[]
   }
 
+  export type UserCreateNestedManyWithoutPlanInput = {
+    create?: XOR<UserCreateWithoutPlanInput, UserUncheckedCreateWithoutPlanInput> | UserCreateWithoutPlanInput[] | UserUncheckedCreateWithoutPlanInput[]
+    connectOrCreate?: UserCreateOrConnectWithoutPlanInput | UserCreateOrConnectWithoutPlanInput[]
+    createMany?: UserCreateManyPlanInputEnvelope
+    connect?: UserWhereUniqueInput | UserWhereUniqueInput[]
+  }
+
   export type TransactionUncheckedCreateNestedManyWithoutPlanInput = {
     create?: XOR<TransactionCreateWithoutPlanInput, TransactionUncheckedCreateWithoutPlanInput> | TransactionCreateWithoutPlanInput[] | TransactionUncheckedCreateWithoutPlanInput[]
     connectOrCreate?: TransactionCreateOrConnectWithoutPlanInput | TransactionCreateOrConnectWithoutPlanInput[]
     createMany?: TransactionCreateManyPlanInputEnvelope
     connect?: TransactionWhereUniqueInput | TransactionWhereUniqueInput[]
+  }
+
+  export type UserUncheckedCreateNestedManyWithoutPlanInput = {
+    create?: XOR<UserCreateWithoutPlanInput, UserUncheckedCreateWithoutPlanInput> | UserCreateWithoutPlanInput[] | UserUncheckedCreateWithoutPlanInput[]
+    connectOrCreate?: UserCreateOrConnectWithoutPlanInput | UserCreateOrConnectWithoutPlanInput[]
+    createMany?: UserCreateManyPlanInputEnvelope
+    connect?: UserWhereUniqueInput | UserWhereUniqueInput[]
   }
 
   export type PlansUpdatefeaturesInput = {
@@ -8577,6 +8714,20 @@ export namespace Prisma {
     deleteMany?: TransactionScalarWhereInput | TransactionScalarWhereInput[]
   }
 
+  export type UserUpdateManyWithoutPlanNestedInput = {
+    create?: XOR<UserCreateWithoutPlanInput, UserUncheckedCreateWithoutPlanInput> | UserCreateWithoutPlanInput[] | UserUncheckedCreateWithoutPlanInput[]
+    connectOrCreate?: UserCreateOrConnectWithoutPlanInput | UserCreateOrConnectWithoutPlanInput[]
+    upsert?: UserUpsertWithWhereUniqueWithoutPlanInput | UserUpsertWithWhereUniqueWithoutPlanInput[]
+    createMany?: UserCreateManyPlanInputEnvelope
+    set?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    disconnect?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    delete?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    connect?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    update?: UserUpdateWithWhereUniqueWithoutPlanInput | UserUpdateWithWhereUniqueWithoutPlanInput[]
+    updateMany?: UserUpdateManyWithWhereWithoutPlanInput | UserUpdateManyWithWhereWithoutPlanInput[]
+    deleteMany?: UserScalarWhereInput | UserScalarWhereInput[]
+  }
+
   export type TransactionUncheckedUpdateManyWithoutPlanNestedInput = {
     create?: XOR<TransactionCreateWithoutPlanInput, TransactionUncheckedCreateWithoutPlanInput> | TransactionCreateWithoutPlanInput[] | TransactionUncheckedCreateWithoutPlanInput[]
     connectOrCreate?: TransactionCreateOrConnectWithoutPlanInput | TransactionCreateOrConnectWithoutPlanInput[]
@@ -8589,6 +8740,20 @@ export namespace Prisma {
     update?: TransactionUpdateWithWhereUniqueWithoutPlanInput | TransactionUpdateWithWhereUniqueWithoutPlanInput[]
     updateMany?: TransactionUpdateManyWithWhereWithoutPlanInput | TransactionUpdateManyWithWhereWithoutPlanInput[]
     deleteMany?: TransactionScalarWhereInput | TransactionScalarWhereInput[]
+  }
+
+  export type UserUncheckedUpdateManyWithoutPlanNestedInput = {
+    create?: XOR<UserCreateWithoutPlanInput, UserUncheckedCreateWithoutPlanInput> | UserCreateWithoutPlanInput[] | UserUncheckedCreateWithoutPlanInput[]
+    connectOrCreate?: UserCreateOrConnectWithoutPlanInput | UserCreateOrConnectWithoutPlanInput[]
+    upsert?: UserUpsertWithWhereUniqueWithoutPlanInput | UserUpsertWithWhereUniqueWithoutPlanInput[]
+    createMany?: UserCreateManyPlanInputEnvelope
+    set?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    disconnect?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    delete?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    connect?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    update?: UserUpdateWithWhereUniqueWithoutPlanInput | UserUpdateWithWhereUniqueWithoutPlanInput[]
+    updateMany?: UserUpdateManyWithWhereWithoutPlanInput | UserUpdateManyWithWhereWithoutPlanInput[]
+    deleteMany?: UserScalarWhereInput | UserScalarWhereInput[]
   }
 
   export type NestedIntFilter<$PrismaModel = never> = {
@@ -8816,6 +8981,30 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type PlansCreateWithoutUsersInput = {
+    name?: string
+    price?: number
+    credits?: number
+    features?: PlansCreatefeaturesInput | string[]
+    createdAt?: Date | string
+    transactions?: TransactionCreateNestedManyWithoutPlanInput
+  }
+
+  export type PlansUncheckedCreateWithoutUsersInput = {
+    id?: number
+    name?: string
+    price?: number
+    credits?: number
+    features?: PlansCreatefeaturesInput | string[]
+    createdAt?: Date | string
+    transactions?: TransactionUncheckedCreateNestedManyWithoutPlanInput
+  }
+
+  export type PlansCreateOrConnectWithoutUsersInput = {
+    where: PlansWhereUniqueInput
+    create: XOR<PlansCreateWithoutUsersInput, PlansUncheckedCreateWithoutUsersInput>
+  }
+
   export type ChatUpsertWithWhereUniqueWithoutUserInput = {
     where: ChatWhereUniqueInput
     update: XOR<ChatUpdateWithoutUserInput, ChatUncheckedUpdateWithoutUserInput>
@@ -8876,6 +9065,36 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Transaction"> | Date | string
   }
 
+  export type PlansUpsertWithoutUsersInput = {
+    update: XOR<PlansUpdateWithoutUsersInput, PlansUncheckedUpdateWithoutUsersInput>
+    create: XOR<PlansCreateWithoutUsersInput, PlansUncheckedCreateWithoutUsersInput>
+    where?: PlansWhereInput
+  }
+
+  export type PlansUpdateToOneWithWhereWithoutUsersInput = {
+    where?: PlansWhereInput
+    data: XOR<PlansUpdateWithoutUsersInput, PlansUncheckedUpdateWithoutUsersInput>
+  }
+
+  export type PlansUpdateWithoutUsersInput = {
+    name?: StringFieldUpdateOperationsInput | string
+    price?: FloatFieldUpdateOperationsInput | number
+    credits?: IntFieldUpdateOperationsInput | number
+    features?: PlansUpdatefeaturesInput | string[]
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    transactions?: TransactionUpdateManyWithoutPlanNestedInput
+  }
+
+  export type PlansUncheckedUpdateWithoutUsersInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    price?: FloatFieldUpdateOperationsInput | number
+    credits?: IntFieldUpdateOperationsInput | number
+    features?: PlansUpdatefeaturesInput | string[]
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    transactions?: TransactionUncheckedUpdateManyWithoutPlanNestedInput
+  }
+
   export type UserCreateWithoutChatsInput = {
     email: string
     password: string
@@ -8884,6 +9103,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     transactions?: TransactionCreateNestedManyWithoutUserInput
+    plan?: PlansCreateNestedOneWithoutUsersInput
   }
 
   export type UserUncheckedCreateWithoutChatsInput = {
@@ -8892,6 +9112,7 @@ export namespace Prisma {
     password: string
     name: string
     credits?: number
+    planId?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     transactions?: TransactionUncheckedCreateNestedManyWithoutUserInput
@@ -8944,6 +9165,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     transactions?: TransactionUpdateManyWithoutUserNestedInput
+    plan?: PlansUpdateOneRequiredWithoutUsersNestedInput
   }
 
   export type UserUncheckedUpdateWithoutChatsInput = {
@@ -8952,6 +9174,7 @@ export namespace Prisma {
     password?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     credits?: FloatFieldUpdateOperationsInput | number
+    planId?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     transactions?: TransactionUncheckedUpdateManyWithoutUserNestedInput
@@ -9038,6 +9261,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     chats?: ChatCreateNestedManyWithoutUserInput
+    plan?: PlansCreateNestedOneWithoutUsersInput
   }
 
   export type UserUncheckedCreateWithoutTransactionsInput = {
@@ -9046,6 +9270,7 @@ export namespace Prisma {
     password: string
     name: string
     credits?: number
+    planId?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     chats?: ChatUncheckedCreateNestedManyWithoutUserInput
@@ -9062,6 +9287,7 @@ export namespace Prisma {
     credits?: number
     features?: PlansCreatefeaturesInput | string[]
     createdAt?: Date | string
+    users?: UserCreateNestedManyWithoutPlanInput
   }
 
   export type PlansUncheckedCreateWithoutTransactionsInput = {
@@ -9071,6 +9297,7 @@ export namespace Prisma {
     credits?: number
     features?: PlansCreatefeaturesInput | string[]
     createdAt?: Date | string
+    users?: UserUncheckedCreateNestedManyWithoutPlanInput
   }
 
   export type PlansCreateOrConnectWithoutTransactionsInput = {
@@ -9097,6 +9324,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     chats?: ChatUpdateManyWithoutUserNestedInput
+    plan?: PlansUpdateOneRequiredWithoutUsersNestedInput
   }
 
   export type UserUncheckedUpdateWithoutTransactionsInput = {
@@ -9105,6 +9333,7 @@ export namespace Prisma {
     password?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     credits?: FloatFieldUpdateOperationsInput | number
+    planId?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     chats?: ChatUncheckedUpdateManyWithoutUserNestedInput
@@ -9127,6 +9356,7 @@ export namespace Prisma {
     credits?: IntFieldUpdateOperationsInput | number
     features?: PlansUpdatefeaturesInput | string[]
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    users?: UserUpdateManyWithoutPlanNestedInput
   }
 
   export type PlansUncheckedUpdateWithoutTransactionsInput = {
@@ -9136,6 +9366,7 @@ export namespace Prisma {
     credits?: IntFieldUpdateOperationsInput | number
     features?: PlansUpdatefeaturesInput | string[]
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    users?: UserUncheckedUpdateManyWithoutPlanNestedInput
   }
 
   export type TransactionCreateWithoutPlanInput = {
@@ -9173,6 +9404,39 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type UserCreateWithoutPlanInput = {
+    email: string
+    password: string
+    name: string
+    credits?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    chats?: ChatCreateNestedManyWithoutUserInput
+    transactions?: TransactionCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutPlanInput = {
+    id?: number
+    email: string
+    password: string
+    name: string
+    credits?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    chats?: ChatUncheckedCreateNestedManyWithoutUserInput
+    transactions?: TransactionUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutPlanInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutPlanInput, UserUncheckedCreateWithoutPlanInput>
+  }
+
+  export type UserCreateManyPlanInputEnvelope = {
+    data: UserCreateManyPlanInput | UserCreateManyPlanInput[]
+    skipDuplicates?: boolean
+  }
+
   export type TransactionUpsertWithWhereUniqueWithoutPlanInput = {
     where: TransactionWhereUniqueInput
     update: XOR<TransactionUpdateWithoutPlanInput, TransactionUncheckedUpdateWithoutPlanInput>
@@ -9187,6 +9451,36 @@ export namespace Prisma {
   export type TransactionUpdateManyWithWhereWithoutPlanInput = {
     where: TransactionScalarWhereInput
     data: XOR<TransactionUpdateManyMutationInput, TransactionUncheckedUpdateManyWithoutPlanInput>
+  }
+
+  export type UserUpsertWithWhereUniqueWithoutPlanInput = {
+    where: UserWhereUniqueInput
+    update: XOR<UserUpdateWithoutPlanInput, UserUncheckedUpdateWithoutPlanInput>
+    create: XOR<UserCreateWithoutPlanInput, UserUncheckedCreateWithoutPlanInput>
+  }
+
+  export type UserUpdateWithWhereUniqueWithoutPlanInput = {
+    where: UserWhereUniqueInput
+    data: XOR<UserUpdateWithoutPlanInput, UserUncheckedUpdateWithoutPlanInput>
+  }
+
+  export type UserUpdateManyWithWhereWithoutPlanInput = {
+    where: UserScalarWhereInput
+    data: XOR<UserUpdateManyMutationInput, UserUncheckedUpdateManyWithoutPlanInput>
+  }
+
+  export type UserScalarWhereInput = {
+    AND?: UserScalarWhereInput | UserScalarWhereInput[]
+    OR?: UserScalarWhereInput[]
+    NOT?: UserScalarWhereInput | UserScalarWhereInput[]
+    id?: IntFilter<"User"> | number
+    email?: StringFilter<"User"> | string
+    password?: StringFilter<"User"> | string
+    name?: StringFilter<"User"> | string
+    credits?: FloatFilter<"User"> | number
+    planId?: IntFilter<"User"> | number
+    createdAt?: DateTimeFilter<"User"> | Date | string
+    updatedAt?: DateTimeFilter<"User"> | Date | string
   }
 
   export type ChatCreateManyUserInput = {
@@ -9309,6 +9603,16 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
+  export type UserCreateManyPlanInput = {
+    id?: number
+    email: string
+    password: string
+    name: string
+    credits?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type TransactionUpdateWithoutPlanInput = {
     amount?: FloatFieldUpdateOperationsInput | number
     razorpayOrderId?: StringFieldUpdateOperationsInput | string
@@ -9342,6 +9646,39 @@ export namespace Prisma {
     razorpayPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     isPaid?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
+    credits?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserUpdateWithoutPlanInput = {
+    email?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    credits?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    chats?: ChatUpdateManyWithoutUserNestedInput
+    transactions?: TransactionUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutPlanInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    email?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    credits?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    chats?: ChatUncheckedUpdateManyWithoutUserNestedInput
+    transactions?: TransactionUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateManyWithoutPlanInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    email?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
     credits?: FloatFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
