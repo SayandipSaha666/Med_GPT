@@ -8,22 +8,24 @@ from langchain_chain import get_chain
 from dotenv import load_dotenv
 
 # Load environment variables from the shared .env file
-load_dotenv(dotenv_path="../.env")
+load_dotenv(dotenv_path=".env")
 
 app = FastAPI(title="MedGPT RAG Service")
 
-# Allow Node.js server to call this service
+allowed_origins = os.getenv("ALLOWED_ORIGINS", "")
+
+origins = [origin.strip() for origin in allowed_origins.split(",") if origin.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
+    allow_origins=origins if origins else [],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
-
 class QueryRequest(BaseModel):
     question: str
-
 
 class QueryResponse(BaseModel):
     answer: str
