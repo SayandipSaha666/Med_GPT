@@ -9,6 +9,7 @@ langchain-experimental==0.4.1
 langchain-groq==1.1.2
 langchain-huggingface==1.2.1
 pinecone==7.3.0
+langchain-pinecone==0.2.1
 pinecone-client==3.0.0
 pinecone-plugin-assistant==1.8.0
 pinecone-plugin-interface==0.0.7
