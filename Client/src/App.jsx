@@ -14,7 +14,7 @@ import ChatDetails from './components/ChatDetails.jsx'
 import Profile from './components/Profile.jsx'
 import { GlobalContext } from './context/context.jsx'
 import {Toaster} from 'react-hot-toast';
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from "@vercel/analytics/react"
 import './assets/prism.css'
 function App() {
   const {pathname} = useLocation()
