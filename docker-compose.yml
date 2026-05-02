@@ -5,11 +5,11 @@ services:
     build:
       context: ./Client
       dockerfile: Dockerfile
-    container_name: research_gpt_frontend
+    container_name: MedGPT_frontend
     ports:
       - "5173:5173"
-    environment:
-      - VITE_BACKEND_URL=http://localhost:5000
+    env_file:
+      - ./Client/.env
     depends_on:
       - backend
     volumes:
@@ -20,12 +20,16 @@ services:
     build:
       context: ./Server
       dockerfile: Dockerfile
-    container_name: research_gpt_backend
+    container_name: MedGPT_backend
     ports:
-      - "5000:5000"
+      - "3000:3000"
     env_file:
       - ./Server/.env
+    environment:
+      - DATABASE_URL=postgresql://postgres:Saha%4006122004@db:5432/MedGPT_DB
+      - RAG_SERVICE_URL=http://rag-service:8000
     depends_on:
+      - db
       - rag-service
     volumes:
       - ./Server/src:/app/src
@@ -35,10 +39,26 @@ services:
     build:
       context: ./Server/services
       dockerfile: Dockerfile
-    container_name: research_gpt_rag
+    container_name: MedGPT_rag
     ports:
       - "8000:8000"
     env_file:
       - ./Server/.env
     volumes:
       - ./Server/services:/app
+
+  db:
+    image: postgres:15-alpine
+    container_name: MedGPT_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Saha@06122004
+      POSTGRES_DB: MedGPT_DB
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

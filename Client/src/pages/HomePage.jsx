@@ -163,10 +163,10 @@ Your AI-powered medical assistant. Get instant, reliable answers to your health 
       <div className='max-w-4xl mx-auto mb-8'>
         <div className='rounded-2xl bg-linear-to-r from-[#A456F7]/10 to-[#3D81F6]/10 border border-[#D4C5E2] dark:border-[#80609F]/30 p-8 text-center backdrop-blur-sm'>
           <h2 className='text-2xl font-bold mb-3 text-[#2D2535] dark:text-white'>
-            Ready to Start Your Research Journey?
+            Ready to ask any of your medical query?
           </h2>
           <p className='text-gray-600 dark:text-purple-200 mb-6'>
-            Join thousands of users who are already exploring ideas with MedGPT.
+            Join thousands of users who are already trusting <span className='font-bold text-[#2D2535] dark:text-white'>MedGPT</span> for their medical queries.
           </p>
           {!user ? (
             <button

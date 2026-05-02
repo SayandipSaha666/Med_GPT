@@ -1,4 +1,5 @@
 import React,{useState} from 'react'
+import {assets} from '../assets/assets.js'
 import SignIn from '../components/auth/SignIn'
 import SignUp from '../components/auth/SignUp'
 
@@ -17,9 +18,11 @@ function AuthPage() {
         <div className="rounded-2xl border border-[#D4C5E2] dark:border-[#80609F]/50 bg-white/80 dark:bg-[#242124]/80 p-8 shadow-xl shadow-slate-900/[0.06] backdrop-blur-xl">
           {/* Logo */}
           <div className="flex justify-center mb-2">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-r from-[#A456F7] to-[#3D81F6]">
-              <span className="text-lg font-bold text-white">T</span>
-            </div>
+            <img
+            src={assets.logo_full}
+            alt='MedGPT Logo'
+            className='h-20 sm:h-24 md:h-28 w-auto object-contain drop-shadow-lg transition-transform hover:scale-105 duration-300'
+          />
           </div>
 
           {/* Heading */}
@@ -29,8 +32,8 @@ function AuthPage() {
             </h1>
             <p className="mt-2 text-sm text-gray-500 dark:text-purple-200">
               {isRegistered
-                ? 'Sign in to continue managing your tasks'
-                : 'Get started with TaskFlow for free'}
+                ? 'Sign in to continue'
+                : 'Get started with MedGPT for free'}
             </p>
           </div>
 

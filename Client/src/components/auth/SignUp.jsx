@@ -30,17 +30,19 @@ function SignUp() {
     try {
       // DB calls
       console.log("Data:", formData);
-      await setSignupData(formData)
-      setFormData(initialState)
-      const response = await callRegisterUserApi(signupData)
+      const dataToSend = formData;
+      setSignupData(dataToSend);
+      setFormData(initialState);
+      const response = await callRegisterUserApi(dataToSend);
       if(response.success){
-        setUser(response.data)
-        navigate("/main")
+        setUser(response.data);
+        navigate("/main");
       }
     } catch (error) {
-      console.log(error?.message || error?.details[0]?.message)
+      const errorMessage = error.response?.data?.message || error.message || "An error occurred";
+      console.log(errorMessage);
+      alert(errorMessage);
     }
-    // setFormData(initialState)
   }
 
   return (
