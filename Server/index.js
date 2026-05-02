@@ -35,6 +35,16 @@ app.use('/api/chat', authMiddleware, chatRouter)
 const billingRouter = require('./src/routes/billingRoutes');
 app.use('/api/billing', authMiddleware, billingRouter)
 
+// Health check route (for Render monitoring)
+app.get('/health', (req, res) => {
+    res.status(200).json({
+        success: true,
+        status: "OK",
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString()
+    });
+});
+
 app.use('/api', (req, res) => {
     res.status(404).json({ success: false, message: "Route not found" });
 });
