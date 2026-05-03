@@ -20,12 +20,12 @@ The system allows users to create persistent chat sessions, ask complex medical 
 
 ### 🧠 RAG Pipeline (AI Service)
 - **Semantic Search**: Powered by **Pinecone** vector database.
-- **High-Performance LLM**: Uses **Groq (Llama-3)** for lightning-fast inference.
+- **High-Performance LLM**: Uses **Groq (OpenAI GPT-OSS 120B)** for lightning-fast inference.
 - **Semantic Chunking**: Advanced document processing using `langchain-experimental`.
 - **HuggingFace Embeddings**: State-of-the-art open-source embedding models.
 
 ### 💳 Payment Integration
-- **Razorpay**: Integrated payment gateway for upgrading to "Pro" plans.
+- **Razorpay**: Integrated payment gateway for upgrading to multiple plans.
 - **Webhook Support**: Secure, server-side verification of payment status.
 
 ---
