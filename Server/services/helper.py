@@ -6,8 +6,8 @@ from langchain_experimental.text_splitter import SemanticChunker
 from typing import List
 from langchain_core.documents import Document
 # Vector stores
-# from langchain_community.vectorstores import Pinecone as PineconeVectorStore
-from langchain_pinecone import PineconeVectorStore
+from langchain_community.vectorstores import Pinecone as PineconeVectorStore
+# from langchain_pinecone import PineconeVectorStore
 from pinecone import Pinecone as PineconeClient, ServerlessSpec
 # Open Source Models
 from langchain_groq import ChatGroq

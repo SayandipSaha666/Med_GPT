@@ -1,7 +1,7 @@
 import os
 from langchain_core.output_parsers import StrOutputParser
-# from langchain_community.vectorstores import Pinecone as PineconeVectorStore
-from langchain_pinecone import PineconeVectorStore
+from langchain_community.vectorstores import Pinecone as PineconeVectorStore
+# from langchain_pinecone import PineconeVectorStore
 from helper import load_llm, load_embedding_model, get_retriever, create_chain
 from prompt import template
 
