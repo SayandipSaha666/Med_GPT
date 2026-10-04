@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../store/authStore';
 
 function Profile() {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState('');
@@ -19,6 +19,7 @@ function Profile() {
   const handleLogout = () => {
     ApiService.auth.useLogout().mutate(undefined, {
       onSuccess: () => {
+        setUser(null);
         navigate('/auth');
       },
     });
@@ -37,9 +38,9 @@ function Profile() {
       return;
     }
     try {
-      await updateProfileMutation.mutateAsync({ name: editName });
+      const response = await updateProfileMutation.mutateAsync({ name: editName });
+      setUser({ ...user, name: response.data.name });
       toast.success('Profile updated successfully');
-      // Note: In a real app, we would update the user in the store
       setIsEditing(false);
     } catch (error) {
       toast.error('Error updating profile');

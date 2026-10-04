@@ -1,9 +1,10 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { userRepository } from "../repositories/user.repository";
-import type { User, UserResponse, CreateUserDto, LoginUserDto } from "../dto/user.dto";
+import type { User, UserResponse, CreateUserDto, LoginUserDto, AuthResponse } from "../dto/user.dto";
 
 const JWT_SECRET = process.env.JWT_SECRET_KEY;
+const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || process.env.JWT_SECRET_KEY;
 
 if (!JWT_SECRET) {
   throw new Error("JWT_SECRET_KEY environment variable is not set");
@@ -11,6 +12,11 @@ if (!JWT_SECRET) {
 
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const secret = JWT_SECRET!;
+const refreshSecret = REFRESH_TOKEN_SECRET!;
+
+// Token expiration times
+const ACCESS_TOKEN_EXPIRY = "15m"; // 15 minutes
+const REFRESH_TOKEN_EXPIRY = "7d"; // 7 days
 
 export class UserService {
   async register(payload: CreateUserDto): Promise<UserResponse> {
@@ -41,7 +47,7 @@ export class UserService {
     };
   }
 
-  async login(payload: LoginUserDto): Promise<{ user: UserResponse; token: string }> {
+  async login(payload: LoginUserDto): Promise<AuthResponse> {
     // Find user by email
     const user = await userRepository.findByEmail(payload.email);
     if (!user) {
@@ -54,9 +60,11 @@ export class UserService {
       throw new Error("Invalid credentials");
     }
 
-    // Generate token
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const token = jwt.sign({ id: user.id }, secret as any, { expiresIn: "24h" }) as string;
+    // Generate access token (short-lived)
+    const accessToken = jwt.sign({ id: user.id }, secret, { expiresIn: ACCESS_TOKEN_EXPIRY });
+
+    // Generate refresh token (long-lived)
+    const refreshToken = jwt.sign({ id: user.id }, refreshSecret, { expiresIn: REFRESH_TOKEN_EXPIRY });
 
     return {
       user: {
@@ -67,8 +75,26 @@ export class UserService {
         planId: user.planId,
         createdAt: user.createdAt,
       },
-      token,
+      accessToken,
+      refreshToken,
     };
+  }
+
+  async generateAccessToken(userId: number): Promise<string> {
+    return jwt.sign({ id: userId }, secret, { expiresIn: ACCESS_TOKEN_EXPIRY });
+  }
+
+  async generateRefreshToken(userId: number): Promise<string> {
+    return jwt.sign({ id: userId }, refreshSecret, { expiresIn: REFRESH_TOKEN_EXPIRY });
+  }
+
+  async verifyRefreshToken(refreshToken: string): Promise<number | null> {
+    try {
+      const decoded = jwt.verify(refreshToken, refreshSecret) as { id: number };
+      return decoded.id;
+    } catch (error) {
+      return null;
+    }
   }
 
   async getProfile(userId: number): Promise<UserResponse> {

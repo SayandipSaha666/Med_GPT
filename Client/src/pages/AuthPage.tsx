@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { assets } from '../assets/assets';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../store/themeStore';
 import { useAuth } from '../store/authStore';
 import { ApiService } from '../api/api.service';
@@ -10,15 +10,26 @@ import { Input } from '../components/ui/input';
 
 function AuthPage() {
   const { theme } = useTheme();
-  const { setUser } = useAuth();
+  const { user, setUser, isLoading } = useAuth();
   const [isRegistered, setIsRegistered] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const loginMutation = ApiService.auth.useLogin();
   const registerMutation = ApiService.auth.useRegister();
+
+  const from = (location.state as any)?.from?.pathname || '/main/chat';
+
+  useEffect(() => {
+    if (!isLoading && user) {
+      navigate(from, { replace: true });
+    }
+  }, [user, isLoading, navigate, from]);
+
+  if (isLoading) return null;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,9 +37,17 @@ function AuthPage() {
 
     try {
       const response = await loginMutation.mutateAsync({ email, password });
+      console.log('[AuthPage] Login response:', response);
+      console.log('[AuthPage] Response data structure:', {
+        hasData: !!response.data,
+        userData: response.data?.user,
+        accessToken: response.data?.accessToken
+      });
       if (response.success) {
-        setUser(response.data.user);
-        navigate('/main');
+        const userData = response.data?.user || response.data;
+        console.log('[AuthPage] Setting user from login:', userData);
+        setUser(userData);
+        navigate(from, { replace: true });
       } else {
         toast.error(response.message || 'Login failed');
       }
@@ -47,7 +66,7 @@ function AuthPage() {
       const response = await registerMutation.mutateAsync({ name, email, password });
       if (response.success) {
         setUser(response.data.user);
-        navigate('/main');
+        navigate(from, { replace: true });
       } else {
         toast.error(response.message || 'Registration failed');
       }

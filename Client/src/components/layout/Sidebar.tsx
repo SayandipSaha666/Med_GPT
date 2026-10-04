@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import { assets } from '../../assets/assets';
 import moment from 'moment';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -14,15 +14,20 @@ interface SidebarProps {
 
 export function Sidebar({ isMenuOpen, setIsMenuOpen }: SidebarProps) {
   const { theme } = useTheme();
-  const { chats, setChats } = useChat();
-  const { user, setUser } = useAuth();
+  // const { chats, setChats } = useChat();
+  const { user, setUser, isLoading } = useAuth();
   const [search, setSearch] = useState('');
+
+  // Log auth status
+  console.log('[Sidebar] Auth status:', { user, isLoggedIn: !!user, isLoading });
   const navigate = useNavigate();
   const location = useLocation();
-  const { useCreateChat, useDeleteChat, useUpdateChatTitle } = ApiService.chats;
+  const { useCreateChat, useDeleteChat, useUpdateChatTitle, useFetchChats } = ApiService.chats;
   const createChatMutation = useCreateChat();
   const deleteChatMutation = useDeleteChat();
   const updateChatTitleMutation = useUpdateChatTitle();
+  // const { data: data, isPending } = useFetchChats();
+  const { data: chats = [], isPending: isChatsLoading, isError: isChatsError, error } = useFetchChats();
 
   const handleDelete = (e: React.MouseEvent, chatId: number) => {
     e.stopPropagation();
@@ -33,7 +38,7 @@ export function Sidebar({ isMenuOpen, setIsMenuOpen }: SidebarProps) {
             navigate('/main/chat');
           }
         },
-      });
+      });// setChats(chat)
     }
   };
 
@@ -43,15 +48,16 @@ export function Sidebar({ isMenuOpen, setIsMenuOpen }: SidebarProps) {
     if (newTitle && newTitle.trim() !== "" && newTitle !== defaultTitle) {
       updateChatTitleMutation.mutate({ chatId: chat.id, title: newTitle.trim() });
     }
+    // setChats(chat)
   };
 
   const processedChats = (() => {
-    let result = Array.isArray(chats) ? chats : [];
+    let result = Array.isArray(data) ? data : [];
 
     if (search.trim() === "") {
       try {
         result = [...result].sort(
-          (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
+          (a, b) => (b.updatedAt as unknown as number) - (a.updatedAt as unknown as number)
         );
       } catch (error) {
         result = [];
@@ -78,9 +84,13 @@ export function Sidebar({ isMenuOpen, setIsMenuOpen }: SidebarProps) {
   })();
 
   const handleNewChat = () => {
-    createChatMutation.mutate(undefined, {
+    const chatTitle = window.prompt("Enter a title for your new chat:", "New Chat");
+    const title = chatTitle && chatTitle.trim() !== "" ? chatTitle.trim() : "New Chat";
+
+    createChatMutation.mutate(title, {
       onSuccess: (data) => {
-        setChats((prevChats) => [data.chat, ...prevChats]);
+        console.log('[Sidebar] New chat created:', data.chat);
+        setChats([data.chat, ...chats]);
         navigate(`/main/chat/${data.chat.id}`);
         setIsMenuOpen(false);
       },
@@ -131,7 +141,7 @@ export function Sidebar({ isMenuOpen, setIsMenuOpen }: SidebarProps) {
 
       {/* Chat History */}
       <div className="flex-1 mt-4 flex flex-col min-h-0 overflow-hidden">
-        {Array.isArray(chats) && chats.length > 0 ? (
+        {Array.isArray(data) && data.length > 0 ? (
           <div className="flex flex-col h-full min-h-0 overflow-hidden">
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-4 shrink-0 font-medium">Recent Chats</p>
             <div className="flex-1 overflow-y-auto mt-3 space-y-3 pr-2 pb-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">

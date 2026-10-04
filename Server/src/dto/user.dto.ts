@@ -36,5 +36,6 @@ export interface UpdateProfileDto {
 
 export interface AuthResponse {
   user: UserResponse;
-  token: string;
+  accessToken: string;
+  refreshToken: string;
 }

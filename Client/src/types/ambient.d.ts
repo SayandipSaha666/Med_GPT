@@ -19,6 +19,21 @@ declare module 'prismjs' {
   export function highlightAll(): void;
 }
 
+declare module '*.png' {
+  const source: string;
+  export default source;
+}
+
+declare module '*.jpg' {
+  const source: string;
+  export default source;
+}
+
+declare module '*.svg' {
+  const source: string;
+  export default source;
+}
+
 // Vite client type declarations
 interface ImportMetaEnv {
   readonly VITE_SERVER_URL?: string;

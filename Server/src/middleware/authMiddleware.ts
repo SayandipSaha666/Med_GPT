@@ -23,7 +23,17 @@ export const authMiddleware = async (
   res: Response,
   next: NextFunction
 ): Promise<void> => {
-  const token = req.cookies?.token;
+  // Check for token in Authorization header first (Bearer token from localStorage)
+  const authHeader = req.headers.authorization;
+  let token: string | undefined;
+
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    token = authHeader.substring(7);
+  } else {
+    // Fallback to cookie token
+    token = req.cookies?.token;
+  }
+
   if (!token) {
     res.status(401).json({
       success: false,

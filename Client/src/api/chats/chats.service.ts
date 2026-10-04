@@ -57,13 +57,14 @@ function useCreateChat() {
 
   return useMutation({
     mutationKey: ['createChat'],
-    mutationFn: async () => {
+    mutationFn: async (title?: string) => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
       try {
-        const response = await api.get<T_Create_Chat_Response>(
+        const response = await api.post<T_Create_Chat_Response>(
           API_ROUTES.CREATE_CHAT,
+          title ? { title } : {},
           { signal: controller.signal }
         );
         clearTimeout(timeoutId);

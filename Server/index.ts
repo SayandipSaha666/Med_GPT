@@ -6,16 +6,31 @@ import bodyParser from "body-parser";
 import { connectDB } from "./src/lib/prisma";
 import { authMiddleware } from "./src/middleware/authMiddleware";
 import { transactionController } from "./src/controllers/transactionController";
+import userRouter from "./src/routes/user.routes";
+import chatRouter from "./src/routes/chat.routes";
+import billingRouter from "./src/routes/billing.routes";
 
 const app = express();
 
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
-  : ["http://localhost:5173"];
+const allowedOriginsEnv = process.env.ALLOWED_ORIGINS;
+const allowedOrigins = allowedOriginsEnv
+  ? allowedOriginsEnv.split(",").map((o) => o.trim())
+  : ["http://localhost:5173", "http://localhost:5174", "http://localhost:5175"];
 
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, Postman)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes("*")) {
+        callback(null, true);
+      } else if (allowedOrigins.includes(origin)) {
+        callback(null, origin);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
@@ -31,18 +46,13 @@ app.use(bodyParser.json());
 
 const PORT = process.env.PORT || 3000;
 
-// Import route modules
-const userRouter = require("./src/routes/user.routes");
-const chatRouter = require("./src/routes/chat.routes");
-const billingRouter = require("./src/routes/billing.routes");
-
 // Mount routers
 app.use("/api/user", userRouter);
 app.use("/api/chat", authMiddleware, chatRouter);
 app.use("/api/billing", authMiddleware, billingRouter);
 
 // Health check route (for Render monitoring)
-app.get("/health", (req, res) => {
+app.get("/health", (_req, res) => {
   res.status(200).json({
     success: true,
     status: "OK",
@@ -51,7 +61,7 @@ app.get("/health", (req, res) => {
   });
 });
 
-app.use("/api", (req, res) => {
+app.use("/api", (_req, res) => {
   res.status(404).json({ success: false, message: "Route not found" });
 });
 

@@ -9,11 +9,11 @@ const router = express.Router();
 // so req.user is available in all these handlers
 
 // Chat routes
-router.get("/create", authMiddleware, chatController.createChat);
-router.get("/all", authMiddleware, chatController.getChats);
-router.get("/:id", authMiddleware, chatController.getChat);
-router.delete("/:id", authMiddleware, chatController.deleteChat);
-router.put("/update", authMiddleware, chatController.updateChatTitle);
+router.post("/create", chatController.createChat);
+router.get("/all", chatController.getChats);
+router.get("/:id", chatController.getChat);
+router.delete("/:id", chatController.deleteChat);
+router.put("/update", chatController.updateChatTitle);
 
 // Message routes
 router.post("/:id/message", authMiddleware, messageController.sendMessage);
