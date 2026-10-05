@@ -145,12 +145,13 @@ export function Sidebar({
     createChatMutation.mutate(
       { title },
       {
-        onSuccess: ({ chat }) => {
-          navigate(`/main/chat/${chat.id}`);
+        onSuccess: (newChat) => {
+          navigate(`/main/chat/${newChat.id}`);
           setIsMenuOpen(false);
         },
       }
     );
+
   };
 
   /* -------------------- LOGOUT -------------------- */
@@ -167,6 +168,7 @@ export function Sidebar({
   /* -------------------- CHAT DISPLAY TITLE -------------------- */
 
   const getDisplayTitle = (chat: T_Chat) => {
+    if (!chat) return 'New Chat';
     if (chat.title && chat.title !== 'New Chat') {
       return chat.title;
     }
@@ -337,10 +339,9 @@ export function Sidebar({
                     border rounded-xl cursor-pointer
                     flex items-center justify-between group
                     transition-all
-                    ${
-                      isActive
-                        ? 'bg-purple-100 dark:bg-purple-900/30 border-purple-300 dark:border-purple-700'
-                        : 'bg-white/70 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-700 hover:shadow-md'
+                    ${isActive
+                      ? 'bg-purple-100 dark:bg-purple-900/30 border-purple-300 dark:border-purple-700'
+                      : 'bg-white/70 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-700 hover:shadow-md'
                     }
                   `}
                 >
@@ -351,7 +352,7 @@ export function Sidebar({
 
                     <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                       {chat.updatedAt &&
-                      !Number.isNaN(Date.parse(chat.updatedAt))
+                        !Number.isNaN(Date.parse(chat.updatedAt))
                         ? moment(chat.updatedAt).fromNow()
                         : 'No date'}
                     </p>

@@ -59,9 +59,7 @@ export interface T_Chat {
   updatedAt: string;
 }
 
-export interface T_Create_Chat_Response {
-  chat: T_Chat;
-}
+export type T_Create_Chat_Response = T_Chat;
 
 export interface T_Send_Message_Response {
   success: boolean;

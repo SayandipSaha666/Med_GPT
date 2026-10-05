@@ -105,23 +105,23 @@ export const useCreateChat = () => {
       return response.data.data;
     },
 
-    onSuccess: async (result) => {
-      // Update the list cache immediately.
+    onSuccess: async (newChat) => {
+      // Update the list cache immediately with the new chat object
       queryClient.setQueryData<T_Chat[]>(chatKeys.all, (oldChats) => {
-        if (!oldChats) return [result.chat];
+        if (!oldChats) return [newChat];
 
-        // Prevent duplicate entries if the chat is already cached.
         return [
-          result.chat,
-          ...oldChats.filter((chat) => chat.id !== result.chat.id),
+          newChat,
+          ...oldChats.filter((chat) => chat?.id !== newChat.id),
         ];
       });
 
-      // Reconcile with the server's latest list.
+      // Reconcile with the server's latest list
       await queryClient.invalidateQueries({
         queryKey: chatKeys.all,
       });
     },
+
   });
 };
 
@@ -213,10 +213,10 @@ export const useUpdateChatTitle = () => {
         (oldChat) =>
           oldChat
             ? {
-                ...oldChat,
-                title,
-                updatedAt: new Date().toISOString(),
-              }
+              ...oldChat,
+              title,
+              updatedAt: new Date().toISOString(),
+            }
             : oldChat
       );
 

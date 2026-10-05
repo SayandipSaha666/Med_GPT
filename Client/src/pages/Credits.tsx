@@ -1,33 +1,18 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState } from 'react';
 import Loading from './Loading';
-import { ApiService } from '../api/api.service';
+import { billingService } from '../api/billing/billing.service';
+import { authService } from '../api/auth/auth.service';
 import toast from 'react-hot-toast';
 import { useAuth } from '../store/authStore';
 
 function Credits() {
-  const [plans, setPlans] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [purchasingId, setPurchasingId] = useState<string | null>(null);
+  const [purchasingId, setPurchasingId] = useState<number | null>(null);
   const { user, setUser } = useAuth();
-  const { useGetPlans, useCreateOrder, usePaymentStatus } = ApiService.billing;
-  const paymentStatusQuery = usePaymentStatus();
 
-  const fetchPlans = async () => {
-    try {
-      const response = await ApiService.billing.useGetPlans().queryFn?.();
-      if (response?.success) {
-        setPlans(response.data);
-      }
-    } catch (error) {
-      toast.error('Failed to load plans');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchPlans();
-  }, []);
+  const { data: plans = [], isLoading } = billingService.useGetPlans();
+  const createOrderMutation = billingService.useCreateOrder();
+  const paymentStatusMutation = billingService.usePaymentStatus();
+  const getMeQuery = authService.useGetMe();
 
   const handlePurchase = async (plan: any) => {
     if (plan.price === 0) {
@@ -37,15 +22,8 @@ function Credits() {
 
     try {
       setPurchasingId(plan.id);
-      const orderResponse = await ApiService.billing.useCreateOrder().mutateAsync(plan.id);
-
-      if (!orderResponse.success) {
-        toast.error('Failed to create order');
-        setPurchasingId(null);
-        return;
-      }
-
-      const { orderId, amount, currency, keyId } = orderResponse.data;
+      const orderData = await createOrderMutation.mutateAsync(plan.id);
+      const { orderId, amount, currency, keyId } = orderData;
 
       const options = {
         key: keyId,
@@ -54,7 +32,7 @@ function Credits() {
         name: 'MedGPT',
         description: `Purchase of ${plan.name} plan`,
         order_id: orderId,
-        handler: function (response: any) {
+        handler: function () {
           toast.success('Payment completed, verifying...');
           verifyPayment(orderId);
         },
@@ -88,12 +66,12 @@ function Credits() {
 
     const pollStatus = async () => {
       try {
-        const response = await paymentStatusQuery.queryFn?.({ orderId });
-        if (response?.success && response.data.isPaid) {
+        const status = await paymentStatusMutation.mutateAsync(orderId);
+        if (status?.isPaid) {
           toast.success('Credits updated successfully!');
-          const userRes = await ApiService.auth.useGetMe().queryFn?.();
-          if (userRes?.success) {
-            setUser(userRes.data);
+          const updatedUser = await getMeQuery.refetch();
+          if (updatedUser.data) {
+            setUser(updatedUser.data);
           }
           setPurchasingId(null);
           return;
@@ -120,7 +98,7 @@ function Credits() {
     pollStatus();
   };
 
-  if (loading) return <Loading />;
+  if (isLoading) return <Loading />;
 
   return (
     <div className="max-w-7xl h-screen overflow-y-scroll mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -131,11 +109,10 @@ function Credits() {
         {plans.map((plan) => (
           <div
             key={plan.id}
-            className={`border border-gray-200 dark:border-purple-700 rounded-lg shadow hover:shadow-lg transition-shadow p-6 min-w-[300px] flex flex-col justify-between ${
-              plan.id === 2
-                ? 'bg-purple-50 dark:bg-purple-900'
-                : 'bg-white dark:bg-transparent'
-            }`}
+            className={`border border-gray-200 dark:border-purple-700 rounded-lg shadow hover:shadow-lg transition-shadow p-6 min-w-[300px] flex flex-col justify-between ${plan.id === 2
+              ? 'bg-purple-50 dark:bg-purple-900'
+              : 'bg-white dark:bg-transparent'
+              }`}
           >
             <div className="flex-1">
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
@@ -157,20 +134,19 @@ function Credits() {
 
             <button
               onClick={() => handlePurchase(plan)}
-              disabled={purchasingId === plan.id || ApiService.billing.useCreateOrder().isPending}
-              className={`w-full py-2.5 rounded-lg text-white font-medium transition-colors ${
-                plan.price === 0
-                  ? 'bg-green-600 hover:bg-green-700'
-                  : purchasingId === plan.id
+              disabled={purchasingId === plan.id || createOrderMutation.isPending}
+              className={`w-full py-2.5 rounded-lg text-white font-medium transition-colors ${plan.price === 0
+                ? 'bg-green-600 hover:bg-green-700'
+                : purchasingId === plan.id
                   ? 'bg-gray-400 cursor-not-allowed'
                   : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700'
-              }`}
+                }`}
             >
               {plan.price === 0
                 ? 'Current Plan'
                 : purchasingId === plan.id
-                ? 'Processing...'
-                : 'Purchase Plan'}
+                  ? 'Processing...'
+                  : 'Purchase Plan'}
             </button>
           </div>
         ))}

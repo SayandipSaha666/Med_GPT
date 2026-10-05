@@ -3,23 +3,14 @@ import { api, API_ROUTES } from '../index';
 import { T_Plan, T_Api_Success_Res, T_Order_Response, T_Payment_Status } from '../api.types';
 
 function useGetPlans() {
-  return useQuery({
+  return useQuery<T_Plan[], Error>({
     queryKey: ['plans'],
-    queryFn: async () => {
-      const timeoutMs = 10000;
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
-      try {
-        const response = await api.get<T_Api_Success_Res<T_Plan[]>>(API_ROUTES.GET_PLANS, {
-          signal: controller.signal,
-        });
-        clearTimeout(timeoutId);
-        return response.data;
-      } catch (error) {
-        clearTimeout(timeoutId);
-        throw error;
-      }
+    queryFn: async ({ signal }) => {
+      const response = await api.get<T_Api_Success_Res<T_Plan[]>>(API_ROUTES.GET_PLANS, {
+        signal,
+        timeout: 10000,
+      });
+      return response.data.data;
     },
     staleTime: 30 * 60 * 1000, // 30 minutes
     retry: false,
@@ -27,53 +18,32 @@ function useGetPlans() {
 }
 
 function useCreateOrder() {
-  return useMutation({
+  return useMutation<T_Order_Response, Error, number>({
     mutationKey: ['createOrder'],
-    mutationFn: async (planId: string) => {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-      try {
-        const response = await api.post<T_Api_Success_Res<T_Order_Response>>(
-          API_ROUTES.CREATE_ORDER,
-          { planId },
-          { signal: controller.signal }
-        );
-        clearTimeout(timeoutId);
-        return response.data;
-      } catch (error) {
-        clearTimeout(timeoutId);
-        throw error;
-      }
+    mutationFn: async (planId: number) => {
+      const response = await api.post<T_Api_Success_Res<T_Order_Response>>(
+        API_ROUTES.CREATE_ORDER,
+        { planId },
+        { timeout: 10000 }
+      );
+      return response.data.data;
     },
   });
 }
 
 function usePaymentStatus() {
-  return useQuery({
-    queryKey: ['paymentStatus'],
-    queryFn: async ({ orderId }: { orderId: string }) => {
-      const timeoutMs = 10000;
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
-      try {
-        const response = await api.get<T_Api_Success_Res<T_Payment_Status>>(
-          API_ROUTES.PAYMENT_STATUS,
-          {
-            signal: controller.signal,
-            params: { orderId },
-          }
-        );
-        clearTimeout(timeoutId);
-        return response.data;
-      } catch (error) {
-        clearTimeout(timeoutId);
-        throw error;
-      }
+  return useMutation<T_Payment_Status, Error, string>({
+    mutationKey: ['paymentStatus'],
+    mutationFn: async (orderId: string) => {
+      const response = await api.get<T_Api_Success_Res<T_Payment_Status>>(
+        API_ROUTES.PAYMENT_STATUS,
+        {
+          params: { orderId },
+          timeout: 10000,
+        }
+      );
+      return response.data.data;
     },
-    enabled: false, // Only run when explicitly called
-    retry: false,
   });
 }
 
