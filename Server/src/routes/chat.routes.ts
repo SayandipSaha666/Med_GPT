@@ -13,7 +13,7 @@ router.post("/create", chatController.createChat);
 router.get("/all", chatController.getChats);
 router.get("/:id", chatController.getChat);
 router.delete("/:id", chatController.deleteChat);
-router.put("/update", chatController.updateChatTitle);
+router.put("/update/:id", chatController.updateChatTitle);
 
 // Message routes
 router.post("/:id/message", authMiddleware, messageController.sendMessage);

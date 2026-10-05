@@ -5,9 +5,9 @@
   "main": "index.js",
   "scripts": {
     "migrate": "NODE_OPTIONS=--dns-result-order=ipv4first prisma migrate dev",
-    "seed": "NODE_OPTIONS=--dns-result-order=ipv4first node prisma/seed.js",
+    "seed": "cross-env NODE_OPTIONS=--dns-result-order=ipv4first node prisma/seed.js",
     "dev": "cross-env NODE_OPTIONS=--dns-result-order=ipv4first nodemon --exec ts-node index.ts",
-    "start": "NODE_OPTIONS=--dns-result-order=ipv4first node index.js",
+    "start": "cross-env NODE_OPTIONS=--dns-result-order=ipv4first node index.js",
     "build": "tsc --build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

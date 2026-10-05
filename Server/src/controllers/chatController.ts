@@ -145,10 +145,10 @@ export class ChatController {
 
   async updateChatTitle(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      // Validate request body
+      // Validate request body and route param
       const validation = UpdateChatSchema.safeParse({
         title: req.body.title,
-        chatId: req.body.chatId,
+        chatId: req.params.id,
       });
       if (!validation.success) {
         res.status(400).json({
@@ -157,7 +157,6 @@ export class ChatController {
         });
         return;
       }
-
       const { title, chatId } = validation.data;
       const userId = req.user?.id;
 

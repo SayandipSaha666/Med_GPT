@@ -7,11 +7,9 @@ import type { CreateOrderResponse, PaymentStatusResponse } from "../dto/transact
 export class TransactionService {
   async getPlans() {
     const plans = await planRepository.findAll();
-    if (plans.length === 0) {
-      throw new Error("No plans found");
-    }
-    return plans;
+    return plans || [];
   }
+
 
   async createOrder(userId: number, planId: number): Promise<CreateOrderResponse> {
     // Find the plan

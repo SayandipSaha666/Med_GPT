@@ -6,11 +6,11 @@ export const CreateChatSchema = z.object({
 
 export const UpdateChatSchema = z.object({
   title: z.string().min(1, "Title cannot be empty"),
-  chatId: z.number().positive("Invalid chat ID"),
+  chatId: z.coerce.number().positive("Invalid chat ID"),
 });
 
 export const ChatIdSchema = z.object({
-  id: z.number().positive("Invalid chat ID"),
+  id: z.coerce.number().positive("Invalid chat ID"),
 });
 
 export type CreateChatDto = z.infer<typeof CreateChatSchema>;
