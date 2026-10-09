@@ -13,61 +13,61 @@ datasource db {
 }
 
 model User {
-  id    Int    @id @default(autoincrement())
-  email String @unique
-  password String
-  name String
-  credits Float @default(200.0)
-  chats Chat[]
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String
+  credits   Float    @default(200.0)
+  planId    Int      @default(1)
+  plan      Plans    @relation(fields: [planId], references: [id], onDelete: Cascade)
+  chats     Chat[]
   transactions Transaction[]
-  planId Int @default(1)
-  plan Plans @relation(fields: [planId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 }
 
 model Chat {
-  id Int @id @default(autoincrement())
-  userId Int
-  user User @relation(fields: [userId], references: [id])
-  title String @default("New Chat")
-  messages Message[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  user      User      @relation(fields: [userId], references: [id])
+  title     String    @default("New Chat")
+  messages  Message[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
 }
 
 model Message {
-  id Int @id @default(autoincrement())
-  chatId Int
-  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
-  role String
-  content String
+  id        Int     @id @default(autoincrement())
+  chatId    Int
+  chat      Chat    @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  role      String
+  content   String
   timestamp DateTime @default(now())
 }
 
 model Transaction {
-  id Int @id @default(autoincrement())
-  userId Int
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  amount Float 
-  planId Int 
-  plan Plans @relation(fields: [planId], references: [id], onDelete: Cascade)
-  razorpayOrderId String @unique
+  id              Int     @id @default(autoincrement())
+  userId          Int
+  user            User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount          Float
+  planId          Int
+  plan            Plans   @relation(fields: [planId], references: [id], onDelete: Cascade)
+  razorpayOrderId String  @unique
   razorpayPaymentId String?
-  isPaid Boolean @default(false)
-  status String @default("pending")
-  credits Float @default(200.0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  isPaid          Boolean @default(false)
+  status          String  @default("pending")
+  credits         Float   @default(200.0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now()) @updatedAt
 }
 
 model Plans {
-  id Int @id @default(autoincrement())
-  name String @default("Free")
-  price Float @default(0.0)
-  credits Int @default(200)
-  features String[]
+  id        Int      @id @default(autoincrement())
+  name      String   @default("Free")
+  price     Float    @default(0.0)
+  credits   Int      @default(200)
+  features  String[]
   transactions Transaction[]
-  users User[]
+  users     User[]
   createdAt DateTime @default(now())
 }
