@@ -3,6 +3,7 @@ import { userService } from "../services/user.service";
 import { RegisterSchema, LoginSchema, UpdateProfileSchema } from "../schema/user.schema";
 import type { AuthResponse } from "../dto/user.dto";
 import jwt from "jsonwebtoken";
+import { env } from "../../config/env";
 
 export class UserController {
   async register(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -26,7 +27,7 @@ export class UserController {
       // Set refresh token in HTTP-only cookie
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: env.NODE_ENV === "production",
         sameSite: "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         path: "/api/user/refresh",
@@ -62,7 +63,7 @@ export class UserController {
       // Set refresh token in HTTP-only cookie
       res.cookie("refreshToken", authData.refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: env.NODE_ENV === "production",
         sameSite: "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         path: "/api/user/refresh",
@@ -85,7 +86,7 @@ export class UserController {
     try {
       res.clearCookie("refreshToken", {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: env.NODE_ENV === "production",
         sameSite: "lax",
         path: "/api/user/refresh",
       });
@@ -184,7 +185,7 @@ export class UserController {
       // Set new refresh token in cookie
       res.cookie("refreshToken", newRefreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: env.NODE_ENV === "production",
         sameSite: "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         path: "/api/user/refresh",

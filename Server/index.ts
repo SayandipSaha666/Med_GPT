@@ -9,13 +9,11 @@ import { transactionController } from "./src/controllers/transactionController";
 import userRouter from "./src/routes/user.routes";
 import chatRouter from "./src/routes/chat.routes";
 import billingRouter from "./src/routes/billing.routes";
+import { env } from "./config/env"
 
 const app = express();
 
-const allowedOriginsEnv = process.env.ALLOWED_ORIGINS;
-const allowedOrigins = allowedOriginsEnv
-  ? allowedOriginsEnv.split(",").map((o) => o.trim())
-  : ["http://localhost:5173", "http://localhost:5174", "http://localhost:5175"];
+const allowedOrigins = env.FRONTEND_ALLOWED_ORIGINS;
 
 app.use(
   cors({
@@ -44,7 +42,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(bodyParser.json());
 
-const PORT = process.env.PORT || 3000;
+const PORT = env.PORT || 3000;
 
 // Mount routers
 app.use("/api/user", userRouter);

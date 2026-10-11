@@ -13,17 +13,59 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  name      String
-  credits   Float    @default(200.0)
-  planId    Int      @default(1)
-  plan      Plans    @relation(fields: [planId], references: [id], onDelete: Cascade)
-  chats     Chat[]
+  id           Int           @id @default(autoincrement())
+  email        String        @unique
+  password     String
+  name         String
+  credits      Float         @default(200.0)
+  planId       Int           @default(1)
+  plan         Plans         @relation(fields: [planId], references: [id], onDelete: Restrict)
+  chats        Chat[]
   transactions Transaction[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @default(now()) @updatedAt
+  files        File[]
+}
+
+enum FileStatus {
+  PROCESSING
+  READY
+  FAILED
+}
+
+model File {
+  id            String     @id @default(uuid())
+  userId        Int        @map("user_id")
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  mime          String
+  sizeBytes     Int        @map("size_bytes")
+  url           String
+  publicId      String     @map("public_id")
+  resourceType  String     @map("resource_type")
+  status        FileStatus @default(PROCESSING)
+  extractedText String?    @map("extracted_text") @db.Text
+  errorMessage  String?    @map("error_message")
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+
+  chunks FileChunk[]
+
+  @@index([userId, createdAt])
+  @@map("files")
+}
+
+model FileChunk {
+  id      Int    @id @default(autoincrement())
+  fileId  String @map("file_id")
+  idx     Int
+  content String @db.Text
+
+  file File @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@unique([fileId, idx])
+  @@index([fileId])
+  @@map("file_chunks")
 }
 
 model Chat {
@@ -37,37 +79,47 @@ model Chat {
 }
 
 model Message {
-  id        Int     @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   chatId    Int
-  chat      Chat    @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
   role      String
   content   String
   timestamp DateTime @default(now())
+
+  @@index([chatId, timestamp])
+}
+
+enum TransactionStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
+  REFUNDED
 }
 
 model Transaction {
-  id              Int     @id @default(autoincrement())
-  userId          Int
-  user            User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  amount          Float
-  planId          Int
-  plan            Plans   @relation(fields: [planId], references: [id], onDelete: Cascade)
-  razorpayOrderId String  @unique
+  id                Int               @id @default(autoincrement())
+  userId            Int
+  user              User              @relation(fields: [userId], references: [id], onDelete: Restrict)
+  amount            Decimal           @db.Decimal(10, 2)
+  planId            Int
+  plan              Plans             @relation(fields: [planId], references: [id], onDelete: Restrict)
+  razorpayOrderId   String            @unique
   razorpayPaymentId String?
-  isPaid          Boolean @default(false)
-  status          String  @default("pending")
-  credits         Float   @default(200.0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @default(now()) @updatedAt
+  isPaid            Boolean           @default(false)
+  status            TransactionStatus @default(PENDING)
+  credits           Float             @default(200.0)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @default(now()) @updatedAt
 }
 
 model Plans {
-  id        Int      @id @default(autoincrement())
-  name      String   @default("Free")
-  price     Float    @default(0.0)
-  credits   Int      @default(200)
-  features  String[]
+  id           Int           @id @default(autoincrement())
+  name         String        @default("Free")
+  price        Decimal       @default(0.0) @db.Decimal(10, 2)
+  credits      Int           @default(200)
+  features     String[]
   transactions Transaction[]
-  users     User[]
-  createdAt DateTime @default(now())
+  users        User[]
+  createdAt    DateTime      @default(now())
 }

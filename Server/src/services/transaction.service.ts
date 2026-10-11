@@ -3,6 +3,7 @@ import { userRepository } from "../repositories/user.repository";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const razorpay: any = require("../../config/razorpay");
 import type { CreateOrderResponse, PaymentStatusResponse } from "../dto/transaction.dto";
+import { env } from "../../config/env";
 
 export class TransactionService {
   async getPlans() {
@@ -45,7 +46,7 @@ export class TransactionService {
       amount: razorpayOrder.amount,
       currency: razorpayOrder.currency,
       transactionId: transaction.id,
-      keyId: process.env.RAZORPAY_KEY_ID || "",
+      keyId: env.RAZORPAY_KEY_ID || "",
     };
   }
 

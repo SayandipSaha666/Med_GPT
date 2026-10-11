@@ -2,8 +2,9 @@ import { messageRepository } from "../repositories/message.repository";
 import { chatRepository } from "../repositories/chat.repository";
 import { userRepository } from "../repositories/user.repository";
 import type { Message } from "../dto/message.dto";
+import { env } from "../../config/env";
 
-const RAG_SERVICE_URL = process.env.RAG_SERVICE_URL || "http://localhost:8000";
+const RAG_SERVICE_URL = env.RAG_SERVICE_URL || "http://localhost:8000";
 
 export class MessageService {
   async sendMessage(

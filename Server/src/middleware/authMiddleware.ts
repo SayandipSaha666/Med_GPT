@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt, { SignOptions, JwtPayload } from "jsonwebtoken";
 import { prisma } from "../lib/prisma";
-
+import { env } from "../../config/env";
 // Extend Express Request type to include user
 declare global {
   namespace Express {
@@ -43,7 +43,7 @@ export const authMiddleware = async (
   }
 
   try {
-    const secret = process.env.JWT_SECRET_KEY;
+    const secret = env.JWT_SECRET_KEY;
     if (!secret) {
       res.status(500).json({
         success: false,

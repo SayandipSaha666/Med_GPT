@@ -1,10 +1,11 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { userRepository } from "../repositories/user.repository";
+import { env } from "../../config/env";
 import type { User, UserResponse, CreateUserDto, LoginUserDto, AuthResponse } from "../dto/user.dto";
 
-const JWT_SECRET = process.env.JWT_SECRET_KEY;
-const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || process.env.JWT_SECRET_KEY;
+const JWT_SECRET = env.JWT_SECRET_KEY;
+const REFRESH_TOKEN_SECRET = env.REFRESH_TOKEN_SECRET || env.JWT_SECRET_KEY;
 
 if (!JWT_SECRET) {
   throw new Error("JWT_SECRET_KEY environment variable is not set");
