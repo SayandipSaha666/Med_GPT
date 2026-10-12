@@ -1,5 +1,6 @@
 // User model
 import { prisma } from "../lib/prisma";
+import { Prisma } from "../generated/prisma-client";
 
 export class UserModel {
   async findById(id: number) {
@@ -19,11 +20,11 @@ export class UserModel {
     return prisma.user.create({ data });
   }
 
-  async update(id: number, data: Partial<any>) {
+  async update(id: number, data: Prisma.UserUpdateInput) {
     return prisma.user.update({ where: { id }, data });
   }
 
-  async incrementCredits(id: number, amount: number) {
+  async incrementCredits(id: number, amount: number | Prisma.Decimal) {
     return prisma.user.update({
       where: { id },
       data: { credits: { increment: amount } },

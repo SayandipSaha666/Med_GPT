@@ -17,7 +17,7 @@ model User {
   email        String        @unique
   password     String
   name         String
-  credits      Float         @default(200.0)
+  credits      Decimal       @default(200.0) @db.Decimal(10, 2)
   planId       Int           @default(1)
   plan         Plans         @relation(fields: [planId], references: [id], onDelete: Restrict)
   chats        Chat[]
@@ -25,6 +25,8 @@ model User {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @default(now()) @updatedAt
   files        File[]
+
+  @@map("users")
 }
 
 enum FileStatus {
@@ -37,6 +39,8 @@ model File {
   id            String     @id @default(uuid())
   userId        Int        @map("user_id")
   user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messageId     Int?       @map("message_id")
+  message       Message?   @relation(fields: [messageId], references: [id], onDelete: SetNull)
   name          String
   mime          String
   sizeBytes     Int        @map("size_bytes")
@@ -76,17 +80,23 @@ model Chat {
   messages  Message[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @default(now()) @updatedAt
+
+  @@map("chats")
 }
 
 model Message {
   id        Int      @id @default(autoincrement())
-  chatId    Int
+  chatId    Int      @map("chat_id")
   chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
   role      String
-  content   String
-  timestamp DateTime @default(now())
+  content   String   @db.Text
+  timestamp DateTime @default(now()) @map("timestamp")
+  sources   Json     @default("[]") // Source[]
+  toolCalls Json     @default("[]") @map("tool_calls") // ToolCall[]
+  files     File[]
 
   @@index([chatId, timestamp])
+  @@map("messages")
 }
 
 enum TransactionStatus {
@@ -108,18 +118,22 @@ model Transaction {
   razorpayPaymentId String?
   isPaid            Boolean           @default(false)
   status            TransactionStatus @default(PENDING)
-  credits           Float             @default(200.0)
+  credits           Decimal           @default(200.0) @db.Decimal(10, 2)
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @default(now()) @updatedAt
+
+  @@map("transactions")
 }
 
 model Plans {
   id           Int           @id @default(autoincrement())
   name         String        @default("Free")
   price        Decimal       @default(0.0) @db.Decimal(10, 2)
-  credits      Int           @default(200)
+  credits      Decimal       @default(200.0) @db.Decimal(10, 2)
   features     String[]
   transactions Transaction[]
   users        User[]
   createdAt    DateTime      @default(now())
+
+  @@map("plans")
 }

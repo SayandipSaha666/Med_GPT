@@ -1,8 +1,8 @@
 import { transactionRepository, planRepository } from "../repositories/transaction.repository";
 import { userRepository } from "../repositories/user.repository";
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const razorpay: any = require("../../config/razorpay");
+import { razorpay } from "../../config/razorpay";
 import type { CreateOrderResponse, PaymentStatusResponse } from "../dto/transaction.dto";
+import { TransactionStatus } from "../generated/prisma-client";
 import { env } from "../../config/env";
 
 export class TransactionService {
@@ -10,7 +10,6 @@ export class TransactionService {
     const plans = await planRepository.findAll();
     return plans || [];
   }
-
 
   async createOrder(userId: number, planId: number): Promise<CreateOrderResponse> {
     // Find the plan
@@ -21,7 +20,7 @@ export class TransactionService {
 
     // Create Razorpay order
     const razorpayOrder = await razorpay.orders.create({
-      amount: Math.round(plan.price * 100),
+      amount: Math.round(Number(plan.price) * 100),
       currency: "INR",
       receipt: `receipt_${userId}_${Date.now()}`,
       notes: {
@@ -37,13 +36,13 @@ export class TransactionService {
       amount: plan.price,
       razorpayOrderId: razorpayOrder.id,
       isPaid: false,
-      status: "pending",
+      status: TransactionStatus.PENDING,
       credits: plan.credits,
     });
 
     return {
       orderId: razorpayOrder.id,
-      amount: razorpayOrder.amount,
+      amount: Number(razorpayOrder.amount),
       currency: razorpayOrder.currency,
       transactionId: transaction.id,
       keyId: env.RAZORPAY_KEY_ID || "",
@@ -73,8 +72,6 @@ export class TransactionService {
       return { success: false, message: "Missing signature" };
     }
 
-    const rawBody = JSON.stringify(payload);
-
     // Handle payment.captured event
     if (payload.event === "payment.captured") {
       const payment = payload.payload.payment;
@@ -93,7 +90,7 @@ export class TransactionService {
       // Update transaction
       await transactionRepository.update(transaction.id, {
         isPaid: true,
-        status: "success",
+        status: TransactionStatus.PAID,
         razorpayPaymentId: payment.id,
       });
 
@@ -110,7 +107,7 @@ export class TransactionService {
 
       const transaction = await transactionRepository.findByRazorpayOrderId(razorpayOrderId);
       if (transaction && !transaction.isPaid) {
-        await transactionRepository.update(transaction.id, { status: "failed" });
+        await transactionRepository.update(transaction.id, { status: TransactionStatus.FAILED });
         console.log(`Webhook: Payment failed for transaction ${transaction.id}`);
       }
     }

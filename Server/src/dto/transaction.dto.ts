@@ -1,14 +1,18 @@
+import { Prisma, TransactionStatus } from "../generated/prisma-client";
+
+export type Decimal = Prisma.Decimal;
+
 // Transaction DTOs
 export interface Transaction {
   id: number;
   userId: number;
-  amount: number;
+  amount: Prisma.Decimal;
   planId: number;
   razorpayOrderId: string;
   razorpayPaymentId?: string | null;
   isPaid: boolean;
-  status: string;
-  credits: number;
+  status: TransactionStatus;
+  credits: Prisma.Decimal;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -16,8 +20,8 @@ export interface Transaction {
 export interface Plan {
   id: number;
   name: string;
-  price: number;
-  credits: number;
+  price: Prisma.Decimal;
+  credits: Prisma.Decimal;
   features: string[];
   createdAt: Date;
 }
@@ -35,8 +39,8 @@ export interface CreateOrderResponse {
 }
 
 export interface PaymentStatusResponse {
-  status: string;
+  status: TransactionStatus | string;
   isPaid: boolean;
-  credits: number;
-  amount: number;
+  credits: Prisma.Decimal | number;
+  amount: Prisma.Decimal | number;
 }

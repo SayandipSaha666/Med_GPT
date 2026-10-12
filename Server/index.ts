@@ -4,10 +4,11 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 import { connectDB } from "./src/lib/prisma";
-import { authMiddleware } from "./src/middleware/authMiddleware";
+import { authMiddleware } from "./src/middleware/auth.middleware";
 import { transactionController } from "./src/controllers/transactionController";
 import userRouter from "./src/routes/user.routes";
 import chatRouter from "./src/routes/chat.routes";
+import fileRouter from "./src/routes/file.route"
 import billingRouter from "./src/routes/billing.routes";
 import { env } from "./config/env"
 
@@ -46,6 +47,7 @@ const PORT = env.PORT || 3000;
 
 // Mount routers
 app.use("/api/user", userRouter);
+app.use("/api/files", fileRouter)
 app.use("/api/chat", authMiddleware, chatRouter);
 app.use("/api/billing", authMiddleware, billingRouter);
 

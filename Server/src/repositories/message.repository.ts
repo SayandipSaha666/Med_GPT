@@ -1,12 +1,14 @@
 import { prisma } from "../lib/prisma";
 import type { Message } from "../dto/message.dto";
+import { toMessage } from "../mapper/message.mapper";
 
 export class MessageRepository {
   async findById(id: number): Promise<Message | null> {
     const msg = await prisma.message.findUnique({
       where: { id },
+      include: { files: true },
     });
-    return msg as Message | null;
+    return msg ? toMessage(msg) : null;
   }
 
   async create(data: {
@@ -16,25 +18,26 @@ export class MessageRepository {
   }): Promise<Message> {
     const msg = await prisma.message.create({
       data,
+      include: { files: true },
     });
-    return msg as Message;
+    return toMessage(msg);
   }
 
   async findManyByChatId(chatId: number): Promise<Message[]> {
     const msgs = await prisma.message.findMany({
       where: { chatId },
+      include: { files: true },
       orderBy: { timestamp: "asc" },
     });
-    return msgs as Message[];
+    return msgs.map(toMessage);
   }
 
-  async findUniqueWhere(
-    where: { id: number; userId: number }
-  ): Promise<Message | null> {
+  async findUniqueWhere(where: { id: number }): Promise<Message | null> {
     const msg = await prisma.message.findUnique({
       where,
+      include: { files: true },
     });
-    return msg as Message | null;
+    return msg ? toMessage(msg) : null;
   }
 }
 

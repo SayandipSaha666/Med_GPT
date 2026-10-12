@@ -1,5 +1,6 @@
 // Transaction model
 import { prisma } from "../lib/prisma";
+import { Prisma, TransactionStatus } from "../generated/prisma-client";
 
 export class TransactionModel {
   async findById(id: number) {
@@ -15,16 +16,21 @@ export class TransactionModel {
   async create(data: {
     userId: number;
     planId: number;
-    amount: number;
+    amount: number | Prisma.Decimal;
     razorpayOrderId: string;
     isPaid?: boolean;
-    status?: string;
-    credits?: number;
+    status?: TransactionStatus;
+    credits?: number | Prisma.Decimal;
   }) {
-    return prisma.transaction.create({ data });
+    return prisma.transaction.create({
+      data: {
+        ...data,
+        status: data.status ?? TransactionStatus.PENDING,
+      },
+    });
   }
 
-  async update(id: number, data: Partial<any>) {
+  async update(id: number, data: Prisma.TransactionUncheckedUpdateInput) {
     return prisma.transaction.update({ where: { id }, data });
   }
 

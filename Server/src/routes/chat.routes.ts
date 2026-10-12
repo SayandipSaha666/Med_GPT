@@ -1,5 +1,5 @@
 import express from "express";
-import { authMiddleware } from "../middleware/authMiddleware";
+import { authMiddleware } from "../middleware/auth.middleware";
 import { chatController } from "../controllers/chatController";
 import { messageController } from "../controllers/messageController";
 

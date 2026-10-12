@@ -23,7 +23,7 @@ export class MessageService {
     if (!user) {
       throw new Error("User not found");
     }
-    if (user.credits < 1) {
+    if (Number(user.credits) < 1) {
       throw new Error("Insufficient credits");
     }
 

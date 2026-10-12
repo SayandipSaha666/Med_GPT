@@ -1,10 +1,14 @@
+import { Prisma } from "../generated/prisma-client";
+
+export type Decimal = Prisma.Decimal;
+
 // User DTOs
 export interface User {
   id: number;
   email: string;
   password: string;
   name: string;
-  credits: number;
+  credits: Prisma.Decimal;
   planId: number;
   createdAt: Date;
   updatedAt: Date;
@@ -14,7 +18,7 @@ export interface UserResponse {
   id: number;
   email: string;
   name: string;
-  credits: number;
+  credits: Prisma.Decimal | number;
   planId: number;
   createdAt: Date;
 }

@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from "express";
 import jwt, { SignOptions, JwtPayload } from "jsonwebtoken";
 import { prisma } from "../lib/prisma";
 import { env } from "../../config/env";
+import { Prisma } from "../generated/prisma-client";
+
 // Extend Express Request type to include user
 declare global {
   namespace Express {
@@ -10,7 +12,7 @@ declare global {
         id: number;
         email: string;
         name: string;
-        credits: number;
+        credits: Prisma.Decimal | number;
         planId: number;
         createdAt: Date;
       };

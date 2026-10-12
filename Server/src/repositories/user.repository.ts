@@ -1,5 +1,6 @@
 import { prisma } from "../lib/prisma";
 import type { User } from "../dto/user.dto";
+import { Prisma } from "../generated/prisma-client";
 
 export class UserRepository {
   async findById(id: number): Promise<User | null> {
@@ -25,14 +26,14 @@ export class UserRepository {
     });
   }
 
-  async update(id: number, data: Partial<User>): Promise<User> {
+  async update(id: number, data: Prisma.UserUpdateInput): Promise<User> {
     return prisma.user.update({
       where: { id },
       data,
     });
   }
 
-  async incrementCredits(id: number, credits: number): Promise<User> {
+  async incrementCredits(id: number, credits: number | Prisma.Decimal): Promise<User> {
     return prisma.user.update({
       where: { id },
       data: {
