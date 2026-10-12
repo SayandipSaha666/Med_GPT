@@ -42,13 +42,44 @@ export interface T_Auth_Response {
   user: T_User;
 }
 
+// File types
+export interface T_UploadedFile {
+  id: string;
+  name: string;
+  mime: string;
+  sizeBytes: number;
+  url: string;
+  status: 'PROCESSING' | 'READY' | 'FAILED';
+  createdAt: string;
+}
+
+export interface T_FileAttachment {
+  id: string;
+  name: string;
+  sizeBytes: number;
+  mime: string;
+  url?: string;
+  status: 'uploading' | 'ready' | 'error';
+  progress: number;
+  error?: string;
+  file?: File;
+}
+
 // Chat types
 export interface T_Message {
   id?: string;
   role: 'user' | 'assistant' | 'system';
   content: string;
-  timestamp: string;
+  timestamp: string | Date;
   isImage?: boolean;
+  files?: Array<{
+    id: string;
+    name: string;
+    mime: string;
+    sizeBytes: number;
+    url: string;
+    status?: string;
+  }>;
 }
 
 export interface T_Chat {

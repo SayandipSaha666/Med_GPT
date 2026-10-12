@@ -24,6 +24,12 @@ export const API_ROUTES = {
   GET_PLANS: '/api/billing/plans',
   CREATE_ORDER: '/api/billing/create-order',
   PAYMENT_STATUS: '/api/billing/payment-status',
+
+  // File routes
+  UPLOAD_FILE: '/api/files',
+  FETCH_FILES: '/api/files',
+  FETCH_FILE: (fileId: string) => `/api/files/${fileId}`,
+  DELETE_FILE: (fileId: string) => `/api/files/${fileId}`,
 };
 
 const api: AxiosInstance = axios.create({

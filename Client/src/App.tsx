@@ -12,13 +12,16 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { Toaster } from 'react-hot-toast';
 import { Analytics } from "@vercel/analytics/react";
 import { useTheme } from './store/themeStore';
+import { FilePreviewProvider } from './store/previewStore';
+import { FilePreviewModal } from './components/FilePreviewModal';
 
 function AppContent() {
   const { theme } = useTheme();
 
   return (
-    <>
+    <FilePreviewProvider>
       <Analytics />
+      <FilePreviewModal />
       <Toaster
         position="top-right"
         reverseOrder={false}
@@ -70,7 +73,7 @@ function AppContent() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
-    </>
+    </FilePreviewProvider>
   );
 }
 

@@ -6,6 +6,8 @@ import Message from './Message';
 import { PromptInput } from './PromptInput';
 import { useTheme } from '../store/themeStore';
 import { ApiService } from '../api/api.service';
+import { useChatAttachments } from '../hooks/useChatAttachments';
+import type { T_FileAttachment } from '../api/api.types';
 import toast from 'react-hot-toast';
 
 export default function Chatbox() {
@@ -13,17 +15,26 @@ export default function Chatbox() {
   const { currentChat } = useChat();
   const navigate = useNavigate();
 
-  const [messages, setMessages] = useState<{ content: string; role: string; timestamp: Date }[]>([]);
+  const [messages, setMessages] = useState<
+    { content: string; role: string; timestamp: Date; files?: any[] }[]
+  >([]);
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState('text');
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const {
+    attachments,
+    addFiles,
+    removeAttachment,
+    clearAttachments,
+  } = useChatAttachments();
 
   const createChatMutation = ApiService.chats.useCreateChat();
   const sendMessageMutation = ApiService.chats.useSendMessage();
 
   useEffect(() => {
     if (currentChat?.messages) {
-      setMessages(currentChat.messages);
+      setMessages(currentChat.messages as any);
     } else {
       setMessages([]);
     }
@@ -38,37 +49,74 @@ export default function Chatbox() {
     }
   }, [messages, loading]);
 
-  const handleSend = useCallback(async (prompt: string, _selectedMode: string) => {
-    if (!prompt.trim()) return;
+  const handleSend = useCallback(
+    async (prompt: string, _selectedMode: string, currentAttachments?: T_FileAttachment[]) => {
+      if (!prompt.trim() && (!currentAttachments || currentAttachments.length === 0)) return;
 
-    // Add user message to UI state immediately
-    const userMsg = { content: prompt, role: 'user', timestamp: new Date() };
-    setMessages((prev) => [...prev, userMsg]);
-    setLoading(true);
+      const stagedFiles = (currentAttachments || attachments).filter(
+        (a) => a.status === 'ready' && !!a.url
+      );
 
-    try {
-      // If we don't have an active chat ID yet, create one first
-      const title = prompt.length > 30 ? `${prompt.slice(0, 30)}...` : prompt;
-      const newChat = await createChatMutation.mutateAsync({ title });
+      const attachedFilesPayload = stagedFiles.map((a) => ({
+        id: a.id,
+        name: a.name,
+        mime: a.mime,
+        sizeBytes: a.sizeBytes,
+        url: a.url!,
+      }));
 
-      if (newChat?.id) {
-        // Send the message in the newly created chat
-        const response = await sendMessageMutation.mutateAsync({
-          chatId: newChat.id,
-          content: prompt,
-        });
+      // Add user message to UI state immediately with attached files
+      const userMsg = {
+        content: prompt,
+        role: 'user',
+        timestamp: new Date(),
+        files: attachedFilesPayload.length > 0 ? attachedFilesPayload : undefined,
+      };
+      setMessages((prev) => [...prev, userMsg]);
+      setLoading(true);
+      clearAttachments();
 
-        if (response?.success) {
-          toast.success('Consultation started! 💬');
-          navigate(`/main/chat/${newChat.id}`);
+      try {
+        // Formulate message title
+        const baseTitle = prompt.length > 30 ? `${prompt.slice(0, 30)}...` : prompt;
+        const title = attachedFilesPayload.length > 0 && !prompt.trim()
+          ? `Analysis of ${attachedFilesPayload[0].name}`
+          : baseTitle || 'Medical Consultation';
+
+        // If we don't have an active chat ID yet, create one first
+        const newChat = await createChatMutation.mutateAsync({ title });
+
+        if (newChat?.id) {
+          // If files were attached, append file reference links to the query payload for context
+          let messageContent = prompt;
+          if (attachedFilesPayload.length > 0) {
+            const filesContext = attachedFilesPayload
+              .map((f) => `[File Attachment: ${f.name}](${f.url})`)
+              .join('\n');
+            messageContent = prompt.trim()
+              ? `${prompt}\n\nAttached Medical Documents:\n${filesContext}`
+              : `Please review and summarize the attached medical document(s):\n${filesContext}`;
+          }
+
+          // Send the message in the newly created chat
+          const response = await sendMessageMutation.mutateAsync({
+            chatId: newChat.id,
+            content: messageContent,
+          });
+
+          if (response?.success) {
+            toast.success('Consultation started! 💬');
+            navigate(`/main/chat/${newChat.id}`);
+          }
         }
+      } catch (error: any) {
+        console.error('Failed to send message:', error);
+        toast.error(error?.message || 'Failed to send message. Please try again.');
+        setLoading(false);
       }
-    } catch (error: any) {
-      console.error('Failed to send message:', error);
-      toast.error(error?.message || 'Failed to send message. Please try again.');
-      setLoading(false);
-    }
-  }, [createChatMutation, sendMessageMutation, navigate]);
+    },
+    [attachments, clearAttachments, createChatMutation, sendMessageMutation, navigate]
+  );
 
   const quickPrompts = [
     {
@@ -105,8 +153,11 @@ export default function Chatbox() {
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/40">
-            General Medicine
+          <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/40 flex items-center gap-1.5">
+            <svg className="w-3 h-3 text-purple-600 dark:text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+            </svg>
+            Files Supported
           </span>
         </div>
       </div>
@@ -136,7 +187,7 @@ export default function Chatbox() {
                 How can I assist your health today?
               </h1>
               <p className="mt-2 text-sm sm:text-base text-gray-500 dark:text-gray-400 max-w-lg mx-auto">
-                Ask about clinical symptoms, medications, medical terms, or lab reports in clear, easy-to-understand language.
+                Ask about clinical symptoms, medications, or attach multiple lab reports, prescriptions, and scans for instant analysis.
               </p>
 
               {/* Quick Prompt Recommendation Cards */}
@@ -196,7 +247,7 @@ export default function Chatbox() {
                       <div className="w-2 h-2 rounded-full bg-blue-600 animate-bounce [animation-delay:0.4s]"></div>
                     </div>
                     <span className="text-xs font-medium text-purple-700 dark:text-purple-300">
-                      Analyzing medical knowledge base...
+                      Analyzing medical knowledge base & documents...
                     </span>
                   </div>
                 </div>
@@ -206,14 +257,17 @@ export default function Chatbox() {
         </div>
       </div>
 
-      {/* Docked Prompt Input at the Bottom */}
+      {/* Docked Prompt Input with Multi-File Upload support */}
       <div className="shrink-0 p-4 sm:p-6 pt-2 bg-gradient-to-t from-[#faf9fc] via-[#faf9fc]/90 to-transparent dark:from-[#0e0d16] dark:via-[#0e0d16]/90 dark:to-transparent z-10">
         <PromptInput
           loading={loading}
           onSend={handleSend}
           mode={mode}
           setMode={setMode}
-          placeholder="Ask MedGPT a medical question or describe symptoms..."
+          placeholder="Ask MedGPT a medical question or attach reports/scans..."
+          attachments={attachments}
+          onAddFiles={addFiles}
+          onRemoveAttachment={removeAttachment}
         />
       </div>
     </div>

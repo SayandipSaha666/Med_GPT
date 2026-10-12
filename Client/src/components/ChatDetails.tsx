@@ -6,6 +6,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useChat } from '../store/chatStore';
 import { useTheme } from '../store/themeStore';
 import { ApiService } from '../api/api.service';
+import { useChatAttachments } from '../hooks/useChatAttachments';
+import type { T_FileAttachment } from '../api/api.types';
 import toast from 'react-hot-toast';
 
 export function ChatDetails() {
@@ -26,6 +28,13 @@ export function ChatDetails() {
     isLoading: isChatLoading,
     isError: isChatError,
   } = ApiService.chats.useFetchChat(isValidId ? numericId : null);
+
+  const {
+    attachments,
+    addFiles,
+    removeAttachment,
+    clearAttachments,
+  } = useChatAttachments();
 
   const sendMessageMutation = ApiService.chats.useSendMessage();
 
@@ -61,21 +70,54 @@ export function ChatDetails() {
     }
   }, [selectedChat?.messages, isSending]);
 
-  const sendMessage = async (prompt: string) => {
-    if (!isValidId || !prompt.trim() || isSending) return;
+  const sendMessage = async (
+    prompt: string,
+    _mode?: string,
+    currentAttachments?: T_FileAttachment[]
+  ) => {
+    if (!isValidId || isSending) return;
+    if (!prompt.trim() && (!currentAttachments || currentAttachments.length === 0)) return;
+
+    const stagedFiles = (currentAttachments || attachments).filter(
+      (a) => a.status === 'ready' && !!a.url
+    );
+
+    const attachedFilesPayload = stagedFiles.map((a) => ({
+      id: a.id,
+      name: a.name,
+      mime: a.mime,
+      sizeBytes: a.sizeBytes,
+      url: a.url!,
+    }));
 
     // Optimistically add user message to UI
-    const newUserMessage = { role: 'user', content: prompt, timestamp: new Date() };
+    const newUserMessage = {
+      role: 'user',
+      content: prompt,
+      timestamp: new Date(),
+      files: attachedFilesPayload.length > 0 ? attachedFilesPayload : undefined,
+    };
     setSelectedChat((prev: any) => ({
       ...prev,
       messages: [...(prev?.messages || []), newUserMessage],
     }));
     setIsSending(true);
+    clearAttachments();
 
     try {
+      let messageContent = prompt;
+      if (attachedFilesPayload.length > 0) {
+        const filesContext = attachedFilesPayload
+          .map((f) => `[File Attachment: ${f.name}](${f.url})`)
+          .join('\n');
+        messageContent = prompt.trim()
+          ? `${prompt}\n\nAttached Medical Documents:\n${filesContext}`
+          : `Please review and summarize the attached medical document(s):\n${filesContext}`;
+      }
+
       const response = await sendMessageMutation.mutateAsync({
         chatId: numericId,
-        content: prompt,
+        content: messageContent,
       });
 
       if (response?.success) {
@@ -83,7 +125,11 @@ export function ChatDetails() {
           const updatedMessages = prev?.messages ? prev.messages.slice(0, -1) : [];
           return {
             ...prev,
-            messages: [...updatedMessages, response.userMessage, response.assistantMessage],
+            messages: [
+              ...updatedMessages,
+              { ...response.userMessage, files: attachedFilesPayload },
+              response.assistantMessage,
+            ],
           };
         });
 
@@ -92,9 +138,13 @@ export function ChatDetails() {
           prevChats.map((c) =>
             c.id === numericId
               ? {
-                  ...c,
-                  messages: [...(c.messages || []), response.userMessage, response.assistantMessage],
-                }
+                ...c,
+                messages: [
+                  ...(c.messages || []),
+                  { ...response.userMessage, files: attachedFilesPayload },
+                  response.assistantMessage,
+                ],
+              }
               : c
           )
         );
@@ -215,7 +265,10 @@ export function ChatDetails() {
           loading={isSending}
           onSend={sendMessage}
           mode="text"
-          placeholder="Continue this consultation..."
+          placeholder="Continue this consultation or attach reports/scans..."
+          attachments={attachments}
+          onAddFiles={addFiles}
+          onRemoveAttachment={removeAttachment}
         />
       </div>
     </div>
