@@ -12,7 +12,7 @@ load_dotenv(dotenv_path=".env")
 
 app = FastAPI(title="MedGPT RAG Service")
 
-allowed_origins = os.getenv("ALLOWED_ORIGINS", "")
+allowed_origins = os.getenv("BACKEND_ALLOWED_ORIGINS", "")
 
 origins = [origin.strip() for origin in allowed_origins.split(",") if origin.strip()]
 

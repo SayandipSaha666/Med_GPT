@@ -1,0 +1,45 @@
+// Theme configuration
+export const theme = {
+  colors: {
+    primary: '#A456F7',
+    primaryDark: '#8B44D9',
+    primaryLight: '#C084FC',
+    secondary: '#3D81F6',
+    secondaryDark: '#2B71EC',
+    secondaryLight: '#60A5FA',
+    accent: '#E6CCFF',
+    text: '#2D2535',
+    textDark: '#1A1A1A',
+    background: '#F8F6FA',
+    backgroundDark: '#242124',
+    border: '#D4C5E2',
+    borderDark: '#80609F',
+  },
+  fonts: {
+    sans: '"Roboto", sans-serif',
+    heading: '"Outfit", system-ui, sans-serif',
+  },
+  spacing: {
+    xs: '4px',
+    sm: '8px',
+    md: '16px',
+    lg: '24px',
+    xl: '32px',
+  },
+  borderRadius: {
+    sm: '4px',
+    md: '8px',
+    lg: '12px',
+    xl: '16px',
+    '2xl': '24px',
+    full: '50%',
+  },
+  shadows: {
+    sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+    md: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+    lg: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+    xl: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
+    purple: '0 0 20px rgba(164, 86, 247, 0.3)',
+    blue: '0 0 20px rgba(61, 129, 246, 0.3)',
+  },
+};
