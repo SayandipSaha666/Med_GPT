@@ -48,6 +48,13 @@ const schema = z.object({
                 .filter(Boolean)
         )
         .pipe(z.array(z.string().url()).min(1)),
+
+    // Agent System (optional — only needed when agent features are enabled)
+    OPENAI_API_KEY: z.string().min(1).optional(),
+    ENCRYPTION_MASTER_KEY: z.string().min(32).optional(),
+    SERPAPI_KEY: z.string().min(1).optional(),
+    GOOGLE_SEARCH_API_KEY: z.string().min(1).optional(),
+    GOOGLE_SEARCH_CX: z.string().min(1).optional(),
 });
 
 export const env = schema.parse(process.env);

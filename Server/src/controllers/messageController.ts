@@ -21,7 +21,7 @@ export class MessageController {
       if (!bodyValidation.success) {
         res.status(400).json({
           success: false,
-          message: bodyValidation.error.errors[0].message,
+          message: bodyValidation.error.issues[0]?.message ?? "Validation failed",
         });
         return;
       }
