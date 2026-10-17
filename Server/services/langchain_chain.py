@@ -1,7 +1,7 @@
 import os
 from langchain_core.output_parsers import StrOutputParser
 from langchain_pinecone import PineconeVectorStore
-from helper import load_llm, load_embedding_model, get_retriever, create_chain
+from helper import load_llm, load_embedding_model, get_retriever, create_chain, load_local_embedding_model
 from prompt import template
 
 # Lazy globals
@@ -17,7 +17,8 @@ def get_chain():
         llm = load_llm(model)
 
         embedding_model = "sentence-transformers/all-MiniLM-L6-v2"
-        embedding = load_embedding_model(embedding_model)
+        # embedding = load_embedding_model(embedding_model)
+        embedding = load_local_embedding_model(embedding_model)
 
         index_name = "medical-chatbot"
         vector_store = PineconeVectorStore.from_existing_index(

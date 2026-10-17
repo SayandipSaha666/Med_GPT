@@ -208,7 +208,7 @@ export function FileUploadButton({
         ref={fileInputRef}
         type="file"
         multiple
-        accept={ACCEPTED_FILE_EXTENSIONS}
+        accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.gif,.webp"
         onChange={handleFileChange}
         className="hidden"
         disabled={disabled}
@@ -260,10 +260,10 @@ export function validateAndAddFiles(files: File[], onAddFiles: (validFiles: File
     // Check file mime type (or fallback to extension for edge-cases)
     const isMimeAllowed = (ALLOWED_MIME_TYPES as readonly string[]).includes(file.type);
     const ext = file.name.split('.').pop()?.toLowerCase();
-    const isExtAllowed = ['pdf', 'doc', 'docx', 'txt', 'png', 'jpg', 'jpeg', 'gif'].includes(ext || '');
+    const isExtAllowed = ['pdf', 'doc', 'docx', 'txt', 'png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext || '');
 
     if (!isMimeAllowed && !isExtAllowed) {
-      toast.error(`"${file.name}" is not a supported format (PDF, Word, TXT, or images).`);
+      toast.error(`"${file.name}" is not a supported format. Use PDF, Word, TXT, or images (PNG, JPG, GIF, WEBP).`);
       continue;
     }
 

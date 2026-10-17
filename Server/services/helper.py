@@ -1,4 +1,7 @@
 import re
+
+from config import load_environment
+
 # Document Loaders
 from langchain_community.document_loaders import PyPDFLoader,DirectoryLoader
 # Text Splitters
@@ -11,15 +14,16 @@ from pinecone import Pinecone as PineconeClient, ServerlessSpec
 # Open Source Models
 from langchain_groq import ChatGroq
 from langchain_huggingface import HuggingFaceEndpointEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
+
 # Import runnables
 from langchain_core.runnables import (
     RunnableParallel,
     RunnablePassthrough,
     RunnableLambda
 )
-# Loading data from .env files
-from dotenv import load_dotenv
-load_dotenv()
+
+load_environment()
 
 # Load LLM
 def load_llm(model):
@@ -31,6 +35,12 @@ def load_llm(model):
 # Load Embedding Model (uses HuggingFace Inference API — no local torch/model download)
 def load_embedding_model(embedding_model):
     embedding = HuggingFaceEndpointEmbeddings(
+        model=embedding_model,
+    )
+    return embedding
+
+def load_local_embedding_model(embedding_model):
+    embedding = HuggingFaceEmbeddings(
         model=embedding_model,
     )
     return embedding

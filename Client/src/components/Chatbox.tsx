@@ -21,6 +21,7 @@ export default function Chatbox() {
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState('text');
   const containerRef = useRef<HTMLDivElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const {
     attachments,
@@ -75,6 +76,8 @@ export default function Chatbox() {
       setMessages((prev) => [...prev, userMsg]);
       setLoading(true);
       clearAttachments();
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
 
       try {
         // Formulate message title
@@ -102,6 +105,8 @@ export default function Chatbox() {
           const response = await sendMessageMutation.mutateAsync({
             chatId: newChat.id,
             content: messageContent,
+            fileIds: attachedFilesPayload.map((f) => f.id),
+            signal: controller.signal,
           });
 
           if (response?.success) {
@@ -110,13 +115,27 @@ export default function Chatbox() {
           }
         }
       } catch (error: any) {
+        if (error?.name === 'CanceledError' || error?.code === 'ERR_CANCELED') {
+          return;
+        }
         console.error('Failed to send message:', error);
         toast.error(error?.message || 'Failed to send message. Please try again.');
+      } finally {
         setLoading(false);
+        abortControllerRef.current = null;
       }
     },
     [attachments, clearAttachments, createChatMutation, sendMessageMutation, navigate]
   );
+
+  const handleStop = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setLoading(false);
+    toast('Response generation stopped. ⏹️');
+  };
 
   const quickPrompts = [
     {
@@ -262,6 +281,7 @@ export default function Chatbox() {
         <PromptInput
           loading={loading}
           onSend={handleSend}
+          onStop={handleStop}
           mode={mode}
           setMode={setMode}
           placeholder="Ask MedGPT a medical question or attach reports/scans..."

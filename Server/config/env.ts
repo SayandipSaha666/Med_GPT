@@ -34,11 +34,10 @@ const schema = z.object({
     MAX_FILE_SIZE_MB: z.coerce.number().positive().default(10),
     NODE_ENV: z.enum(["development", "production", "test"]),
 
-    // RAG Service
-    PINECONE_API_KEY: z.string().min(1),
-    GROQ_API_KEY: z.string().min(1),
-    HUGGINGFACEHUB_API_TOKEN: z.string().min(1),
-
+    // RAG / Vector Search Services
+    PINECONE_API_KEY: z.string().min(1).optional(),
+    GROQ_API_KEY: z.string().min(1).optional(),
+    HUGGINGFACEHUB_API_TOKEN: z.string().min(1).optional(),
     BACKEND_ALLOWED_ORIGINS: z
         .string()
         .transform((value) =>
@@ -48,6 +47,33 @@ const schema = z.object({
                 .filter(Boolean)
         )
         .pipe(z.array(z.string().url()).min(1)),
+
+    // AI/LLM provider configuration
+    MODEL_PROVIDER: z.enum(["openai", "groq"]).optional().default("openai"),
+    OPENAI_AGENT_API_KEY: z.string().min(1).optional(),
+    GROQ_AGENT_API_KEY: z.string().min(1).optional(),
+    OPENAI_AGENT_MODEL: z.string().min(1).optional().default("gpt-4o"),
+    GROQ_AGENT_MODEL: z.string().min(1).optional().default("qwen/qwen-2-7b"),
+    GUARDRAILS_ENABLED: z.coerce.boolean().optional().default(true),
+
+    // OCR / Text Extraction
+    OCR_PROVIDER: z.enum(["gemini", "groq", "openai"]).optional().default("gemini"),
+    GEMINI_OCR_API_KEY: z.string().min(1).optional(),
+    GEMINI_OCR_MODEL: z.string().min(1).optional().default("gemini-2.0-flash-exp"),
+    GROQ_OCR_API_KEY: z.string().min(1).optional(),
+    GROQ_OCR_MODEL: z.string().min(1).optional().default("qwen/qwen-2.5-32b"),
+    OPENAI_OCR_API_KEY: z.string().min(1).optional(),
+    OPENAI_OCR_MODEL: z.string().min(1).optional().default("gpt-4o-2024-11-20"),
+
+    // Legacy provider keys used by current extraction and agent services
+    OPENAI_API_KEY: z.string().min(1).optional(),
+    GEMINI_API_KEY: z.string().min(1).optional(),
+
+    // Optional services
+    ENCRYPTION_MASTER_KEY: z.string().min(32).optional(),
+    SERPAPI_KEY: z.string().min(1).optional(),
+    GOOGLE_SEARCH_API_KEY: z.string().min(1).optional(),
+    GOOGLE_SEARCH_CX: z.string().min(1).optional(),
 });
 
 export const env = schema.parse(process.env);

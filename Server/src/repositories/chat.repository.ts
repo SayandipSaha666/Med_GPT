@@ -5,6 +5,7 @@ export class ChatRepository {
   async findById(id: number): Promise<Chat | null> {
     return prisma.chat.findUnique({
       where: { id },
+      include: { summary: true },
     });
   }
 
@@ -16,6 +17,7 @@ export class ChatRepository {
           take: 1,
           orderBy: { timestamp: "desc" },
         },
+        summary: true,
       },
     });
   }
@@ -35,7 +37,7 @@ export class ChatRepository {
     });
   }
 
-  async update(id: number, data: Partial<Chat>): Promise<Chat> {
+  async update(id: number, data: Pick<Chat, "title">): Promise<Chat> {
     return prisma.chat.update({
       where: { id },
       data,

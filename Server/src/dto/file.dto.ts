@@ -13,6 +13,8 @@ export const FileResponseDto = z.object({
     sizeBytes: z.number(),
     url: z.string().url(),
     status: z.enum(["PROCESSING", "READY", "FAILED"]),
+    extractedText: z.string().nullable().optional(),
+    errorMessage: z.string().nullable().optional(),
     createdAt: z.date(),
 });
 export type FileResponseDto = z.infer<typeof FileResponseDto>;

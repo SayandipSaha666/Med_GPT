@@ -1,12 +1,18 @@
 // Chat DTOs
 import { Message } from "./message.dto";
 import { FileResponseDto } from "./file.dto";
+import type { ChatSummary } from "../generated/prisma-client";
 import { z } from "zod";
 
+/**
+ * Represents a chat conversation with optional structured summary.
+ * The summary is a compacted clinical memory of previous consultation state.
+ */
 export interface Chat {
   id: number;
   userId: number;
   title: string;
+  summary?: ChatSummary | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -23,6 +29,15 @@ export interface ChatFiles {
 export interface CreateChatDto {
   userId: number;
   title?: string;
+}
+
+/**
+ * DTO for updating chat with summary support.
+ * Used when persisting compacted conversation state.
+ */
+export interface UpdateChatSummaryDto {
+  chatId: number;
+  summary: string;
 }
 
 export interface UpdateChatDto {

@@ -5,3 +5,6 @@ node_modules
 .claude
 /sessions/
 /.claude/
+.claude/
+/docs/
+/__pycache__/

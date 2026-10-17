@@ -2,18 +2,23 @@
 import type { Request, Response } from "express";
 import { fileService } from "../services/file.service";
 import { AppError } from "../errors/app-error";
+import { FileResponseDto } from "../dto/file.dto";
 
 export class FileController {
     upload = async (req: Request, res: Response) => {
-        if (!req.file) throw AppError.badRequest("No file provided");
+        const file = req.file;
+        if (!file) {
+            throw AppError.badRequest("No files provided");
+        }
 
-        const result = await fileService.upload({
+        const result: FileResponseDto = await fileService.upload({
             userId: req.user!.id,
-            buffer: req.file.buffer,
-            originalName: req.file.originalname,
-            mime: req.file.mimetype,
-            size: req.file.size,
+            buffer: file.buffer,
+            originalName: file.originalname,
+            mime: file.mimetype,
+            size: file.size,
         });
+
         res.status(201).json(result);
     };
 
