@@ -19,6 +19,8 @@ export const API_ROUTES = {
   DELETE_CHAT: (chatId: string | number) => `/api/chat/${chatId}`,
   UPDATE_CHAT_TITLE: (chatId: string | number) => `/api/chat/update/${chatId}`,
   SEND_MESSAGE: (chatId: string | number) => `/api/chat/${chatId}/message`,
+  EDIT_MESSAGE: (chatId: string | number, messageId: string | number) => `/api/chat/${chatId}/message/${messageId}`,
+  DELETE_MESSAGE: (chatId: string | number, messageId: string | number) => `/api/chat/${chatId}/message/${messageId}`,
 
   // Billing routes
   GET_PLANS: '/api/billing/plans',

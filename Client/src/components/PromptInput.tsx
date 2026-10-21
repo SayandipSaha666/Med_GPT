@@ -5,6 +5,7 @@ import type { T_FileAttachment } from '../api/api.types';
 interface PromptInputProps {
   loading: boolean;
   onSend: (prompt: string, mode: string, attachments?: T_FileAttachment[]) => void;
+  onStop?: () => void;
   mode?: string;
   setMode?: (mode: string) => void;
   placeholder?: string;
@@ -16,6 +17,7 @@ interface PromptInputProps {
 export function PromptInput({
   loading,
   onSend,
+  onStop,
   mode = 'text',
   setMode,
   placeholder = 'Ask anything about symptoms, treatments, medications or attach reports...',
@@ -41,6 +43,12 @@ export function PromptInput({
 
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    if (loading) {
+      if (onStop) {
+        onStop();
+      }
+      return;
+    }
     if (!canSubmit) return;
 
     const finalPrompt = prompt.trim() || 'Please analyze these attached medical documents/images.';
@@ -183,42 +191,33 @@ export function PromptInput({
 
           {/* Send / Stop Button */}
           <button
-            type="submit"
-            disabled={!canSubmit}
+            type={loading ? "button" : "submit"}
+            onClick={loading ? onStop : undefined}
+            disabled={!loading && !canSubmit}
             className={`
               p-2.5 rounded-xl flex items-center justify-center
-              transition-all duration-200 shrink-0
-              ${canSubmit
-                ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-md shadow-purple-500/25 hover:scale-105 active:scale-95 cursor-pointer'
-                : 'bg-gray-100 dark:bg-purple-950/40 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+              transition-all duration-200 shrink-0 cursor-pointer
+              ${loading
+                ? 'bg-rose-600 hover:bg-rose-700 active:scale-95 text-white shadow-md shadow-rose-500/30 animate-pulse'
+                : canSubmit
+                  ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-md shadow-purple-500/25 hover:scale-105 active:scale-95'
+                  : 'bg-gray-100 dark:bg-purple-950/40 text-gray-400 dark:text-gray-500 !cursor-not-allowed'
               }
             `}
             title={
               loading
-                ? 'Processing response...'
+                ? 'Stop generating response'
                 : isUploadingFiles
                   ? 'Uploading attachments...'
                   : 'Send message (Enter)'
             }
-            aria-label="Send message"
+            aria-label={loading ? 'Stop generating' : 'Send message'}
           >
             {loading ? (
-              <svg className="animate-spin h-5 w-5 text-purple-600 dark:text-purple-300" viewBox="0 0 24 24">
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                  fill="none"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
-              </svg>
+              /* Stop Square Icon */
+              <div className="flex items-center justify-center w-4 h-4">
+                <span className="w-2.5 h-2.5 bg-white rounded-xs"></span>
+              </div>
             ) : isUploadingFiles ? (
               <svg className="animate-spin h-4 w-4 text-purple-600 dark:text-purple-400" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" />

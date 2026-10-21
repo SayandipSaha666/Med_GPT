@@ -31,7 +31,7 @@ export class FileService {
         }
 
         // 3. Extract in background (do not await)
-        void fileProcessingService.process(file.id, input.buffer, input.mime);
+        void fileProcessingService.process(file.id, input.buffer, input.mime, file.userId);
 
         return toFileAttachment(file);
     }

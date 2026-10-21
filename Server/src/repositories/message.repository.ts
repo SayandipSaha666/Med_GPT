@@ -39,6 +39,53 @@ export class MessageRepository {
     });
     return msg ? toMessage(msg) : null;
   }
+
+  async updateAgentMetadata(
+    messageId: number,
+    data: { agentType?: string; confidence?: number }
+  ): Promise<void> {
+    await prisma.message.update({
+      where: { id: messageId },
+      data: {
+        agentType: data.agentType ?? undefined,
+        confidence: data.confidence ?? undefined,
+      },
+    });
+  }
+
+  async deleteById(id: number): Promise<void> {
+    await prisma.message.delete({
+      where: { id },
+    });
+  }
+
+  async deleteManyByIds(ids: number[]): Promise<void> {
+    await prisma.message.deleteMany({
+      where: { id: { in: ids } },
+    });
+  }
+
+  async updateContent(id: number, content: string): Promise<Message> {
+    const msg = await prisma.message.update({
+      where: { id },
+      data: { content },
+      include: { files: true },
+    });
+    return toMessage(msg);
+  }
+
+  async findNextAssistantMessage(chatId: number, userMessageId: number): Promise<Message | null> {
+    const msg = await prisma.message.findFirst({
+      where: {
+        chatId,
+        id: { gt: userMessageId },
+        role: "assistant",
+      },
+      orderBy: { id: "asc" },
+      include: { files: true },
+    });
+    return msg ? toMessage(msg) : null;
+  }
 }
 
 export const messageRepository = new MessageRepository();

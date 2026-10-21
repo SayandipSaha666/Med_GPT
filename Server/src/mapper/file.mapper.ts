@@ -10,6 +10,8 @@ export const toFileAttachment = (file: File): FileResponseDto => {
         sizeBytes: file.sizeBytes,
         url: file.url,
         status: file.status,
+        extractedText: file.extractedText,
+        errorMessage: file.errorMessage,
         createdAt: file.createdAt,
     };
 }

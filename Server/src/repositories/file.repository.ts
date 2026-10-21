@@ -8,6 +8,10 @@ export class FileRepository {
         return prisma.file.create({ data });
     }
 
+    findById(id: string): Promise<File | null> {
+        return prisma.file.findUnique({ where: { id } });
+    }
+
     findByIdForUser(id: string, userId: number): Promise<File | null> {
         return prisma.file.findFirst({ where: { id, userId } });
     }

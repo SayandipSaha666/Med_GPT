@@ -10,9 +10,10 @@ export const ALLOWED_MIME_TYPES = [
   'image/png',
   'image/jpeg',
   'image/gif',
+  'image/webp', // Modern web image format with better compression
 ] as const;
 
-export const ACCEPTED_FILE_EXTENSIONS = '.pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.gif';
+export const ACCEPTED_FILE_EXTENSIONS = '.pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.gif,.webp';
 export const MAX_FILE_SIZE_MB = 10;
 export const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 

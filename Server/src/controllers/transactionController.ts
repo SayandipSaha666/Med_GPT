@@ -23,7 +23,7 @@ export class TransactionController {
       if (!validation.success) {
         res.status(400).json({
           success: false,
-          message: validation.error.errors[0].message,
+          message: validation.error.issues[0]?.message ?? "Validation failed",
         });
         return;
       }

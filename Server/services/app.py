@@ -4,11 +4,17 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel
-from langchain_chain import get_chain
-from dotenv import load_dotenv
 
-# Load environment variables from the shared .env file
-load_dotenv(dotenv_path=".env")
+from config import load_environment
+load_environment()
+
+# token = os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACEHUB_API_TOKEN")
+
+
+# print("Token loaded:", bool(token))
+# print("Token prefix:", token[:3] if token else None)
+
+from langchain_chain import get_chain
 
 app = FastAPI(title="MedGPT RAG Service")
 

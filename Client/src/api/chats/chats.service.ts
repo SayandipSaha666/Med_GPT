@@ -238,6 +238,8 @@ export const useUpdateChatTitle = () => {
 interface T_Send_Message_Variables {
   chatId: number;
   content: string;
+  fileIds?: string[];
+  signal?: AbortSignal;
 }
 
 export const useSendMessage = () => {
@@ -250,14 +252,15 @@ export const useSendMessage = () => {
   >({
     mutationKey: ['sendMessage'],
 
-    mutationFn: async ({ chatId, content }) => {
+    mutationFn: async ({ chatId, content, fileIds, signal }) => {
       const response = await api.post<
         T_Api_Success_Res<T_Send_Message_Response>
       >(
         API_ROUTES.SEND_MESSAGE(chatId),
-        { content },
+        { content, fileIds },
         {
-          timeout: 30000,
+          signal,
+          timeout: 45000,
         }
       );
 
@@ -266,6 +269,93 @@ export const useSendMessage = () => {
 
     onSuccess: async (_result, { chatId }) => {
       // The server may update messages, title, and updatedAt.
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: chatKeys.detail(chatId),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: chatKeys.all,
+        }),
+      ]);
+    },
+  });
+};
+
+/* -------------------- DELETE MESSAGE -------------------- */
+
+interface T_Delete_Message_Variables {
+  chatId: number;
+  messageId: number;
+}
+
+export const useDeleteMessage = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    { deletedIds: number[] },
+    Error,
+    T_Delete_Message_Variables
+  >({
+    mutationKey: ['deleteMessage'],
+
+    mutationFn: async ({ chatId, messageId }) => {
+      const response = await api.delete<
+        T_Api_Success_Res<{ deletedIds: number[] }>
+      >(API_ROUTES.DELETE_MESSAGE(chatId, messageId), {
+        timeout: 10000,
+      });
+
+      return response.data.data;
+    },
+
+    onSuccess: async (_result, { chatId }) => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: chatKeys.detail(chatId),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: chatKeys.all,
+        }),
+      ]);
+    },
+  });
+};
+
+/* -------------------- EDIT MESSAGE -------------------- */
+
+interface T_Edit_Message_Variables {
+  chatId: number;
+  messageId: number;
+  content: string;
+  signal?: AbortSignal;
+}
+
+export const useEditMessage = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    { userMessage: any; assistantMessage: any },
+    Error,
+    T_Edit_Message_Variables
+  >({
+    mutationKey: ['editMessage'],
+
+    mutationFn: async ({ chatId, messageId, content, signal }) => {
+      const response = await api.put<
+        T_Api_Success_Res<{ userMessage: any; assistantMessage: any }>
+      >(
+        API_ROUTES.EDIT_MESSAGE(chatId, messageId),
+        { content },
+        {
+          signal,
+          timeout: 45000,
+        }
+      );
+
+      return response.data.data;
+    },
+
+    onSuccess: async (_result, { chatId }) => {
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: chatKeys.detail(chatId),
@@ -287,4 +377,6 @@ export const chatService = {
   useDeleteChat,
   useUpdateChatTitle,
   useSendMessage,
+  useDeleteMessage,
+  useEditMessage,
 };

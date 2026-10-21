@@ -18,6 +18,7 @@ export function ChatDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const numericId = id ? parseInt(id, 10) : NaN;
   const isValidId = !isNaN(numericId) && numericId > 0;
@@ -37,6 +38,8 @@ export function ChatDetails() {
   } = useChatAttachments();
 
   const sendMessageMutation = ApiService.chats.useSendMessage();
+  const deleteMessageMutation = ApiService.chats.useDeleteMessage();
+  const editMessageMutation = ApiService.chats.useEditMessage();
 
   // Validate ID and redirect to 404 if invalid
   useEffect(() => {
@@ -102,7 +105,8 @@ export function ChatDetails() {
       messages: [...(prev?.messages || []), newUserMessage],
     }));
     setIsSending(true);
-    clearAttachments();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
     try {
       let messageContent = prompt;
@@ -118,6 +122,8 @@ export function ChatDetails() {
       const response = await sendMessageMutation.mutateAsync({
         chatId: numericId,
         content: messageContent,
+        fileIds: attachedFilesPayload.map((f) => f.id),
+        signal: controller.signal,
       });
 
       if (response?.success) {
@@ -150,8 +156,94 @@ export function ChatDetails() {
         );
       }
     } catch (error: any) {
+      if (error?.name === 'CanceledError' || error?.code === 'ERR_CANCELED') {
+        // User intentionally stopped generation
+        return;
+      }
       console.error('Failed to send message:', error);
       toast.error(error?.message || 'Error sending message. Please try again.');
+    } finally {
+      setIsSending(false);
+      abortControllerRef.current = null;
+    }
+  };
+
+  const handleStop = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsSending(false);
+    toast('Response generation stopped. ⏹️');
+  };
+
+  const handleDeleteMessage = async (messageId: number | string) => {
+    if (!isValidId) return;
+    try {
+      const numMsgId = Number(messageId);
+      const res = await deleteMessageMutation.mutateAsync({
+        chatId: numericId,
+        messageId: numMsgId,
+      });
+
+      const deletedIds = res?.deletedIds || [numMsgId];
+      setSelectedChat((prev: any) => ({
+        ...prev,
+        messages: (prev?.messages || []).filter((m: any) => !deletedIds.includes(Number(m.id))),
+      }));
+
+      // Update global chats list
+      setChats((prevChats: any[]) =>
+        prevChats.map((c) =>
+          c.id === numericId
+            ? {
+                ...c,
+                messages: (c.messages || []).filter((m: any) => !deletedIds.includes(Number(m.id))),
+              }
+            : c
+        )
+      );
+
+      toast.success('Message and AI response deleted.');
+    } catch (err: any) {
+      console.error('Delete message error:', err);
+      toast.error(err?.message || 'Failed to delete message');
+    }
+  };
+
+  const handleEditMessage = async (messageId: number | string, newContent: string) => {
+    if (!isValidId) return;
+    try {
+      setIsSending(true);
+      const numMsgId = Number(messageId);
+      const res = await editMessageMutation.mutateAsync({
+        chatId: numericId,
+        messageId: numMsgId,
+        content: newContent,
+      });
+
+      if (res?.userMessage && res?.assistantMessage) {
+        setSelectedChat((prev: any) => {
+          const currentMsgs = prev?.messages || [];
+          const userIdx = currentMsgs.findIndex((m: any) => Number(m.id) === numMsgId);
+          if (userIdx === -1) return prev;
+
+          let deleteCount = 1;
+          if (userIdx + 1 < currentMsgs.length && currentMsgs[userIdx + 1].role === 'assistant') {
+            deleteCount = 2;
+          }
+
+          const newMsgs = [...currentMsgs];
+          newMsgs.splice(userIdx, deleteCount, res.userMessage, res.assistantMessage);
+
+          return { ...prev, messages: newMsgs };
+        });
+
+        toast.success('Message updated and response regenerated! 🔄');
+      }
+    } catch (err: any) {
+      console.error('Edit message error:', err);
+      toast.error(err?.message || 'Failed to edit and resubmit message');
     } finally {
       setIsSending(false);
     }
@@ -226,7 +318,13 @@ export function ChatDetails() {
           ) : (
             <div className="space-y-4 pb-4">
               {selectedChat.messages.map((message: any, index: number) => (
-                <Message key={index} message={message} />
+                <Message
+                  key={message.id || index}
+                  message={message}
+                  onEdit={handleEditMessage}
+                  onDelete={handleDeleteMessage}
+                  isSending={isSending}
+                />
               ))}
 
               {/* Researching Animation */}
@@ -264,6 +362,7 @@ export function ChatDetails() {
         <PromptInput
           loading={isSending}
           onSend={sendMessage}
+          onStop={handleStop}
           mode="text"
           placeholder="Continue this consultation or attach reports/scans..."
           attachments={attachments}

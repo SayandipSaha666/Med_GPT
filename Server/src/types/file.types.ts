@@ -5,10 +5,11 @@ export const ALLOWED_MIME_TYPES = [
     "application/msword", // .doc
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
 
-    // Images
+    // Images - including WebP for modern web format support
     "image/png", // .png
     "image/jpeg", // .jpg, .jpeg
     "image/gif", // .gif
+    "image/webp", // .webp - Modern web image format with better compression
 ] as const;
 
 export type AllowedMime = (typeof ALLOWED_MIME_TYPES)[number];
