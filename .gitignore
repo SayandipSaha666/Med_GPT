@@ -5,3 +5,8 @@ node_modules
 .claude
 /sessions/
 /.claude/
+# Ignore all files and folders inside Server/docs
+/Server/docs/
+
+# Ignore Python cache directories inside Server/services
+/Server/services/**/__pycache__/
