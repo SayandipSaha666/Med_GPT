@@ -4,7 +4,7 @@ node_modules
 .gitignore
 .claude
 /sessions/
-/.claude/
+/.claude/**/
 # Ignore all files and folders inside Server/docs
 /Server/docs/
 
