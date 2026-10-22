@@ -12,7 +12,7 @@ RUN npm run build
 FROM node:20-alpine AS production
 WORKDIR /app
 ENV NODE_ENV=production
-ENV PORT=3000
+ENV USER_SERVICE_PORT=3000
 
 COPY package*.json ./
 RUN npm ci --omit=dev

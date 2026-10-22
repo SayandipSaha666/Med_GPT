@@ -13,7 +13,7 @@ RUN npm run build
 FROM node:20-alpine AS production
 WORKDIR /app
 ENV NODE_ENV=production
-ENV PORT=4001
+ENV AGENT_SERVICE_PORT=4000
 
 COPY package*.json ./
 RUN npm ci --omit=dev
@@ -23,5 +23,5 @@ COPY --from=build /app/dist ./dist
 COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
 
 USER node
-EXPOSE 4001
+EXPOSE 4000
 CMD ["node", "dist/index.js"]

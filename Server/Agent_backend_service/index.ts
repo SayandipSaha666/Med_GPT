@@ -1,5 +1,3 @@
-require("dotenv").config();
-
 import express, { type NextFunction, type Request, type Response } from "express";
 import cors from "cors";
 import { connectDB } from "./src/lib/prisma";
@@ -47,8 +45,8 @@ app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
 const startServer = async () => {
   try {
     await connectDB();
-    app.listen(env.PORT, () => {
-      console.log(`Agent service is running on port ${env.PORT}`);
+    app.listen(env.AGENT_SERVICE_PORT, () => {
+      console.log(`Agent service is running on port ${env.AGENT_SERVICE_PORT}`);
     });
   } catch (error) {
     console.log(error);

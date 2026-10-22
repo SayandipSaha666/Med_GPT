@@ -1,4 +1,3 @@
-require("dotenv").config();
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -43,7 +42,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(bodyParser.json());
 
-const PORT = env.PORT || 3000;
+const PORT = env.USER_SERVICE_PORT;
 
 // Mount routers
 app.use("/api/user", userRouter);
