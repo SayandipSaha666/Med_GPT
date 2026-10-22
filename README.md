@@ -66,23 +66,34 @@ Research_GPT/
 │   │   └── services/       # API call handlers
 │   └── Dockerfile
 │
-├── Server/                 # Node.js Backend (Express)
-│   ├── index.js            # Entry point
-│   ├── prisma/             # Schema and Migrations
-│   ├── src/
-│   │   ├── controllers/    # Route logic
-│   │   ├── middleware/     # Auth & Validation
-│   │   └── routes/         # Express API routes
-│   └── services/           # Python RAG Service (FastAPI)
-│   |    ├── app.py          # FastAPI entry point
-│   |    ├── helper.py       # Vector store & LLM logic
-│   |    ├── langchain_chain.py # Chain orchestration
-│   |    ├── prompt.py       # Prompt engineering
-│   |    ├── Dockerfile      # AI Service Dockerfile
-│   |    ├── .env            # AI Service environment variables
-│   |    └── requirements.txt  # AI Service dependencies
-│   ├── .env                 # Server dependencies
-│   ├── Dockerfile           # Server Dockerfile
+├── Server/
+│   ├── user_service/           # Node.js User Service (Express)
+│   │   ├── index.ts            # Entry point (port 3000)
+│   │   ├── prisma/             # Schema and Migrations
+│   │   ├── src/
+│   │   │   ├── controllers/    # Auth, users, chats, messages, files, billing
+│   │   │   ├── services/       # Business logic + agent client
+│   │   │   ├── middleware/     # Auth & Validation
+│   │   │   └── routes/         # Express API routes
+│   │   ├── .env                # User service environment variables
+│   │   └── Dockerfile          # User service Dockerfile
+│   ├── Agent_backend_service/  # Node.js Agent Service (Express)
+│   │   ├── index.ts            # Entry point (port 4001)
+│   │   ├── prisma/             # Shared schema for agent tool queries
+│   │   ├── src/
+│   │   │   ├── agents/         # Multi-agent system, tools, guardrails
+│   │   │   ├── lib/            # Prisma client
+│   │   │   └── agents/api/     # Internal /agent HTTP API
+│   │   ├── .env                # Agent service environment variables
+│   │   └── Dockerfile          # Agent service Dockerfile
+│   └── RAG_Service/            # Python RAG Service (FastAPI)
+│       ├── app.py              # FastAPI entry point
+│       ├── helper.py           # Vector store & LLM logic
+│       ├── langchain_chain.py  # Chain orchestration
+│       ├── prompt.py           # Prompt engineering
+│       ├── Dockerfile          # RAG service Dockerfile
+│       ├── .env                # RAG service environment variables
+│       └── prod-requirements.txt # RAG service dependencies
 |
 ├── docker-compose.yml      # Orchestrates all services
 └── README.md
@@ -92,24 +103,39 @@ Research_GPT/
 
 ## ⚙️ Environment Variables
 
-### Backend (`Server/.env`)
+### User Service (`Server/user_service/.env`)
 ```env
 PORT=3000
 DATABASE_URL="postgresql://user:password@host:port/db?sslmode=require"
 JWT_SECRET_KEY="your_secret_hex_string"
 RAG_SERVICE_URL=http://localhost:8000
-ALLOWED_ORIGINS=http://localhost:5173
+AGENT_SERVICE_URL=http://localhost:4001
+AGENT_SERVICE_API_KEY="shared_internal_secret"
+FRONTEND_ALLOWED_ORIGINS=http://localhost:5173
 RAZORPAY_KEY_ID=rzp_test_xxxxxx
 RAZORPAY_KEY_SECRET=xxxxxx
 RAZORPAY_WEBHOOK_SECRET=xxxxxx
 ```
 
-### AI Service (`Server/services/.env`)
+### Agent Service (`Server/Agent_backend_service/.env`)
+```env
+PORT=4001
+DATABASE_URL="postgresql://user:password@host:port/db?sslmode=require"
+RAG_SERVICE_URL=http://localhost:8000
+AGENT_SERVICE_API_KEY="shared_internal_secret"
+MODEL_PROVIDER=openai
+OPENAI_AGENT_API_KEY="your_openai_key"
+OPENAI_AGENT_MODEL=gpt-4o
+GUARDRAILS_ENABLED=true
+ENCRYPTION_MASTER_KEY="your_encryption_key"
+```
+
+### AI Service (`Server/RAG_Service/.env`)
 ```env
 PINECONE_API_KEY="your_pinecone_key"
 GROQ_API_KEY="your_groq_key"
 HUGGINGFACEHUB_API_TOKEN="your_hf_token"
-ALLOWED_ORIGINS=http://localhost:3000
+BACKEND_ALLOWED_ORIGINS=http://localhost:3000
 ```
 
 ### Frontend (`Client/.env`)
@@ -123,7 +149,7 @@ VITE_SERVER_URL=http://localhost:3000
 
 ### 1. Database Setup
 ```bash
-cd Server
+cd Server/user_service
 npx prisma generate
 npx prisma db push
 npm run seed      # To populate Free/Pro plans
@@ -131,21 +157,29 @@ npm run seed      # To populate Free/Pro plans
 
 ### 2. AI Service Setup
 ```bash
-cd Server/services
+cd Server/RAG_Service
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+pip install -r prod-requirements.txt
 python app.py
 ```
 
-### 3. Backend Setup
+### 3. Agent Service Setup
 ```bash
-cd Server
+cd Server/Agent_backend_service
 npm install
-npm run dev
+npx prisma generate
+npm run dev       # Starts on port 4001
 ```
 
-### 4. Frontend Setup
+### 4. User Service Setup
+```bash
+cd Server/user_service
+npm install
+npm run dev       # Starts on port 3000
+```
+
+### 5. Frontend Setup
 ```bash
 cd Client
 npm install

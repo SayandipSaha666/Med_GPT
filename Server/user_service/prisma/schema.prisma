@@ -1,0 +1,349 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma-client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id             Int             @id @default(autoincrement())
+  email          String          @unique
+  password       String
+  name           String
+  credits        Decimal         @default(200.0) @db.Decimal(10, 2)
+  planId         Int             @default(1)
+  plan           Plans           @relation(fields: [planId], references: [id], onDelete: Restrict)
+  chats          Chat[]
+  transactions   Transaction[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @default(now()) @updatedAt
+  files          File[]
+  // NEW: Agent system relations
+  medicalProfile MedicalProfile?
+  prescriptions  Prescription[]
+  appointments   Appointment[]
+  chatSummaries  ChatSummary[]
+
+  @@map("users")
+}
+
+enum FileStatus {
+  PROCESSING
+  READY
+  FAILED
+}
+
+model File {
+  id            String     @id @default(uuid())
+  userId        Int        @map("user_id")
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messageId     Int?       @map("message_id")
+  message       Message?   @relation(fields: [messageId], references: [id], onDelete: SetNull)
+  name          String
+  mime          String
+  sizeBytes     Int        @map("size_bytes")
+  url           String
+  publicId      String     @map("public_id")
+  resourceType  String     @map("resource_type")
+  status        FileStatus @default(PROCESSING)
+  extractedText String?    @map("extracted_text") @db.Text
+  errorMessage  String?    @map("error_message")
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+
+  chunks        FileChunk[]
+  prescriptions Prescription[]
+
+  @@index([userId, createdAt])
+  @@map("files")
+}
+
+model FileChunk {
+  id      Int    @id @default(autoincrement())
+  fileId  String @map("file_id")
+  idx     Int
+  content String @db.Text
+
+  file File @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@unique([fileId, idx])
+  @@index([fileId])
+  @@map("file_chunks")
+}
+
+model Chat {
+  id        Int          @id @default(autoincrement())
+  userId    Int
+  user      User         @relation(fields: [userId], references: [id])
+  title     String       @default("New Chat")
+  messages  Message[]
+  summary   ChatSummary?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @default(now()) @updatedAt
+
+  @@map("chats")
+}
+
+model Message {
+  id         Int      @id @default(autoincrement())
+  chatId     Int      @map("chat_id")
+  chat       Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  role       String
+  content    String   @db.Text
+  timestamp  DateTime @default(now()) @map("timestamp")
+  sources    Json     @default("[]") // Source[]
+  toolCalls  Json     @default("[]") @map("tool_calls") // ToolCall[]
+  files      File[]
+  // NEW: Track which agent handled this message
+  agentType  String?  @map("agent_type")
+  confidence Float?   @map("confidence")
+  metadata   Json?    @map("agent_metadata")
+
+  @@index([chatId, timestamp])
+  @@map("messages")
+}
+
+/// Compacted structured summary for each conversation thread.
+/// Stores clinical observations (symptoms, diagnoses, advice, medications, allergies)
+/// for single-chat context restoration and cross-chat memory retrieval.
+model ChatSummary {
+  id                       Int      @id @default(autoincrement())
+  chatId                   Int      @unique @map("chat_id")
+  chat                     Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  userId                   Int      @map("user_id")
+  user                     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Clinical Summary Fields
+  chiefComplaints          String[] @default([]) @map("chief_complaints")
+  symptomsDetail           String?  @map("symptoms_detail") @db.Text
+  diagnosesDiscussed       String[] @default([]) @map("diagnoses_discussed")
+  clinicalAdvice           String?  @map("clinical_advice") @db.Text
+
+  // Relevant columns matching Prescription & MedicalProfile
+  medicationsMentioned     Json     @default("[]") @map("medications_mentioned")
+  allergiesNoted           String[] @default([]) @map("allergies_noted")
+
+  // Department & Triage context
+  primaryDepartment        String?  @map("primary_department")
+  urgencyLevel             String   @default("routine") @map("urgency_level")
+  pendingActions           String[] @default([]) @map("pending_actions")
+
+  // Compacted Narrative for direct agent context injection
+  compactedText            String   @map("compacted_text") @db.Text
+  messageCountAtCompaction  Int      @default(0) @map("message_count_at_compaction")
+
+  createdAt                DateTime @default(now()) @map("created_at")
+  updatedAt                DateTime @updatedAt @map("updated_at")
+
+  @@index([userId, updatedAt])
+  @@index([userId, primaryDepartment])
+  @@map("chat_summaries")
+}
+
+enum TransactionStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+model Transaction {
+  id                Int               @id @default(autoincrement())
+  userId            Int
+  user              User              @relation(fields: [userId], references: [id], onDelete: Restrict)
+  amount            Decimal           @db.Decimal(10, 2)
+  planId            Int
+  plan              Plans             @relation(fields: [planId], references: [id], onDelete: Restrict)
+  razorpayOrderId   String            @unique
+  razorpayPaymentId String?
+  isPaid            Boolean           @default(false)
+  status            TransactionStatus @default(PENDING)
+  credits           Decimal           @default(200.0) @db.Decimal(10, 2)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @default(now()) @updatedAt
+
+  @@map("transactions")
+}
+
+model Plans {
+  id           Int           @id @default(autoincrement())
+  name         String        @default("Free")
+  price        Decimal       @default(0.0) @db.Decimal(10, 2)
+  credits      Decimal       @default(200.0) @db.Decimal(10, 2)
+  features     String[]
+  transactions Transaction[]
+  users        User[]
+  createdAt    DateTime      @default(now())
+
+  @@map("plans")
+}
+
+// ════════════════════════════════════════════════════════════════════
+// NEW MODELS FOR MULTI-AGENT MEDICAL SYSTEM
+// ════════════════════════════════════════════════════════════════════
+
+/// Stores encrypted PII and health history for personalized agent responses.
+/// All sensitive fields are AES-256-GCM encrypted at the application layer.
+model MedicalProfile {
+  id     Int  @id @default(autoincrement())
+  userId Int  @unique @map("user_id")
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Encrypted PII fields (AES-256-GCM encrypted at application layer)
+  dateOfBirth          String? @map("date_of_birth")
+  gender               String?
+  bloodGroup           String? @map("blood_group")
+  allergiesEncrypted   String? @map("allergies_encrypted") @db.Text
+  conditionsEncrypted  String? @map("conditions_encrypted") @db.Text
+  medicationsEncrypted String? @map("medications_encrypted") @db.Text
+
+  // Non-PII preferences
+  preferredLanguage   String  @default("en") @map("preferred_language")
+  emergencyEscalation Boolean @default(true) @map("emergency_escalation")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("medical_profiles")
+}
+
+/// Structured prescription data extracted via VLM/OCR.
+/// Linked to the uploaded File and the User.
+model Prescription {
+  id     String @id @default(uuid())
+  userId Int    @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fileId String @map("file_id")
+  file   File   @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  // Extracted structured data
+  doctorName        String?   @map("doctor_name")
+  patientName       String?   @map("patient_name")
+  dateIssued        DateTime? @map("date_issued")
+  rawText           String    @map("raw_text") @db.Text
+  medications       Json      @default("[]")
+  warnings          Json      @default("[]")
+  recommendations   Json      @default("[]")
+  overallAssessment String?   @map("overall_assessment") @db.Text
+
+  // Extraction metadata
+  extractionModel  String @map("extraction_model")
+  confidenceScore  Float  @map("confidence_score")
+  processingTimeMs Int    @map("processing_time_ms")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId, createdAt])
+  @@map("prescriptions")
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+/// Appointment bookings created by the Booking Agent.
+model Appointment {
+  id     String @id @default(uuid())
+  userId Int    @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  hospitalName    String  @map("hospital_name")
+  hospitalAddress String? @map("hospital_address")
+  department      String
+  doctorName      String? @map("doctor_name")
+
+  scheduledAt     DateTime          @map("scheduled_at")
+  durationMinutes Int               @default(30) @map("duration_minutes")
+  status          AppointmentStatus @default(PENDING)
+
+  // Integration IDs
+  calendarEventId   String? @map("calendar_event_id")
+  externalBookingId String? @map("external_booking_id")
+
+  notes          String?   @db.Text
+  reminderSentAt DateTime? @map("reminder_sent_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId, scheduledAt])
+  @@map("appointments")
+}
+
+enum KnowledgeSource {
+  WEB_SEARCH
+  UPLOADED_DOCUMENT
+  MEDICAL_GUIDELINE
+  HOSPITAL_DATA
+  AGENT_LEARNING
+  MANUAL_ENTRY
+}
+
+/// Stores curated knowledge from web searches, guidelines, and documents.
+/// Dual-written: content is ALSO embedded in Pinecone for semantic search.
+/// PostgreSQL provides exact keyword search + structured filtering.
+model KnowledgeEntry {
+  id String @id @default(uuid())
+
+  source     KnowledgeSource
+  sourceUrl  String?         @map("source_url")
+  department String?
+
+  title       String
+  content     String @db.Text
+  contentHash String @unique @map("content_hash")
+
+  // Vector embedding reference (points to Pinecone)
+  pineconeId     String? @map("pinecone_id")
+  embeddingModel String? @map("embedding_model")
+
+  // Metadata
+  isVerified Boolean  @default(false) @map("is_verified")
+  tags       String[] @default([])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([department, source])
+  @@map("knowledge_entries")
+}
+
+/// Agent execution logs for observability, debugging, and cost tracking.
+model AgentLog {
+  id        String @id @default(uuid())
+  chatId    Int    @map("chat_id")
+  messageId Int?   @map("message_id")
+
+  agentType String @map("agent_type")
+  action    String
+
+  input  String? @db.Text
+  output String? @db.Text
+
+  // Performance
+  latencyMs  Int     @map("latency_ms")
+  tokensUsed Int?    @map("tokens_used")
+  modelUsed  String? @map("model_used")
+
+  // Guardrail results
+  guardrailResults Json? @map("guardrail_results")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([chatId, createdAt])
+  @@index([agentType, createdAt])
+  @@map("agent_logs")
+}

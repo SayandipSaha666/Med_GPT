@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   frontend:
     build:
@@ -11,41 +9,62 @@ services:
     env_file:
       - ./Client/.env
     depends_on:
-      - backend
+      - user-service
     volumes:
       - ./Client/src:/app/src
       - ./Client/public:/app/public
 
-  backend:
+  user-service:
     build:
-      context: ./Server
+      context: ./Server/user_service
       dockerfile: Dockerfile
-    container_name: MedGPT_backend
+    container_name: MedGPT_user_service
     ports:
       - "3000:3000"
     env_file:
-      - ./Server/.env
+      - ./Server/user_service/.env
     environment:
+      - DATABASE_URL=postgresql://postgres:Saha%4006122004@db:5432/MedGPT_DB
+      - RAG_SERVICE_URL=http://rag-service:8000
+      - AGENT_SERVICE_URL=http://agent-service:4001
+    depends_on:
+      - db
+      - rag-service
+      - agent-service
+    volumes:
+      - ./Server/user_service/src:/app/src
+      - ./Server/user_service/prisma:/app/prisma
+
+  agent-service:
+    build:
+      context: ./Server/Agent_backend_service
+      dockerfile: Dockerfile
+    container_name: MedGPT_agent_service
+    ports:
+      - "4001:4001"
+    env_file:
+      - ./Server/Agent_backend_service/.env
+    environment:
+      - PORT=4001
       - DATABASE_URL=postgresql://postgres:Saha%4006122004@db:5432/MedGPT_DB
       - RAG_SERVICE_URL=http://rag-service:8000
     depends_on:
       - db
       - rag-service
     volumes:
-      - ./Server/src:/app/src
-      - ./Server/prisma:/app/prisma
+      - ./Server/Agent_backend_service/src:/app/src
 
   rag-service:
     build:
-      context: ./Server/services
+      context: ./Server/RAG_Service
       dockerfile: Dockerfile
     container_name: MedGPT_rag
     ports:
       - "8000:8000"
     env_file:
-      - ./Server/.env
+      - ./Server/RAG_Service/.env
     volumes:
-      - ./Server/services:/app
+      - ./Server/RAG_Service:/app
 
   db:
     image: postgres:15-alpine
