@@ -5,7 +5,7 @@ import type {
   StreamChunk,
 } from "../types/agent.types";
 
-const AGENT_SERVICE_URL = (env.AGENT_SERVICE_URL || "http://localhost:4001").replace(/\/+$/, "");
+const AGENT_SERVICE_URL = (env.AGENT_SERVICE_URL || "http://localhost:4000").replace(/\/+$/, "");
 
 function buildHeaders(): Record<string, string> {
   const headers: Record<string, string> = {

@@ -4,8 +4,8 @@ services:
       context: ./Client
       dockerfile: Dockerfile
     restart: unless-stopped
-    expose:
-      - "80"
+    ports:
+      - "5173:5173"
     depends_on:
       - user-service
     networks:
@@ -20,12 +20,12 @@ services:
       - ./Server/user_service/.env
     environment:
       NODE_ENV: production
-      PORT: "3000"
+      USER_SERVICE_PORT: "3000"
       DATABASE_URL: postgresql://${POSTGRES_USER:-medgpt}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in root .env}@db:5432/${POSTGRES_DB:-MedGPT_DB}
       RAG_SERVICE_URL: http://rag-service:8000
-      AGENT_SERVICE_URL: http://agent-service:4001
-    expose:
-      - "3000"
+      AGENT_SERVICE_URL: http://agent-service:4000
+    ports:
+      - "3000:3000"
     depends_on:
       db:
         condition: service_healthy
@@ -45,11 +45,11 @@ services:
       - ./Server/Agent_backend_service/.env
     environment:
       NODE_ENV: production
-      PORT: "4001"
+      AGENT_SERVICE_PORT: "4000"
       DATABASE_URL: postgresql://${POSTGRES_USER:-medgpt}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in root .env}@db:5432/${POSTGRES_DB:-MedGPT_DB}
       RAG_SERVICE_URL: http://rag-service:8000
-    expose:
-      - "4001"
+    ports:
+      - "4000:4000"
     depends_on:
       db:
         condition: service_healthy
@@ -65,8 +65,8 @@ services:
     restart: unless-stopped
     env_file:
       - ./Server/RAG_Service/.env
-    expose:
-      - "8000"
+    ports:
+      - "8000:8000"
     networks:
       - medgpt-internal
     # If the service downloads model files at runtime, consider adding a named

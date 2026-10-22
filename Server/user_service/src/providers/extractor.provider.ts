@@ -248,7 +248,7 @@ async function extractWithOpenAI(buffer: Buffer, mime: string): Promise<Extracti
     };
 
     console.log(`[OCR] Using OpenAI with model: ${modelName}`);
-    const response = await axios.post("https://api.openai.com/v1/chat/completions", payload, {
+    const response = await axios.post(`${env.OPENAI_API_URL}/chat/completions`, payload, {
         headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${apiKey}`,
