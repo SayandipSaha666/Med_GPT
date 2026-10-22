@@ -3,81 +3,98 @@ services:
     build:
       context: ./Client
       dockerfile: Dockerfile
-    container_name: MedGPT_frontend
-    ports:
-      - "5173:5173"
-    env_file:
-      - ./Client/.env
+    restart: unless-stopped
+    expose:
+      - "80"
     depends_on:
       - user-service
-    volumes:
-      - ./Client/src:/app/src
-      - ./Client/public:/app/public
+    networks:
+      - medgpt-internal
 
   user-service:
     build:
       context: ./Server/user_service
       dockerfile: Dockerfile
-    container_name: MedGPT_user_service
-    ports:
-      - "3000:3000"
+    restart: unless-stopped
     env_file:
       - ./Server/user_service/.env
     environment:
-      - DATABASE_URL=postgresql://postgres:Saha%4006122004@db:5432/MedGPT_DB
-      - RAG_SERVICE_URL=http://rag-service:8000
-      - AGENT_SERVICE_URL=http://agent-service:4001
+      NODE_ENV: production
+      PORT: "3000"
+      DATABASE_URL: postgresql://${POSTGRES_USER:-medgpt}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in root .env}@db:5432/${POSTGRES_DB:-MedGPT_DB}
+      RAG_SERVICE_URL: http://rag-service:8000
+      AGENT_SERVICE_URL: http://agent-service:4001
+    expose:
+      - "3000"
     depends_on:
-      - db
-      - rag-service
-      - agent-service
-    volumes:
-      - ./Server/user_service/src:/app/src
-      - ./Server/user_service/prisma:/app/prisma
+      db:
+        condition: service_healthy
+      rag-service:
+        condition: service_started
+      agent-service:
+        condition: service_started
+    networks:
+      - medgpt-internal
 
   agent-service:
     build:
       context: ./Server/Agent_backend_service
       dockerfile: Dockerfile
-    container_name: MedGPT_agent_service
-    ports:
-      - "4001:4001"
+    restart: unless-stopped
     env_file:
       - ./Server/Agent_backend_service/.env
     environment:
-      - PORT=4001
-      - DATABASE_URL=postgresql://postgres:Saha%4006122004@db:5432/MedGPT_DB
-      - RAG_SERVICE_URL=http://rag-service:8000
+      NODE_ENV: production
+      PORT: "4001"
+      DATABASE_URL: postgresql://${POSTGRES_USER:-medgpt}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in root .env}@db:5432/${POSTGRES_DB:-MedGPT_DB}
+      RAG_SERVICE_URL: http://rag-service:8000
+    expose:
+      - "4001"
     depends_on:
-      - db
-      - rag-service
-    volumes:
-      - ./Server/Agent_backend_service/src:/app/src
+      db:
+        condition: service_healthy
+      rag-service:
+        condition: service_started
+    networks:
+      - medgpt-internal
 
   rag-service:
     build:
       context: ./Server/RAG_Service
       dockerfile: Dockerfile
-    container_name: MedGPT_rag
-    ports:
-      - "8000:8000"
+    restart: unless-stopped
     env_file:
       - ./Server/RAG_Service/.env
-    volumes:
-      - ./Server/RAG_Service:/app
+    expose:
+      - "8000"
+    networks:
+      - medgpt-internal
+    # If the service downloads model files at runtime, consider adding a named
+    # model-cache volume after confirming the cache path used by your code.
 
   db:
     image: postgres:15-alpine
-    container_name: MedGPT_db
-    restart: always
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: Saha@06122004
-      POSTGRES_DB: MedGPT_DB
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: ${POSTGRES_USER:-medgpt}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in root .env}
+      POSTGRES_DB: ${POSTGRES_DB:-MedGPT_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    expose:
+      - "5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - medgpt-internal
 
 volumes:
   postgres_data:
+
+networks:
+  medgpt-internal:
+    driver: bridge
