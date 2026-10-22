@@ -1,0 +1,38 @@
+{
+  "name": "medgpt-agent-service",
+  "version": "1.0.0",
+  "description": "MedGPT agent runtime, guardrails, and response generation service",
+  "main": "index.js",
+  "scripts": {
+    "dev": "cross-env NODE_OPTIONS=--dns-result-order=ipv4first nodemon --exec ts-node index.ts",
+    "start": "cross-env NODE_OPTIONS=--dns-result-order=ipv4first tsx index.ts",
+    "build": "tsc --build",
+    "db:generate": "prisma generate",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@openai/agents": "^0.20.0",
+    "@prisma/adapter-pg": "^7.8.0",
+    "@prisma/client": "^7.10.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.3.0",
+    "pg": "^8.20.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.9.9",
+    "@types/pg": "^8.20.0",
+    "cross-env": "^10.1.0",
+    "nodemon": "^3.1.14",
+    "prisma": "^7.10.0",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3"
+  }
+}

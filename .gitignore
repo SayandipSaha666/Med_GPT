@@ -5,8 +5,11 @@ node_modules
 .claude
 /sessions/
 /.claude/**/
-# Ignore all files and folders inside Server/docs
-/Server/docs/
+# Ignore generated/service artifacts
+/Server/user_service/src/generated/
+/Server/Agent_backend_service/src/generated/
+/Server/Agent_backend_service/docs/
+*.tsbuildinfo
 
-# Ignore Python cache directories inside Server/services
-/Server/services/**/__pycache__/
+# Ignore Python cache directories inside the RAG service
+/Server/RAG_Service/**/__pycache__/
