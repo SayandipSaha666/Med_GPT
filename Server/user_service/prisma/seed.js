@@ -65,6 +65,15 @@ async function main() {
     },
   });
 
+  await prisma.$queryRaw`
+    SELECT setval(
+      pg_get_serial_sequence('plans', 'id'),
+      COALESCE(MAX(id), 1),
+      true
+    )
+    FROM plans
+  `;
+
   console.log({ freePlan, basicPlan, proPlan, premiumPlan });
 }
 

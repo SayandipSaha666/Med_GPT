@@ -143,6 +143,25 @@ BACKEND_ALLOWED_ORIGINS=http://localhost:3000
 VITE_SERVER_URL=http://localhost:3000
 ```
 
+### Docker Compose
+
+Compose interpolates the `${...}` variables in `docker-compose.yml` from the
+shell environment or a `.env` file in the repository root. The service-specific
+`.env` files above are not automatically used by Compose. For a local setup,
+copy the root template and replace every `CHANGE_ME` value with real
+credentials/settings:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Then run `docker compose up` from the repository root. Do not commit `.env`.
+`VITE_SERVER_URL` must be the API URL reachable by the user's browser, and
+`FRONTEND_ALLOWED_ORIGINS` must include the frontend's browser origin. Use
+provider-issued credentials for Groq, Pinecone, Cloudinary, and Razorpay; the
+placeholder values will let Compose parse the file but will not make services
+work. Keep `RUN_SEED=false` except when initializing a new, empty database.
+
 ---
 
 ## 🛠️ Setup Guide
@@ -151,9 +170,18 @@ VITE_SERVER_URL=http://localhost:3000
 ```bash
 cd Server/user_service
 npx prisma generate
-npx prisma db push
+npm run migrate:dev
 npm run seed      # To populate Free/Pro plans
 ```
+
+Production deployments use `npm run migrate:deploy` through the one-time Compose
+`migrate` service; do not use `prisma migrate dev` or `db push` in production.
+Keep `RUN_SEED=false` for normal deployments. Set it to `true` only for the
+initial empty database when you want the default plans seeded. Back up any
+existing database before deployment. The historical
+`20261012035719_update_table_mappings` migration drops and recreates legacy
+tables, so do not apply it to a database with data you need to preserve without
+first preparing a data-preserving migration plan.
 
 ### 2. AI Service Setup
 ```bash

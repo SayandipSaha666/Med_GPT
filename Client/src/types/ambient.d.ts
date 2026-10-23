@@ -37,6 +37,7 @@ declare module '*.svg' {
 // Vite client type declarations
 interface ImportMetaEnv {
   readonly VITE_SERVER_URL?: string;
+  readonly DEV?: boolean;
 }
 
 interface ImportMeta {

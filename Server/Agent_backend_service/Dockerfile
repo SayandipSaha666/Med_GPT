@@ -1,4 +1,4 @@
-FROM node:20-alpine AS build
+FROM node:22-alpine AS build
 WORKDIR /app
 
 COPY package*.json ./
@@ -10,7 +10,7 @@ COPY . .
 RUN if [ -f prisma/schema.prisma ]; then npx prisma generate; fi
 RUN npm run build
 
-FROM node:20-alpine AS production
+FROM node:22-alpine AS production
 WORKDIR /app
 ENV NODE_ENV=production
 ENV AGENT_SERVICE_PORT=4000
@@ -19,8 +19,8 @@ COPY package*.json ./
 RUN npm ci --omit=dev
 
 COPY --from=build /app/dist ./dist
-# Safe when the build stage generated Prisma client files.
-COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
+# The schema uses a custom Prisma client output path, imported by compiled code.
+COPY --from=build /app/src/generated/prisma-client ./dist/src/generated/prisma-client
 
 USER node
 EXPOSE 4000

@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "cross-env NODE_OPTIONS=--dns-result-order=ipv4first nodemon --exec ts-node index.ts",
     "start": "cross-env NODE_OPTIONS=--dns-result-order=ipv4first tsx index.ts",
-    "build": "tsc --build",
+    "build": "tsc -p tsconfig.json",
     "db:generate": "prisma generate",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
