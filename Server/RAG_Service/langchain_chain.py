@@ -17,8 +17,8 @@ def get_chain():
         llm = load_llm(model)
 
         embedding_model = "sentence-transformers/all-MiniLM-L6-v2"
-        # embedding = load_embedding_model(embedding_model)
-        embedding = load_local_embedding_model(embedding_model)
+        embedding = load_embedding_model(embedding_model)
+        # embedding = load_local_embedding_model(embedding_model)
 
         index_name = "medical-chatbot"
         vector_store = PineconeVectorStore.from_existing_index(

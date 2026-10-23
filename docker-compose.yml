@@ -3,81 +3,110 @@ services:
     build:
       context: ./Client
       dockerfile: Dockerfile
+      args:
+        VITE_SERVER_URL: ${VITE_SERVER_URL:?Set the public frontend origin}
     restart: unless-stopped
-    ports:
-      - "5173:5173"
+    expose:
+      - "5173"
     depends_on:
       - user-service
-    networks:
-      - medgpt-internal
+
+  migrate:
+    build:
+      context: ./Server/user_service
+      dockerfile: Dockerfile
+      target: build            # the stage that still has dev deps and the Prisma CLI
+    restart: "no"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-medgpt}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-MedGPT_DB}
+      RUN_SEED: ${RUN_SEED:-false}
+    command:
+      - sh
+      - -c
+      - npm run migrate:deploy && if [ "$$RUN_SEED" = "true" ]; then npm run seed; fi
+    depends_on:
+      db:
+        condition: service_healthy
 
   user-service:
     build:
       context: ./Server/user_service
       dockerfile: Dockerfile
     restart: unless-stopped
-    env_file:
-      - ./Server/user_service/.env
+    expose:
+      - "3000"
     environment:
       NODE_ENV: production
       USER_SERVICE_PORT: "3000"
-      DATABASE_URL: postgresql://${POSTGRES_USER:-medgpt}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in root .env}@db:5432/${POSTGRES_DB:-MedGPT_DB}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-medgpt}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-MedGPT_DB}
       RAG_SERVICE_URL: http://rag-service:8000
       AGENT_SERVICE_URL: http://agent-service:4000
-    ports:
-      - "3000:3000"
+      AGENT_SERVICE_API_KEY: ${AGENT_SERVICE_API_KEY:?}
+      ENCRYPTION_MASTER_KEY: ${ENCRYPTION_MASTER_KEY:?}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?}
+      REFRESH_TOKEN_SECRET: ${REFRESH_TOKEN_SECRET:?}
+      FRONTEND_ALLOWED_ORIGINS: ${FRONTEND_ALLOWED_ORIGINS:?}
+      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID:?}
+      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET:?}
+      RAZORPAY_WEBHOOK_SECRET: ${RAZORPAY_WEBHOOK_SECRET:?}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:?}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:?}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:?}
+      MAX_FILE_SIZE_MB: ${MAX_FILE_SIZE_MB:-10}
+      OCR_PROVIDER: ${OCR_PROVIDER:-groq}
+      GROQ_OCR_API_KEY: ${GROQ_OCR_API_KEY:?}
+      # If you switch OCR providers, add GEMINI_OCR_API_KEY or OPENAI_OCR_API_KEY (and OPENAI_API_URL) here
     depends_on:
-      db:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
       rag-service:
         condition: service_started
       agent-service:
         condition: service_started
-    networks:
-      - medgpt-internal
 
   agent-service:
     build:
       context: ./Server/Agent_backend_service
       dockerfile: Dockerfile
     restart: unless-stopped
-    env_file:
-      - ./Server/Agent_backend_service/.env
+    expose:
+      - "4000"
     environment:
       NODE_ENV: production
       AGENT_SERVICE_PORT: "4000"
-      DATABASE_URL: postgresql://${POSTGRES_USER:-medgpt}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in root .env}@db:5432/${POSTGRES_DB:-MedGPT_DB}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-medgpt}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-MedGPT_DB}
       RAG_SERVICE_URL: http://rag-service:8000
-    ports:
-      - "4000:4000"
+      AGENT_SERVICE_API_KEY: ${AGENT_SERVICE_API_KEY:?}
+      ENCRYPTION_MASTER_KEY: ${ENCRYPTION_MASTER_KEY:?}
+      AGENT_ALLOWED_ORIGINS: ${FRONTEND_ALLOWED_ORIGINS:?}
+      MODEL_PROVIDER: ${MODEL_PROVIDER:-groq}
+      GROQ_AGENT_API_KEY: ${GROQ_AGENT_API_KEY:?}
+      # If MODEL_PROVIDER=openai, use OPENAI_AGENT_API_KEY instead
+      # Optional search: SERPAPI_KEY, or GOOGLE_SEARCH_API_KEY + GOOGLE_SEARCH_CX
     depends_on:
-      db:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
       rag-service:
         condition: service_started
-    networks:
-      - medgpt-internal
 
   rag-service:
     build:
       context: ./Server/RAG_Service
       dockerfile: Dockerfile
     restart: unless-stopped
-    env_file:
-      - ./Server/RAG_Service/.env
-    ports:
-      - "8000:8000"
-    networks:
-      - medgpt-internal
-    # If the service downloads model files at runtime, consider adding a named
-    # model-cache volume after confirming the cache path used by your code.
+    expose:
+      - "8000"
+    environment:
+      PINECONE_API_KEY: ${PINECONE_API_KEY:?}
+      GROQ_API_KEY: ${GROQ_API_KEY:?}
+      BACKEND_ALLOWED_ORIGINS: http://user-service:3000,http://agent-service:4000
 
   db:
     image: postgres:15-alpine
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-medgpt}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in root .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB:-MedGPT_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -89,12 +118,6 @@ services:
       timeout: 5s
       retries: 10
       start_period: 10s
-    networks:
-      - medgpt-internal
 
 volumes:
   postgres_data:
-
-networks:
-  medgpt-internal:
-    driver: bridge
