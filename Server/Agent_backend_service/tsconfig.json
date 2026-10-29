@@ -21,6 +21,6 @@
     "noPropertyAccessFromIndexSignature": false,
     "ignoreDeprecations": "5.0"
   },
-  "include": ["src/**/*", "index.ts"],
+  "include": ["src/**/*", "index.ts", "worker.ts"],
   "exclude": ["node_modules", "dist"]
 }

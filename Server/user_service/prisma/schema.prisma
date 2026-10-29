@@ -30,6 +30,7 @@ model User {
   prescriptions  Prescription[]
   appointments   Appointment[]
   chatSummaries  ChatSummary[]
+  agentTasks     AgentTask[]
 
   @@map("users")
 }
@@ -84,6 +85,7 @@ model Chat {
   user      User         @relation(fields: [userId], references: [id])
   title     String       @default("New Chat")
   messages  Message[]
+  agentTasks AgentTask[]
   summary   ChatSummary?
   createdAt DateTime     @default(now())
   updatedAt DateTime     @default(now()) @updatedAt
@@ -105,9 +107,43 @@ model Message {
   agentType  String?  @map("agent_type")
   confidence Float?   @map("confidence")
   metadata   Json?    @map("agent_metadata")
+  inputAgentTask AgentTask? @relation("AgentTaskUserMessage")
+  outputAgentTask AgentTask? @relation("AgentTaskAssistantMessage")
 
   @@index([chatId, timestamp])
   @@map("messages")
+}
+
+/// Durable background agent work. Queue messages contain only this task ID;
+/// conversation context remains in Postgres rather than RabbitMQ.
+model AgentTask {
+  id                String    @id @default(cuid())
+  chatId            Int       @map("chat_id")
+  chat              Chat      @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  userId            Int       @map("user_id")
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userMessageId     Int       @map("user_message_id")
+  userMessage       Message   @relation("AgentTaskUserMessage", fields: [userMessageId], references: [id], onDelete: Cascade)
+  assistantMessageId Int      @unique @map("assistant_message_id")
+  assistantMessage  Message   @relation("AgentTaskAssistantMessage", fields: [assistantMessageId], references: [id], onDelete: Cascade)
+  input             String    @db.Text
+  context           Json
+  status            String    @default("queued")
+  agentType         String?   @map("agent_type")
+  error             String?   @db.Text
+  publishedAt       DateTime? @map("published_at")
+  startedAt         DateTime? @map("started_at")
+  leaseExpiresAt    DateTime? @map("lease_expires_at")
+  attempts          Int       @default(0)
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  completedAt       DateTime? @map("completed_at")
+  compactedAt       DateTime? @map("compacted_at")
+
+  @@index([status, publishedAt, createdAt])
+  @@index([userId, chatId, createdAt])
+  @@unique([userMessageId])
+  @@map("agent_tasks")
 }
 
 /// Compacted structured summary for each conversation thread.

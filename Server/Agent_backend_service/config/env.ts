@@ -12,6 +12,7 @@ const schema = z.object({
   DATABASE_URL: z.string().url(),
 
   AGENT_SERVICE_API_KEY: z.string().min(1).optional(),
+  RABBITMQ_URL: z.string().url(),
   AGENT_ALLOWED_ORIGINS: z
     .string()
     .transform((value) =>

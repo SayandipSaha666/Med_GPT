@@ -21,6 +21,9 @@ export const API_ROUTES = {
   DELETE_CHAT: (chatId: string | number) => `/api/chat/${chatId}`,
   UPDATE_CHAT_TITLE: (chatId: string | number) => `/api/chat/update/${chatId}`,
   SEND_MESSAGE: (chatId: string | number) => `/api/chat/${chatId}/message`,
+  CREATE_AGENT_TASK: (chatId: string | number) => `/api/chat/${chatId}/tasks`,
+  STREAM_AGENT_TASK: (chatId: string | number, taskId: string) => `/api/chat/${chatId}/tasks/${taskId}/stream`,
+  CANCEL_AGENT_TASK: (chatId: string | number, taskId: string) => `/api/chat/${chatId}/tasks/${taskId}/cancel`,
   EDIT_MESSAGE: (chatId: string | number, messageId: string | number) => `/api/chat/${chatId}/message/${messageId}`,
   DELETE_MESSAGE: (chatId: string | number, messageId: string | number) => `/api/chat/${chatId}/message/${messageId}`,
 

@@ -25,6 +25,8 @@ export interface MessageProps {
     timestamp?: string | Date;
     isImage?: boolean;
     files?: MessageFile[];
+    agentType?: string | null;
+    metadata?: Record<string, unknown> | null;
   };
   onEdit?: (messageId: number | string, newContent: string) => Promise<void> | void;
   onDelete?: (messageId: number | string) => Promise<void> | void;
@@ -81,6 +83,9 @@ export const Message: React.FC<MessageProps> = ({
   const { openPreview } = useFilePreview();
 
   const isUser = message?.role === 'user';
+  const generationStatus = String(message?.metadata?.generationStatus || '');
+  const progressMessage = String(message?.metadata?.progressMessage || '');
+  const isGenerating = ['queued', 'running', 'routing', 'handed_off', 'generating'].includes(generationStatus);
   const { cleanText, files: allFiles } = parseFilesAndContent(message.content, message.files);
   const [editContent, setEditContent] = useState(cleanText || message.content);
 
@@ -293,6 +298,12 @@ export const Message: React.FC<MessageProps> = ({
                 }
               `}
             >
+              {isGenerating && (
+                <div className="mb-2 flex items-center gap-2 text-xs font-medium text-purple-700 dark:text-purple-300" role="status" aria-live="polite">
+                  <span className="inline-block h-2 w-2 rounded-full bg-purple-500 animate-pulse" />
+                  <span>{progressMessage || 'Generating a response…'}</span>
+                </div>
+              )}
               {isEditing ? (
                 /* Inline Edit Mode */
                 <div className="flex flex-col gap-2.5 min-w-[260px] sm:min-w-[340px]">

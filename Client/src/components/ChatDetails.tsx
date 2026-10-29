@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { assets } from '../assets/assets';
 import Message from './Message';
 import { PromptInput } from './PromptInput';
@@ -19,6 +19,10 @@ export function ChatDetails() {
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const activeTaskIdRef = useRef<string | null>(null);
+  const activeAssistantMessageIdRef = useRef<number | string | null>(null);
+  const observedTaskIdsRef = useRef(new Set<string>());
+  const stopRequestedRef = useRef(false);
 
   const numericId = id ? parseInt(id, 10) : NaN;
   const isValidId = !isNaN(numericId) && numericId > 0;
@@ -33,13 +37,77 @@ export function ChatDetails() {
   const {
     attachments,
     addFiles,
-    removeAttachment,
-    clearAttachments,
+    removeAttachment
   } = useChatAttachments();
 
-  const sendMessageMutation = ApiService.chats.useSendMessage();
   const deleteMessageMutation = ApiService.chats.useDeleteMessage();
   const editMessageMutation = ApiService.chats.useEditMessage();
+
+  const applyTaskStreamEvent = useCallback((assistantId: number | string, event: { type: string; status?: string; progressMessage?: string; agentType?: string; content?: string }) => {
+    const updateAssistant = (messages: any[]) => messages.map((message) => {
+      if (String(message.id) !== String(assistantId)) return message;
+      if (event.type === 'end') {
+        return {
+          ...message,
+          metadata: {
+            ...(message.metadata || {}),
+            generationStatus: event.status || 'completed',
+            ...(event.progressMessage ? { progressMessage: event.progressMessage } : {}),
+          },
+        };
+      }
+      return {
+        ...message,
+        content: event.content ?? message.content,
+        agentType: event.agentType ?? message.agentType,
+        metadata: {
+          ...(message.metadata || {}),
+          generationStatus: event.status || 'generating',
+          progressMessage: event.progressMessage,
+        },
+      };
+    });
+
+    setSelectedChat((prev: any) => ({ ...prev, messages: updateAssistant(prev?.messages || []) }));
+    setChats((prevChats: any[]) => prevChats.map((chat) =>
+      chat.id === numericId
+        ? { ...chat, messages: updateAssistant(chat.messages || []) }
+        : chat,
+    ));
+  }, [numericId, setChats]);
+
+  const watchAgentTask = useCallback((taskId: string, assistantId: number | string, signal: AbortSignal) =>
+    ApiService.chats.streamAgentTask(numericId, taskId, signal, (event) => applyTaskStreamEvent(assistantId, event)),
+  [applyTaskStreamEvent, numericId]);
+
+  // Reattach to a durable task after a refresh or route revisit.
+  useEffect(() => {
+    if (isSending) return;
+    const pending = (selectedChat?.messages || []).find((message: any) =>
+      message.role === 'assistant'
+      && ['queued', 'running', 'routing', 'handed_off', 'generating'].includes(String(message.metadata?.generationStatus || ''))
+      && typeof message.metadata?.taskId === 'string',
+    );
+    if (!pending) return;
+    const taskId = String(pending.metadata.taskId);
+    if (observedTaskIdsRef.current.has(taskId)) return;
+
+    observedTaskIdsRef.current.add(taskId);
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+    stopRequestedRef.current = false;
+    activeTaskIdRef.current = taskId;
+    activeAssistantMessageIdRef.current = pending.id;
+    setIsSending(true);
+    void watchAgentTask(taskId, pending.id, controller.signal)
+      .catch((error) => toast.error(error?.message || 'Lost connection to response generation.'))
+      .finally(() => {
+        setIsSending(false);
+        abortControllerRef.current = null;
+        activeTaskIdRef.current = null;
+        activeAssistantMessageIdRef.current = null;
+      });
+  }, [isSending, selectedChat?.messages, watchAgentTask]);
 
   // Validate ID and redirect to 404 if invalid
   useEffect(() => {
@@ -107,6 +175,7 @@ export function ChatDetails() {
     setIsSending(true);
     const controller = new AbortController();
     abortControllerRef.current = controller;
+    let taskAccepted = false;
 
     try {
       let messageContent = prompt;
@@ -119,62 +188,90 @@ export function ChatDetails() {
           : `Please review and summarize the attached medical document(s):\n${filesContext}`;
       }
 
-      const response = await sendMessageMutation.mutateAsync({
-        chatId: numericId,
-        content: messageContent,
-        fileIds: attachedFilesPayload.map((f) => f.id),
-        signal: controller.signal,
-      });
+      const queued = await ApiService.chats.createAgentTask(
+        numericId,
+        messageContent,
+        attachedFilesPayload.map((f) => f.id),
+        controller.signal,
+      );
 
-      if (response?.success) {
-        setSelectedChat((prev: any) => {
-          const updatedMessages = prev?.messages ? prev.messages.slice(0, -1) : [];
-          return {
-            ...prev,
-            messages: [
-              ...updatedMessages,
-              { ...response.userMessage, files: attachedFilesPayload },
-              response.assistantMessage,
-            ],
-          };
-        });
+      activeTaskIdRef.current = queued.taskId;
+      activeAssistantMessageIdRef.current = queued.assistantMessage.id;
+      observedTaskIdsRef.current.add(queued.taskId);
+      taskAccepted = true;
+      setSelectedChat((prev: any) => ({
+        ...prev,
+        messages: [
+          ...(prev?.messages || []).slice(0, -1),
+          { ...queued.userMessage, files: attachedFilesPayload },
+          queued.assistantMessage,
+        ],
+      }));
+      setChats((prevChats: any[]) => prevChats.map((chat) =>
+        chat.id === numericId
+          ? { ...chat, messages: [...(chat.messages || []), queued.userMessage, queued.assistantMessage] }
+          : chat,
+      ));
 
-        // Update global chats store
-        setChats((prevChats: any[]) =>
-          prevChats.map((c) =>
-            c.id === numericId
-              ? {
-                ...c,
-                messages: [
-                  ...(c.messages || []),
-                  { ...response.userMessage, files: attachedFilesPayload },
-                  response.assistantMessage,
-                ],
-              }
-              : c
-          )
-        );
+      if (stopRequestedRef.current) {
+        try {
+          await ApiService.chats.cancelAgentTask(numericId, queued.taskId);
+          applyTaskStreamEvent(queued.assistantMessage.id, {
+            type: 'end',
+            status: 'cancelled',
+            progressMessage: 'Response generation stopped.',
+          });
+          return;
+        } catch {
+          // The task may have completed before the cancellation request arrived.
+          stopRequestedRef.current = false;
+        }
       }
+
+      await watchAgentTask(queued.taskId, queued.assistantMessage.id, controller.signal);
     } catch (error: any) {
       if (error?.name === 'CanceledError' || error?.code === 'ERR_CANCELED') {
         // User intentionally stopped generation
         return;
+      }
+      if (!taskAccepted) {
+        setSelectedChat((prev: any) => ({
+          ...prev,
+          messages: (prev?.messages || []).slice(0, -1),
+        }));
       }
       console.error('Failed to send message:', error);
       toast.error(error?.message || 'Error sending message. Please try again.');
     } finally {
       setIsSending(false);
       abortControllerRef.current = null;
+      activeTaskIdRef.current = null;
+      activeAssistantMessageIdRef.current = null;
+      stopRequestedRef.current = false;
     }
   };
 
   const handleStop = () => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
+    const taskId = activeTaskIdRef.current;
+    const assistantId = activeAssistantMessageIdRef.current;
+    if (!taskId) {
+      stopRequestedRef.current = true;
+      toast('Stopping response generation…');
+      return;
     }
-    setIsSending(false);
-    toast('Response generation stopped. ⏹️');
+
+    void ApiService.chats.cancelAgentTask(numericId, taskId).then(() => {
+      abortControllerRef.current?.abort();
+      applyTaskStreamEvent(assistantId!, {
+        type: 'end',
+        status: 'cancelled',
+        progressMessage: 'Response generation stopped.',
+      });
+      toast('Response generation stopped.');
+    }).catch((error) => {
+      console.warn('Unable to cancel agent task:', error);
+      toast('The response may have completed before it could be stopped.');
+    });
   };
 
   const handleDeleteMessage = async (messageId: number | string) => {
@@ -347,7 +444,7 @@ export function ChatDetails() {
                       <div className="w-2 h-2 rounded-full bg-blue-600 animate-bounce [animation-delay:0.4s]"></div>
                     </div>
                     <span className="text-xs font-medium text-purple-700 dark:text-purple-300">
-                      Analyzing medical knowledge base...
+                      Generating a response…
                     </span>
                   </div>
                 </div>

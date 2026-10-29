@@ -12,6 +12,8 @@ export interface Message {
   files: FileResponseDto[];
   sources?: Source[];
   toolCalls?: ToolCall[];
+  agentType?: string | null;
+  metadata?: Record<string, unknown> | null;
 }
 
 export interface CreateMessageDto {

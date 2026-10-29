@@ -44,35 +44,35 @@ export class CompactionService {
 
         const prompt = `You are an expert clinical conversation summarizer. Analyze this patient-agent medical consultation transcript and extract a structured clinical memory state.
 
-Transcript:
-${transcript}
+        Transcript:
+        ${transcript}
 
-Instructions:
-1. Identify all chief complaints / symptoms mentioned by the user.
-2. Note duration, severity, and symptom details.
-3. List any differential diagnoses or medical conditions explored.
-4. Summarize medical recommendations, home care, and clinical triage advice given.
-5. Extract any medications discussed (with dosages and frequencies if mentioned).
-6. Note any drug or food allergies revealed.
-7. Determine the primary clinical department (e.g. general, cardiology, dermatology, dental, ent, gynecology, orthopedic, prescription).
-8. Determine clinical urgency (routine, soon, urgent, emergency).
-9. Write a dense, coherent 1-2 paragraph "compactedText" that captures the complete clinical state of this consultation so future agents can seamlessly resume context without reading past messages.
+        Instructions:
+        1. Identify all chief complaints / symptoms mentioned by the user.
+        2. Note duration, severity, and symptom details.
+        3. List any differential diagnoses or medical conditions explored.
+        4. Summarize medical recommendations, home care, and clinical triage advice given.
+        5. Extract any medications discussed (with dosages and frequencies if mentioned).
+        6. Note any drug or food allergies revealed.
+        7. Determine the primary clinical department (e.g. general, cardiology, dermatology, dental, ent, gynecology, orthopedic, prescription).
+        8. Determine clinical urgency (routine, soon, urgent, emergency).
+        9. Write a dense, coherent 1-2 paragraph "compactedText" that captures the complete clinical state of this consultation so future agents can seamlessly resume context without reading past messages.
 
-Return ONLY a valid JSON object (no markdown fences, no extra text) matching this schema:
-{
-  "chiefComplaints": ["symptom1", "symptom2"],
-  "symptomsDetail": "Duration, onset, triggers, progression",
-  "diagnosesDiscussed": ["condition A", "condition B"],
-  "clinicalAdvice": "Triage and lifestyle advice given",
-  "medicationsMentioned": [
-    { "name": "Drug Name", "dosage": "500mg", "frequency": "twice daily", "status": "discussed/prescribed" }
-  ],
-  "allergiesNoted": ["allergy1"],
-  "primaryDepartment": "general",
-  "urgencyLevel": "routine",
-  "pendingActions": ["Follow up with primary care physician", "Monitor temperature"],
-  "compactedText": "Patient presented with... Advised to... Pending..."
-}`;
+        Return ONLY a valid JSON object (no markdown fences, no extra text) matching this schema:
+        {
+        "chiefComplaints": ["symptom1", "symptom2"],
+        "symptomsDetail": "Duration, onset, triggers, progression",
+        "diagnosesDiscussed": ["condition A", "condition B"],
+        "clinicalAdvice": "Triage and lifestyle advice given",
+        "medicationsMentioned": [
+            { "name": "Drug Name", "dosage": "500mg", "frequency": "twice daily", "status": "discussed/prescribed" }
+        ],
+        "allergiesNoted": ["allergy1"],
+        "primaryDepartment": "general",
+        "urgencyLevel": "routine",
+        "pendingActions": ["Follow up with primary care physician", "Monitor temperature"],
+        "compactedText": "Patient presented with... Advised to... Pending..."
+        }`;
 
         try {
             const rawJson = await this.callLlmForSummary(prompt);

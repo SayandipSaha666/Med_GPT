@@ -111,6 +111,7 @@ JWT_SECRET_KEY="your_secret_hex_string"
 RAG_SERVICE_URL=http://localhost:8000
 AGENT_SERVICE_URL=http://localhost:4001
 AGENT_SERVICE_API_KEY="shared_internal_secret"
+RABBITMQ_URL=amqp://medgpt:your_url_safe_password@localhost:5672
 FRONTEND_ALLOWED_ORIGINS=http://localhost:5173
 RAZORPAY_KEY_ID=rzp_test_xxxxxx
 RAZORPAY_KEY_SECRET=xxxxxx
@@ -123,6 +124,7 @@ PORT=4001
 DATABASE_URL="postgresql://user:password@host:port/db?sslmode=require"
 RAG_SERVICE_URL=http://localhost:8000
 AGENT_SERVICE_API_KEY="shared_internal_secret"
+RABBITMQ_URL=amqp://medgpt:your_url_safe_password@localhost:5672
 MODEL_PROVIDER=openai
 OPENAI_AGENT_API_KEY="your_openai_key"
 OPENAI_AGENT_MODEL=gpt-4o
@@ -161,6 +163,13 @@ Then run `docker compose up` from the repository root. Do not commit `.env`.
 provider-issued credentials for Groq, Pinecone, Cloudinary, and Razorpay; the
 placeholder values will let Compose parse the file but will not make services
 work. Keep `RUN_SEED=false` except when initializing a new, empty database.
+
+Chat responses are stored as durable agent tasks and processed by the
+`agent-worker` service through RabbitMQ. Set `RABBITMQ_DEFAULT_PASS` in the root
+`.env` to a strong URL-safe value; RabbitMQ is available only to services on the
+Compose network. The user service streams saved task progress and response text
+to the browser over authenticated SSE, so refreshing a chat can reconnect to a
+task that is still running.
 
 ---
 

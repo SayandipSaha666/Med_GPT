@@ -111,3 +111,21 @@ ALWAYS hand off — never generate a final medical response yourself.`,
     piiDetectionGuardrail,
   ],
 });
+
+/**
+ * Deterministic safety net for provider/model responses that say they will
+ * transfer the request but finish without invoking an SDK handoff.
+ */
+export function selectFallbackAgent(input: string) {
+  const query = input.toLowerCase();
+  if (/prescription|drug interaction|medication safety|medication review|dosage|medicine list/.test(query)) return prescriptionAgent;
+  if (/appointment|book (a|an)? ?(doctor|visit)|schedule|hospital/.test(query)) return bookingAgent;
+  if (/latest|current research|recent study|clinical guideline|drug recall/.test(query)) return webSearchAgent;
+  if (/heart|cardiac|cardiology|chest pain|blood pressure|palpitation|ecg/.test(query)) return cardiologyAgent;
+  if (/tooth|teeth|dental|gum|oral pain/.test(query)) return dentalAgent;
+  if (/pregnan|menstrual|period|gynecol|reproductive health/.test(query)) return gynecologyAgent;
+  if (/ear|nose|throat|sinus|hearing|voice|ent/.test(query)) return entAgent;
+  if (/skin|rash|acne|hair loss|nail|dermatolog/.test(query)) return dermatologyAgent;
+  if (/bone|joint|back pain|fracture|orthopedic|sports injury/.test(query)) return orthopedicAgent;
+  return generalAgent;
+}

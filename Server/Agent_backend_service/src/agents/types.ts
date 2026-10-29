@@ -169,10 +169,12 @@ export interface DepartmentAgentConfig {
 // ─── Streaming Types ─────────────────────────────────────────────────────────
 
 export interface StreamChunk {
-  type: "token" | "complete" | "metadata" | "error" | "connected" | "end";
+  type: "token" | "complete" | "metadata" | "error" | "connected" | "end" | "progress";
   content: string;
   agentName?: string;
   agentType?: string;
+  status?: "routing" | "handed_off" | "generating";
+  progressMessage?: string;
   isPartial?: boolean;
   metadata?: {
     latencyMs?: number;

@@ -10,6 +10,7 @@ import chatRouter from "./src/routes/chat.routes";
 import fileRouter from "./src/routes/file.route"
 import billingRouter from "./src/routes/billing.routes";
 import { env } from "./config/env"
+import { startAgentTaskPublisher } from "./src/services/agent-task.publisher";
 
 const app = express();
 
@@ -68,6 +69,7 @@ app.use("/api", (_req, res) => {
 const startServer = async () => {
   try {
     await connectDB();
+    startAgentTaskPublisher();
     app.listen(PORT, () => {
       console.log(`User service running on port ${PORT}`);
     });

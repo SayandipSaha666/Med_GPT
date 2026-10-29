@@ -1,7 +1,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { api, API_ROUTES } from '../index';
+import { api, API_ROUTES, API_URL } from '../index';
 import {
   T_Chat,
   T_Create_Chat_Response,
@@ -281,6 +281,99 @@ export const useSendMessage = () => {
   });
 };
 
+export interface T_Queued_Agent_Task {
+  taskId: string;
+  userMessage: any;
+  assistantMessage: any;
+}
+
+export async function createAgentTask(
+  chatId: number,
+  content: string,
+  fileIds: string[],
+  signal?: AbortSignal,
+): Promise<T_Queued_Agent_Task> {
+  const response = await api.post<T_Api_Success_Res<T_Queued_Agent_Task>>(
+    API_ROUTES.CREATE_AGENT_TASK(chatId),
+    { content, fileIds },
+    { signal, timeout: 15_000 },
+  );
+  return response.data.data;
+}
+
+export interface T_Agent_Task_Stream_Event {
+  type: 'update' | 'end';
+  status?: string;
+  progressMessage?: string;
+  agentType?: string;
+  content?: string;
+}
+
+const wait = (ms: number, signal?: AbortSignal) => new Promise<void>((resolve) => {
+  const finish = () => {
+    clearTimeout(timer);
+    signal?.removeEventListener('abort', finish);
+    resolve();
+  };
+  const timer = setTimeout(finish, ms);
+  signal?.addEventListener('abort', finish, { once: true });
+});
+
+export async function streamAgentTask(
+  chatId: number,
+  taskId: string,
+  signal: AbortSignal,
+  onEvent: (event: T_Agent_Task_Stream_Event) => void,
+): Promise<void> {
+  let finished = false;
+  while (!finished && !signal.aborted) {
+    let retryable = true;
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`${API_URL}${API_ROUTES.STREAM_AGENT_TASK(chatId, taskId)}`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: token ? { Authorization: `Bearer ${token}`, Accept: 'text/event-stream' } : { Accept: 'text/event-stream' },
+        signal,
+      });
+      if (!response.ok || !response.body) {
+        retryable = response.status >= 500 || response.status === 0;
+        throw new Error(`Unable to connect to response stream (${response.status})`);
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      try {
+        while (!finished && !signal.aborted) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const blocks = buffer.split('\n\n');
+          buffer = blocks.pop() ?? '';
+          for (const block of blocks) {
+            const dataLine = block.split('\n').find((line) => line.startsWith('data:'));
+            if (!dataLine) continue;
+            const event = JSON.parse(dataLine.slice(5).trim()) as T_Agent_Task_Stream_Event;
+            onEvent(event);
+            if (event.type === 'end') finished = true;
+          }
+        }
+      } finally {
+        reader.releaseLock();
+      }
+    } catch (error) {
+      if (signal.aborted) return;
+      if (!retryable) throw error;
+      await wait(1_000, signal);
+    }
+  }
+}
+
+export async function cancelAgentTask(chatId: number, taskId: string): Promise<void> {
+  await api.post(API_ROUTES.CANCEL_AGENT_TASK(chatId, taskId));
+}
+
 /* -------------------- DELETE MESSAGE -------------------- */
 
 interface T_Delete_Message_Variables {
@@ -377,6 +470,9 @@ export const chatService = {
   useDeleteChat,
   useUpdateChatTitle,
   useSendMessage,
+  createAgentTask,
+  streamAgentTask,
+  cancelAgentTask,
   useDeleteMessage,
   useEditMessage,
 };

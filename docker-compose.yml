@@ -49,6 +49,7 @@ services:
       RAG_SERVICE_URL: http://rag-service:8000
       AGENT_SERVICE_URL: http://agent-service:4000
       AGENT_SERVICE_API_KEY: ${AGENT_SERVICE_API_KEY:?}
+      RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER:-medgpt}:${RABBITMQ_DEFAULT_PASS:?Set RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
       ENCRYPTION_MASTER_KEY: ${ENCRYPTION_MASTER_KEY:?}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:?}
       REFRESH_TOKEN_SECRET: ${REFRESH_TOKEN_SECRET:?}
@@ -70,6 +71,8 @@ services:
         condition: service_started
       agent-service:
         condition: service_started
+      rabbitmq:
+        condition: service_healthy
     # existing build, expose, environment, etc.
     healthcheck:
       test:
@@ -92,6 +95,7 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-medgpt}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-MedGPT_DB}
       RAG_SERVICE_URL: http://rag-service:8000
       AGENT_SERVICE_API_KEY: ${AGENT_SERVICE_API_KEY:?}
+      RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER:-medgpt}:${RABBITMQ_DEFAULT_PASS:?Set RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
       ENCRYPTION_MASTER_KEY: ${ENCRYPTION_MASTER_KEY:?}
       AGENT_ALLOWED_ORIGINS: ${FRONTEND_ALLOWED_ORIGINS:?}
       MODEL_PROVIDER: ${MODEL_PROVIDER:-groq}
@@ -111,6 +115,30 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
+
+  agent-worker:
+    build:
+      context: ./Server/Agent_backend_service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    command: ["node", "dist/worker.js"]
+    environment:
+      NODE_ENV: production
+      AGENT_SERVICE_PORT: "4000"
+      DATABASE_URL: postgresql://${POSTGRES_USER:-medgpt}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-MedGPT_DB}
+      RAG_SERVICE_URL: http://rag-service:8000
+      AGENT_SERVICE_API_KEY: ${AGENT_SERVICE_API_KEY:?}
+      AGENT_ALLOWED_ORIGINS: ${FRONTEND_ALLOWED_ORIGINS:?}
+      MODEL_PROVIDER: ${MODEL_PROVIDER:-groq}
+      GROQ_AGENT_API_KEY: ${GROQ_AGENT_API_KEY:?}
+      RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER:-medgpt}:${RABBITMQ_DEFAULT_PASS:?Set RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
+      rag-service:
+        condition: service_started
 
   rag-service:
     build:
@@ -132,6 +160,24 @@ services:
       retries: 3
       start_period: 30s
 
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-medgpt}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:?Set RABBITMQ_DEFAULT_PASS}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    expose:
+      - "5672"
+      - "15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
   db:
     image: postgres:15-alpine
     restart: unless-stopped
@@ -152,3 +198,4 @@ services:
 
 volumes:
   postgres_data:
+  rabbitmq_data:
