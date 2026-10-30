@@ -1,7 +1,7 @@
 // src/config/cloudinary.ts
 import { v2 as cloudinary } from "cloudinary";
 import multer from "multer";
-import { env } from "../../config/env.ts";
+import { env } from "../../config/env";
 
 cloudinary.config({
     cloud_name: env.CLOUDINARY_CLOUD_NAME,
