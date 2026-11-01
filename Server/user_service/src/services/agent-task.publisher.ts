@@ -14,19 +14,25 @@ let flushing = false;
 async function getChannel(): Promise<ConfirmChannel> {
   if (channel) return channel;
   if (connecting) return connecting;
-
   connecting = (async () => {
-    const conn = await amqp.connect(env.RABBITMQ_URL);
-    conn.on("error", (error) => console.error("[Agent Queue] RabbitMQ connection error:", error.message));
-    conn.on("close", () => {
-      connection = undefined;
+    if (!connection) {
+      connection = await amqp.connect(env.RABBITMQ_URL);
+      connection.on("error", (error) => {
+        console.error("[Agent Queue] RabbitMQ error:", error.message);
+      });
+      connection.on("close", () => {
+        connection = undefined;
+        channel = undefined;
+      });
+    }
+    const confirmChannel = await connection.createConfirmChannel();
+    await confirmChannel.assertQueue(QUEUE, {
+      durable: true,
+    });
+    channel = confirmChannel;
+    confirmChannel.on("close", () => {
       channel = undefined;
     });
-    const confirmChannel = await conn.createConfirmChannel();
-    await confirmChannel.assertQueue(QUEUE, { durable: true });
-    connection = conn;
-    channel = confirmChannel;
-    confirmChannel.on("close", () => { channel = undefined; });
     return confirmChannel;
   })();
 

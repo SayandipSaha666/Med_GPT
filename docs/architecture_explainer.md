@@ -2,26 +2,7 @@
 
 The upgrade separates **queueing a chat turn** from **running the agent pipeline**. RabbitMQ dispatches the whole turn to a worker. Inside that worker, the gateway can hand the request to a specialist agent. The specialist handoff happens within the agent pipeline; it does not create another RabbitMQ task.
 
-```mermaid
-sequenceDiagram
-    participant UI as Chat UI
-    participant API as User service
-    participant DB as PostgreSQL
-    participant MQ as RabbitMQ
-    participant W as Agent worker
-    participant A as Gateway and specialist agents
-
-    UI->>API: Create task
-    API->>DB: Save messages and task; reserve credit
-    API-->>UI: Return taskId
-    API->>MQ: Publish taskId
-    W->>MQ: Consume taskId
-    W->>DB: Claim task; write progress
-    W->>A: Run agent pipeline
-    A->>A: Route gateway request to specialist
-    W->>DB: Save response and status
-    API-->>UI: Stream database updates over SSE
-```
+![Architecture](./architecture.png)
 
 ## Frontend files
 
@@ -97,3 +78,9 @@ sequenceDiagram
 The important recovery boundary is PostgreSQL: it stores the task and response, while RabbitMQ carries task IDs for delivery. SSE reads saved state from PostgreSQL, so a browser can reconnect without needing the original stream connection.
 
 **Redis is not part of this implementation.** There is an `ioredis` dependency and a Redis caching comment elsewhere, but this task flow has no Redis connection, cache, or Compose service.
+
+## Pubsub Architecture in RabbitMQ
+
+```
+https://chatgpt.com/share/6ae70d9e-a934-83ee-8ea8-e0e86e386b31
+```

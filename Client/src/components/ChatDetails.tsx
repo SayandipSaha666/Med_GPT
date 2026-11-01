@@ -187,7 +187,7 @@ export function ChatDetails() {
           ? `${prompt}\n\nAttached Medical Documents:\n${filesContext}`
           : `Please review and summarize the attached medical document(s):\n${filesContext}`;
       }
-
+      // Sent to /api/chats/:id/tasks
       const queued = await ApiService.chats.createAgentTask(
         numericId,
         messageContent,

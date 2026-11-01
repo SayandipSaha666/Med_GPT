@@ -90,6 +90,8 @@ services:
     restart: unless-stopped
     expose:
       - "4000"
+    ports:
+      - "127.0.0.1:4000:4000"
     environment:
       NODE_ENV: production
       AGENT_SERVICE_PORT: "4000"
@@ -189,13 +191,13 @@ services:
     image: postgres:15-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-medgpt}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB:-MedGPT_DB}
+      POSTGRES_DB: ${POSTGRES_DB:-medgpt}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5433:5432"
     # expose:
     #   - "5432"
     healthcheck:
