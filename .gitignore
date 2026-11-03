@@ -3,6 +3,8 @@ graphify-out
 node_modules
 .gitignore
 .claude
+.codex
+.agents
 /sessions/
 /.claude/**/
 # Ignore generated/service artifacts
@@ -10,6 +12,10 @@ node_modules
 /Server/Agent_backend_service/src/generated/
 /Server/Agent_backend_service/docs/
 *.tsbuildinfo
+agent.md
+AGENTS.md
+skills-lock.json
+.gitignore
 
 # Ignore Python cache directories inside the RAG service
 /Server/RAG_Service/**/__pycache__/
