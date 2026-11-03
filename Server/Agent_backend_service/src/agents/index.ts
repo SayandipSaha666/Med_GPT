@@ -169,6 +169,15 @@ export async function* streamAgentPipeline(
 
     await result.completed;
 
+    console.log("[Agent completion]", {
+      lastAgent: result.lastAgent?.name,
+      trackedAgent: lastAgentName,
+      streamedCharacters: fullResponse.length,
+      finalOutputCharacters: String(result.finalOutput ?? "").length,
+      matchesFinalOutput:
+        fullResponse === String(result.finalOutput ?? ""),
+    });
+
     if (lastAgentName === gatewayAgent.name) {
       // Some OpenAI-compatible models return a natural-language transfer
       // promise instead of calling the handoff tool. Route it deterministically
