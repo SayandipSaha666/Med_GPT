@@ -15,5 +15,7 @@ export function toMessage(m: DbMessage & { files: DbFile[] }): Message {
         files: m.files.map(toFileAttachment),
         sources: (m.sources as unknown as Source[]) ?? [],
         toolCalls: (m.toolCalls as unknown as ToolCall[]) ?? [],
+        agentType: m.agentType,
+        metadata: m.metadata as Record<string, unknown> | null,
     };
 }

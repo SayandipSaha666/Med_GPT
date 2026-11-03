@@ -80,6 +80,8 @@ export interface T_Message {
     url: string;
     status?: string;
   }>;
+  agentType?: string | null;
+  metadata?: Record<string, unknown> | null;
 }
 
 export interface T_Chat {

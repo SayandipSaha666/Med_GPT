@@ -4,8 +4,172 @@ import { SendMessageSchema, ChatIdParamsSchema, MessageIdParamsSchema } from "..
 import type { MessageResponse } from "../dto/message.dto";
 import { agentClient } from "../clients/agent.client";
 import { compactionService } from "../services/compaction.service";
+import { prisma } from "../lib/prisma";
 
 export class MessageController {
+  async enqueueMessage(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const chatIdValidation = ChatIdParamsSchema.safeParse({ id: req.params.id });
+      const bodyValidation = SendMessageSchema.safeParse(req.body);
+      if (!chatIdValidation.success || !bodyValidation.success) {
+        res.status(400).json({
+          success: false,
+          message: !chatIdValidation.success
+            ? "Invalid chat ID"
+            : bodyValidation.error.issues[0]?.message ?? "Validation failed",
+        });
+        return;
+      }
+
+      const userId = req.user?.id;
+      if (!userId) {
+        res.status(401).json({ success: false, message: "Unauthorized" });
+        return;
+      }
+
+      const chatId = Number(chatIdValidation.data.id);
+      const result = await messageService.enqueueMessage(
+        userId,
+        chatId,
+        bodyValidation.data.content,
+        bodyValidation.data.fileIds,
+      );
+
+      res.status(202).json({
+        success: true,
+        message: "Agent task queued",
+        data: result,
+      });
+    } catch (error) {
+      if (error instanceof Error && error.message === "Insufficient credits") {
+        res.status(402).json({ success: false, message: error.message });
+        return;
+      }
+      next(error);
+    }
+  }
+
+  async streamAgentTask(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const chatIdValidation = ChatIdParamsSchema.safeParse({ id: req.params.id });
+      const userId = req.user?.id;
+      const taskId = Array.isArray(req.params.taskId) ? req.params.taskId[0] : req.params.taskId;
+      if (!chatIdValidation.success || !userId || typeof taskId !== "string" || !/^[a-z0-9_-]+$/i.test(taskId)) {
+        res.status(!userId ? 401 : 400).json({ success: false, message: "Invalid chat or task ID" });
+        return;
+      }
+
+      const chatId = Number(chatIdValidation.data.id);
+      const where = { id: taskId, chatId, userId };
+      const initialTask = await prisma.agentTask.findFirst({ where });
+      if (!initialTask) {
+        res.status(404).json({ success: false, message: "Agent task not found" });
+        return;
+      }
+
+      res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+      res.setHeader("Cache-Control", "no-cache, no-transform");
+      res.setHeader("Connection", "keep-alive");
+      res.setHeader("X-Accel-Buffering", "no");
+      res.flushHeaders();
+      res.write("retry: 1000\n\n");
+
+      let closed = false;
+      let lastContent = "";
+      let lastState = "";
+      let lastHeartbeatAt = Date.now();
+      res.on("close", () => { closed = true; });
+
+      while (!closed && !res.writableEnded) {
+        const task = await prisma.agentTask.findFirst({ where });
+        if (!task) break;
+        const assistant = await prisma.message.findUnique({
+          where: { id: task.assistantMessageId },
+          select: { content: true, agentType: true, metadata: true },
+        });
+        if (!assistant) break;
+
+        const state = String((assistant.metadata as Record<string, unknown> | null)?.generationStatus ?? task.status);
+        const content = assistant.content ?? "";
+        const reset = content.length < lastContent.length || !content.startsWith(lastContent);
+        const delta = reset ? content : content.slice(lastContent.length);
+        if (state !== lastState || delta || reset) {
+          res.write(`data: ${JSON.stringify({
+            type: "update",
+            status: state,
+            progressMessage: (assistant.metadata as Record<string, unknown> | null)?.progressMessage,
+            agentType: assistant.agentType ?? task.agentType,
+            content,
+            delta,
+            reset,
+          })}\n\n`);
+          lastState = state;
+          lastContent = content;
+        }
+
+        if (["completed", "failed", "cancelled"].includes(task.status)) {
+          res.write(`data: ${JSON.stringify({ type: "end", status: task.status })}\n\n`);
+          res.end();
+          break;
+        }
+        if (Date.now() - lastHeartbeatAt >= 15_000) {
+          res.write(": keep-alive\n\n");
+          lastHeartbeatAt = Date.now();
+        }
+        await new Promise((resolve) => setTimeout(resolve, 400));
+      }
+
+      if (!res.writableEnded) res.end();
+    } catch (error) {
+      if (!res.headersSent) next(error);
+      else if (!res.writableEnded) res.end();
+    }
+  }
+
+  async cancelAgentTask(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const chatId = Number(req.params.id);
+      const userId = req.user?.id;
+      const taskId = Array.isArray(req.params.taskId) ? req.params.taskId[0] : req.params.taskId;
+      if (!Number.isInteger(chatId) || chatId < 1 || !userId || typeof taskId !== "string" || !/^[a-z0-9_-]+$/i.test(taskId)) {
+        res.status(!userId ? 401 : 400).json({ success: false, message: "Invalid chat or task ID" });
+        return;
+      }
+
+      const task = await prisma.agentTask.findFirst({
+        where: { id: taskId, chatId, userId, status: { in: ["queued", "running"] } },
+      });
+      if (!task) {
+        res.status(409).json({ success: false, message: "Task is already complete or cannot be cancelled" });
+        return;
+      }
+
+      const updated = await prisma.$transaction(async (tx) => {
+        const cancelled = await tx.agentTask.updateMany({
+          where: { id: task.id, status: { in: ["queued", "running"] } },
+          data: { status: "cancelled", leaseExpiresAt: null, completedAt: new Date() },
+        });
+        if (!cancelled.count) return false;
+        await tx.message.update({
+          where: { id: task.assistantMessageId },
+          data: {
+            metadata: { taskId: task.id, generationStatus: "cancelled", progressMessage: "Response generation stopped." },
+          },
+        });
+        await tx.user.update({ where: { id: userId }, data: { credits: { increment: 1 } } });
+        return true;
+      });
+
+      if (!updated) {
+        res.status(409).json({ success: false, message: "Task is already complete or cannot be cancelled" });
+        return;
+      }
+      res.status(200).json({ success: true, message: "Agent task cancelled" });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async sendMessage(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       // Validate chat ID

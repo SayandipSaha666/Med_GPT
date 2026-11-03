@@ -17,8 +17,15 @@ def get_chain():
         llm = load_llm(model)
 
         embedding_model = "sentence-transformers/all-MiniLM-L6-v2"
-        embedding = load_embedding_model(embedding_model)
-        # embedding = load_local_embedding_model(embedding_model)
+        environment = os.getenv("ENV", "production").strip().lower()
+        if environment == "development":
+            embedding = load_local_embedding_model(embedding_model)
+        elif environment == "production":
+            embedding = load_embedding_model(embedding_model)
+        else:
+            raise ValueError(
+                f"Unsupported ENV value {environment!r}; expected 'development' or 'production'."
+            )
 
         index_name = "medical-chatbot"
         vector_store = PineconeVectorStore.from_existing_index(

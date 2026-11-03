@@ -3,7 +3,7 @@
 // Provides the runAgentPipeline() and streamAgentPipeline() functions that integrate with
 // the existing message service.
 
-import { gatewayAgent } from "./gateway/gateway.agent";
+import { gatewayAgent, selectFallbackAgent } from "./gateway/gateway.agent";
 import type { AgentContext, AgentResult, ConversationMessage, StreamChunk } from "./types";
 import { runner } from "./config/model.provider";
 
@@ -24,7 +24,11 @@ export async function runAgentPipeline(
       context.chatSummary
     );
 
-    const result = await runner.run(gatewayAgent, conversationInput, { context });
+    let result = await runner.run(gatewayAgent, conversationInput, { context });
+    if (result.lastAgent?.name === gatewayAgent.name) {
+      const fallbackAgent = selectFallbackAgent(conversationInput);
+      result = await runner.run(fallbackAgent, conversationInput, { context });
+    }
 
     const latencyMs = Date.now() - startTime;
     const lastAgentName = result.lastAgent?.name || "Unknown";
@@ -94,7 +98,8 @@ export async function runAgentPipeline(
  */
 export async function* streamAgentPipeline(
   query: string,
-  context: AgentContext
+  context: AgentContext,
+  signal?: AbortSignal,
 ): AsyncGenerator<StreamChunk> {
   const startTime = Date.now();
 
@@ -106,22 +111,109 @@ export async function* streamAgentPipeline(
     );
 
     // Run agent with streaming enabled
-    const result = await runner.run(gatewayAgent, conversationInput, { context, stream: true });
-    const stream = result.toTextStream();
-
+    const result = await runner.run(gatewayAgent, conversationInput, { context, stream: true, signal });
     let fullResponse = "";
-    let lastAgentName = result.lastAgent?.name || "Unknown";
+    let gatewayDraft = "";
+    let lastAgentName = gatewayAgent.name;
 
-    // Yield streaming chunks
-    for await (const chunk of stream) {
-      fullResponse += chunk;
+    // Observe run events so we can report real handoffs and stream only the
+    // specialist's final response, never the gateway's conversational handoff text.
+    for await (const event of result) {
+      if (event.type === "agent_updated_stream_event") {
+        const nextAgent = event.agent.name;
+        if (nextAgent !== lastAgentName) {
+          lastAgentName = nextAgent;
+          gatewayDraft = "";
+          fullResponse = "";
+          yield {
+            type: "progress",
+            content: "",
+            status: "handed_off",
+            agentName: nextAgent,
+            agentType: nextAgent,
+            progressMessage: `Your request is with ${nextAgent}. Generating a response…`,
+          };
+        }
+        continue;
+      }
+
+      if (event.type === "run_item_stream_event" && event.name === "handoff_requested") {
+        yield {
+          type: "progress",
+          content: "",
+          status: "routing",
+          agentName: lastAgentName,
+          agentType: lastAgentName,
+          progressMessage: "Finding the right specialist…",
+        };
+        continue;
+      }
+
+      if (event.type === "raw_model_stream_event" && event.data.type === "output_text_delta") {
+        const delta = event.data.delta;
+        if (lastAgentName === gatewayAgent.name) {
+          gatewayDraft += delta;
+          continue;
+        }
+        fullResponse += delta;
+        yield {
+          type: "token",
+          content: delta,
+          agentName: lastAgentName,
+          agentType: lastAgentName,
+          status: "generating",
+          isPartial: true,
+        };
+      }
+    }
+
+    await result.completed;
+
+    if (lastAgentName === gatewayAgent.name) {
+      // Some OpenAI-compatible models return a natural-language transfer
+      // promise instead of calling the handoff tool. Route it deterministically
+      // from the conversation so that promise never becomes the final answer.
+      const fallbackAgent = selectFallbackAgent(conversationInput);
+      lastAgentName = fallbackAgent.name;
+      gatewayDraft = "";
+      fullResponse = "";
       yield {
-        type: "token",
-        content: chunk,
+        type: "progress",
+        content: "",
+        status: "handed_off",
         agentName: lastAgentName,
         agentType: lastAgentName,
-        isPartial: true,
+        progressMessage: `Your request is with ${lastAgentName}. Generating a response…`,
       };
+
+      const fallbackResult = await runner.run(fallbackAgent, conversationInput, { context, stream: true, signal });
+      for await (const event of fallbackResult) {
+        if (event.type === "raw_model_stream_event" && event.data.type === "output_text_delta") {
+          fullResponse += event.data.delta;
+          yield {
+            type: "token",
+            content: event.data.delta,
+            agentName: lastAgentName,
+            agentType: lastAgentName,
+            status: "generating",
+            isPartial: true,
+          };
+        }
+      }
+      await fallbackResult.completed;
+      if (!fullResponse) fullResponse = String(fallbackResult.finalOutput ?? "");
+    } else if (!fullResponse) {
+      fullResponse = String(result.finalOutput ?? "");
+      if (fullResponse) {
+        yield {
+          type: "token",
+          content: fullResponse,
+          agentName: lastAgentName,
+          agentType: lastAgentName,
+          status: "generating",
+          isPartial: true,
+        };
+      }
     }
 
     const latencyMs = Date.now() - startTime;
@@ -187,6 +279,7 @@ export async function* streamAgentPipeline(
       type: "complete",
       content: "I apologize, but I encountered an error processing your request. Please try again.",
       agentType: "Error",
+      agentName: "Error",
       metadata: { latencyMs, error: error instanceof Error ? error.message : "Unknown error" },
     };
   }

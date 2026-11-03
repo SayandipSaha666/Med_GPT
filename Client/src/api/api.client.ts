@@ -2,7 +2,9 @@ import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { queryClient } from './queryClient';
 import { API_ROUTES } from './index';
 
-const API_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000';
+const API_URL =
+  import.meta.env.VITE_SERVER_URL ||
+  (import.meta.env.DEV ? 'http://localhost:3000' : window.location.origin);
 
 const api: AxiosInstance = axios.create({
   baseURL: API_URL,

@@ -2,6 +2,7 @@ import { chatRepository } from "../repositories/chat.repository";
 import { messageRepository } from "../repositories/message.repository";
 import type { Chat, ChatWithMessages, CreateChatDto, UpdateChatDto } from "../dto/chat.dto";
 import type { Message } from "../dto/message.dto";
+import { prisma } from "../lib/prisma";
 
 export class ChatService {
   async createChat(userId: number, title?: string): Promise<Chat> {
@@ -34,7 +35,22 @@ export class ChatService {
     if (!chat || chat.userId !== userId) {
       throw new Error("Chat not found");
     }
-    await chatRepository.delete(chatId);
+    await prisma.$transaction(async (tx) => {
+      const activeTasks = await tx.agentTask.findMany({
+        where: { chatId, userId, status: { in: ["queued", "running"] } },
+        select: { id: true },
+      });
+      if (activeTasks.length) {
+        const cancelled = await tx.agentTask.updateMany({
+          where: { id: { in: activeTasks.map((task) => task.id) }, status: { in: ["queued", "running"] } },
+          data: { status: "cancelled", leaseExpiresAt: null, completedAt: new Date() },
+        });
+        if (cancelled.count) {
+          await tx.user.update({ where: { id: userId }, data: { credits: { increment: cancelled.count } } });
+        }
+      }
+      await tx.chat.delete({ where: { id: chatId } });
+    });
   }
 
   async updateChatTitle(chatId: number, userId: number, title: string): Promise<Chat> {
