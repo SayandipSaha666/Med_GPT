@@ -5,6 +5,13 @@ node_modules
 .claude
 /sessions/
 /.claude/**/
+.agents
+.codex
+.claude
+agent.md
+AGENTS.md
+skills-lock.json
+.gitignore
 # Ignore generated/service artifacts
 /Server/user_service/src/generated/
 /Server/Agent_backend_service/src/generated/
