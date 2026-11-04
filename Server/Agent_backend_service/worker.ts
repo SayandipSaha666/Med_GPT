@@ -77,7 +77,7 @@ async function retryOrFail(taskId: string, assistantMessageId: number, userId: n
   });
 }
 
-async function processTask(taskId: string): Promise<void> {
+export async function processTask(taskId: string): Promise<void> {
   const task = await prisma.agentTask.findUnique({ where: { id: taskId } });
   if (!task || ["completed", "failed", "cancelled"].includes(task.status)) return;
   if (task.status === "running" && task.leaseExpiresAt && task.leaseExpiresAt > new Date()) return;
@@ -153,10 +153,14 @@ async function processTask(taskId: string): Promise<void> {
 
     for await (const chunk of streamAgentPipeline(current.input, context, abortController.signal)) {
       if (chunk.type === "progress") {
+        if (chunk.reset) {
+          response = "";
+          pendingWrite = "";
+        }
         progressState = chunk.status ?? "generating";
         progressMessage = chunk.progressMessage ?? "Generating a response…";
         agentType = chunk.agentType ?? agentType;
-        await updateProgress(taskId, current.assistantMessageId, progressState, progressMessage, agentType);
+        await updateProgress(taskId, current.assistantMessageId, progressState, progressMessage, agentType, chunk.reset ? "" : undefined);
         continue;
       }
 
@@ -275,7 +279,9 @@ async function main(): Promise<void> {
   await runConsumer();
 }
 
-void main().catch((error) => {
-  console.error("[Agent Worker] Fatal startup error:", error);
-  process.exit(1);
-});
+if (require.main === module) {
+  void main().catch((error) => {
+    console.error("[Agent Worker] Fatal startup error:", error);
+    process.exit(1);
+  });
+}

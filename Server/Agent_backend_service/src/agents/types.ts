@@ -169,6 +169,8 @@ export interface DepartmentAgentConfig {
 // ─── Streaming Types ─────────────────────────────────────────────────────────
 
 export interface StreamChunk {
+  /** Replace the current draft before subsequent tokens (handoff or recovery). */
+  reset?: boolean;
   type: "token" | "complete" | "metadata" | "error" | "connected" | "end" | "progress";
   content: string;
   agentName?: string;

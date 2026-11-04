@@ -6,6 +6,7 @@
 import { gatewayAgent, selectFallbackAgent } from "./gateway/gateway.agent";
 import type { AgentContext, AgentResult, ConversationMessage, StreamChunk } from "./types";
 import { runner } from "./config/model.provider";
+import { completionIssue, recoveryAgent } from "./completion";
 
 /**
  * Non-streaming agent pipeline - returns full response after completion.
@@ -29,6 +30,23 @@ export async function runAgentPipeline(
       const fallbackAgent = selectFallbackAgent(conversationInput);
       result = await runner.run(fallbackAgent, conversationInput, { context });
     }
+
+    let recovered = false;
+    const issue = result.lastAgent?.name === gatewayAgent.name
+      ? "gateway_only" : completionIssue(String(result.finalOutput ?? ""));
+    if (issue) {
+      const specialist = result.lastAgent && result.lastAgent.name !== gatewayAgent.name
+        ? result.lastAgent : selectFallbackAgent(conversationInput);
+      console.warn("[Agent completion validation]", { agent: specialist.name, issue, recoveryAttempted: true });
+      recovered = true;
+      result = await runner.run(recoveryAgent(specialist), conversationInput, { context });
+    }
+    const finalIssue = result.lastAgent?.name === gatewayAgent.name
+      ? "gateway_only" : completionIssue(String(result.finalOutput ?? ""));
+    console.log("[Agent completion validation]", {
+      agent: result.lastAgent?.name, valid: !finalIssue, issue: finalIssue, recoveryAttempted: recovered,
+    });
+    if (finalIssue) throw new Error(`Agent response incomplete after recovery: ${finalIssue}`);
 
     const latencyMs = Date.now() - startTime;
     const lastAgentName = result.lastAgent?.name || "Unknown";
@@ -110,119 +128,83 @@ export async function* streamAgentPipeline(
       context.chatSummary
     );
 
-    // Run agent with streaming enabled
-    const result = await runner.run(gatewayAgent, conversationInput, { context, stream: true, signal });
-    let fullResponse = "";
-    let gatewayDraft = "";
+    let activeAgent = gatewayAgent;
     let lastAgentName = gatewayAgent.name;
+    let fullResponse = "";
+    let fallbackUsed = false;
+    let recoveryAttempted = false;
 
-    // Observe run events so we can report real handoffs and stream only the
-    // specialist's final response, never the gateway's conversational handoff text.
-    for await (const event of result) {
-      if (event.type === "agent_updated_stream_event") {
-        const nextAgent = event.agent.name;
-        if (nextAgent !== lastAgentName) {
-          lastAgentName = nextAgent;
-          gatewayDraft = "";
-          fullResponse = "";
-          yield {
-            type: "progress",
-            content: "",
-            status: "handed_off",
-            agentName: nextAgent,
-            agentType: nextAgent,
-            progressMessage: `Your request is with ${nextAgent}. Generating a response…`,
-          };
-        }
-        continue;
-      }
-
-      if (event.type === "run_item_stream_event" && event.name === "handoff_requested") {
-        yield {
-          type: "progress",
-          content: "",
-          status: "routing",
-          agentName: lastAgentName,
-          agentType: lastAgentName,
-          progressMessage: "Finding the right specialist…",
-        };
-        continue;
-      }
-
-      if (event.type === "raw_model_stream_event" && event.data.type === "output_text_delta") {
-        const delta = event.data.delta;
-        if (lastAgentName === gatewayAgent.name) {
-          gatewayDraft += delta;
+    while (true) {
+      signal?.throwIfAborted();
+      const result = await runner.run(activeAgent, conversationInput, { context, stream: true, signal });
+      fullResponse = "";
+      for await (const event of result) {
+        if (event.type === "agent_updated_stream_event") {
+          const nextAgent = event.agent.name;
+          if (nextAgent !== lastAgentName) {
+            lastAgentName = nextAgent;
+            fullResponse = "";
+            yield {
+              type: "progress", content: "", reset: true, status: "handed_off",
+              agentName: nextAgent, agentType: nextAgent,
+              progressMessage: `Your request is with ${nextAgent}. Generating a response...`,
+            };
+          }
           continue;
         }
-        fullResponse += delta;
-        yield {
-          type: "token",
-          content: delta,
-          agentName: lastAgentName,
-          agentType: lastAgentName,
-          status: "generating",
-          isPartial: true,
-        };
-      }
-    }
-
-    await result.completed;
-
-    console.log("[Agent completion]", {
-      lastAgent: result.lastAgent?.name,
-      trackedAgent: lastAgentName,
-      streamedCharacters: fullResponse.length,
-      finalOutputCharacters: String(result.finalOutput ?? "").length,
-      matchesFinalOutput:
-        fullResponse === String(result.finalOutput ?? ""),
-    });
-
-    if (lastAgentName === gatewayAgent.name) {
-      // Some OpenAI-compatible models return a natural-language transfer
-      // promise instead of calling the handoff tool. Route it deterministically
-      // from the conversation so that promise never becomes the final answer.
-      const fallbackAgent = selectFallbackAgent(conversationInput);
-      lastAgentName = fallbackAgent.name;
-      gatewayDraft = "";
-      fullResponse = "";
-      yield {
-        type: "progress",
-        content: "",
-        status: "handed_off",
-        agentName: lastAgentName,
-        agentType: lastAgentName,
-        progressMessage: `Your request is with ${lastAgentName}. Generating a response…`,
-      };
-
-      const fallbackResult = await runner.run(fallbackAgent, conversationInput, { context, stream: true, signal });
-      for await (const event of fallbackResult) {
+        if (event.type === "run_item_stream_event" && event.name === "handoff_requested") {
+          yield {
+            type: "progress", content: "", status: "routing",
+            agentName: lastAgentName, agentType: lastAgentName,
+            progressMessage: "Finding the right specialist...",
+          };
+          continue;
+        }
         if (event.type === "raw_model_stream_event" && event.data.type === "output_text_delta") {
+          if (lastAgentName === gatewayAgent.name) continue;
           fullResponse += event.data.delta;
           yield {
-            type: "token",
-            content: event.data.delta,
-            agentName: lastAgentName,
-            agentType: lastAgentName,
-            status: "generating",
-            isPartial: true,
+            type: "token", content: event.data.delta,
+            agentName: lastAgentName, agentType: lastAgentName,
+            status: "generating", isPartial: true,
           };
         }
       }
-      await fallbackResult.completed;
-      if (!fullResponse) fullResponse = String(fallbackResult.finalOutput ?? "");
-    } else if (!fullResponse) {
-      fullResponse = String(result.finalOutput ?? "");
-      if (fullResponse) {
-        yield {
-          type: "token",
-          content: fullResponse,
-          agentName: lastAgentName,
-          agentType: lastAgentName,
-          status: "generating",
-          isPartial: true,
-        };
+      await result.completed;
+      // The SDK final output is authoritative; streamed text can include tool preambles.
+      const finalOutput = String(result.finalOutput ?? "");
+      lastAgentName = result.lastAgent?.name ?? lastAgentName;
+      const issue = completionIssue(finalOutput);
+      const gatewayFinished = lastAgentName === gatewayAgent.name;
+      console.log("[Agent completion]", {
+        lastAgent: lastAgentName, streamedCharacters: fullResponse.length,
+        finalOutputCharacters: finalOutput.length, matchesFinalOutput: fullResponse === finalOutput,
+        valid: !gatewayFinished && !issue, issue, recoveryAttempted,
+      });
+
+      if (gatewayFinished && !fallbackUsed && !recoveryAttempted) {
+        fallbackUsed = true;
+        activeAgent = selectFallbackAgent(conversationInput);
+      } else if (issue || gatewayFinished) {
+        if (recoveryAttempted) {
+          throw new Error(`Agent response incomplete after recovery: ${issue ?? "gateway_only"}`);
+        }
+        recoveryAttempted = true;
+        const specialist = result.lastAgent && !gatewayFinished
+          ? result.lastAgent : selectFallbackAgent(conversationInput);
+        activeAgent = recoveryAgent(specialist);
+      } else {
+        fullResponse = finalOutput;
+        break;
       }
+
+      lastAgentName = activeAgent.name;
+      fullResponse = "";
+      yield {
+        type: "progress", content: "", reset: true, status: "handed_off",
+        agentName: lastAgentName, agentType: lastAgentName,
+        progressMessage: `Your request is with ${lastAgentName}. Generating a response...`,
+      };
     }
 
     const latencyMs = Date.now() - startTime;
