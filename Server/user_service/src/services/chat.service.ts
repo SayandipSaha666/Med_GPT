@@ -41,13 +41,10 @@ export class ChatService {
         select: { id: true },
       });
       if (activeTasks.length) {
-        const cancelled = await tx.agentTask.updateMany({
+        await tx.agentTask.updateMany({
           where: { id: { in: activeTasks.map((task) => task.id) }, status: { in: ["queued", "running"] } },
           data: { status: "cancelled", leaseExpiresAt: null, completedAt: new Date() },
         });
-        if (cancelled.count) {
-          await tx.user.update({ where: { id: userId }, data: { credits: { increment: cancelled.count } } });
-        }
       }
       await tx.chat.delete({ where: { id: chatId } });
     });

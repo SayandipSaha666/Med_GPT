@@ -10,6 +10,18 @@ class FileController {
             if (!file) {
                 throw app_error_1.AppError.badRequest("No files provided");
             }
+            /*
+            conceptually,
+                req.file = {
+                    fieldname: "file",
+                    originalname: "prescription.pdf",
+                    encoding: "7bit",
+                    mimetype: "application/pdf",
+                    size: 102400,
+                    buffer: Buffer(...)
+                };
+                from multer middleware, which is used to handle multipart/form-data requests.
+            */
             const result = await file_service_1.fileService.upload({
                 userId: req.user.id,
                 buffer: file.buffer,

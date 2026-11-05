@@ -277,13 +277,10 @@ export class MessageService {
         select: { id: true },
       });
       if (task) {
-        const cancelled = await tx.agentTask.updateMany({
+        await tx.agentTask.updateMany({
           where: { id: task.id, status: { in: ["queued", "running"] } },
           data: { status: "cancelled", leaseExpiresAt: null, completedAt: new Date() },
         });
-        if (cancelled.count) {
-          await tx.user.update({ where: { id: userId }, data: { credits: { increment: 1 } } });
-        }
       }
       await tx.message.deleteMany({ where: { id: { in: idsToDelete } } });
     });

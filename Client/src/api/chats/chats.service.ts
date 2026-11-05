@@ -8,6 +8,7 @@ import {
   T_Api_Success_Res,
   T_Send_Message_Response,
 } from '../api.types';
+import broadcastChannel from '../../lib/broadcastChannel';
 
 /**
  * Centralized query keys.
@@ -158,6 +159,9 @@ export const useDeleteChat = () => {
         exact: true,
       });
 
+      // Broadcast to other tabs so they can sync
+      broadcastChannel.sendChatDeleted(chatId);
+
       // Reconcile the list with the backend.
       await queryClient.invalidateQueries({
         queryKey: chatKeys.all,
@@ -267,6 +271,26 @@ export const useSendMessage = () => {
       return response.data.data;
     },
 
+    onMutate: async ({ chatId }) => {
+      // Optimistically decrement user credits by 1
+      // Rollback function returned for error recovery
+      await queryClient.cancelQueries({ queryKey: ['getMe'] });
+
+      const previousUser = queryClient.getQueryData<{ success: boolean; data: any }>(['getMe']);
+
+      if (previousUser?.data?.credits) {
+        queryClient.setQueryData<{ success: boolean; data: any }>(['getMe'], {
+          success: true,
+          data: {
+            ...previousUser.data,
+            credits: previousUser.data.credits - 1,
+          },
+        });
+      }
+
+      return { previousUser, chatId };
+    },
+
     onSuccess: async (_result, { chatId }) => {
       // The server may update messages, title, and updatedAt.
       await Promise.all([
@@ -276,7 +300,19 @@ export const useSendMessage = () => {
         queryClient.invalidateQueries({
           queryKey: chatKeys.all,
         }),
+        queryClient.invalidateQueries({
+          queryKey: ['getMe'],
+        }),
       ]);
+    },
+
+    onError: async (_error, { chatId }, context) => {
+      // Rollback: restore previous user data
+      if (context?.previousUser) {
+        queryClient.setQueryData<{ success: boolean; data: any }>(['getMe'], context.previousUser);
+      }
+      // Reconcile with server state
+      await queryClient.invalidateQueries({ queryKey: ['getMe'] });
     },
   });
 };

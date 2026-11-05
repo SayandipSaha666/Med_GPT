@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { T_User } from '../types/auth';
 import { ApiService } from '../api/api.service';
+import broadcastChannel from '../lib/broadcastChannel';
 
 interface IAuthContext {
   user: T_User | null;
@@ -16,7 +17,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const setUser = (newUser: T_User | null) => {
-    console.log('[AuthStore] Setting user:', newUser);
     setUserState(newUser);
   };
 
@@ -26,18 +26,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Update user state when meData changes
   useEffect(() => {
     if (isSuccess && meData && meData.success) {
-      console.log('[AuthStore] Retrieved user from server:', meData.data);
       setUserState(meData.data);
       setIsLoading(false);
     } else if (!meLoading) {
-      // If no token or error, set loading to false with null user
-      console.log('[AuthStore] No token or user not loaded, user:', user);
       setIsLoading(false);
     }
   }, [meData, meLoading, isSuccess]);
 
-  // Log when component mounts
-  console.log('[AuthStore] AuthProvider mounted, current user:', user, 'isLoading:', isLoading);
+  // Listen for credit updates from other tabs
+  useEffect(() => {
+    const unsubscribe = broadcastChannel.onCreditUpdate((credits) => {
+      setUserState((prevUser) => (prevUser ? { ...prevUser, credits } : null));
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Broadcast credit changes to other tabs when user state changes
+  useEffect(() => {
+    if (user?.credits !== undefined) {
+      broadcastChannel.sendCreditUpdate(user.credits);
+    }
+  }, [user?.credits]);
 
   return (
     <AuthContext.Provider value={{ user, setUser, isLoading, setIsLoading }}>

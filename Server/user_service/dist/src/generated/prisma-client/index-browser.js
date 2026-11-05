@@ -145,6 +145,26 @@ exports.Prisma.MessageScalarFieldEnum = {
     confidence: 'confidence',
     metadata: 'metadata'
 };
+exports.Prisma.AgentTaskScalarFieldEnum = {
+    id: 'id',
+    chatId: 'chatId',
+    userId: 'userId',
+    userMessageId: 'userMessageId',
+    assistantMessageId: 'assistantMessageId',
+    input: 'input',
+    context: 'context',
+    status: 'status',
+    agentType: 'agentType',
+    error: 'error',
+    publishedAt: 'publishedAt',
+    startedAt: 'startedAt',
+    leaseExpiresAt: 'leaseExpiresAt',
+    attempts: 'attempts',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt',
+    completedAt: 'completedAt',
+    compactedAt: 'compactedAt'
+};
 exports.Prisma.ChatSummaryScalarFieldEnum = {
     id: 'id',
     chatId: 'chatId',
@@ -319,6 +339,7 @@ exports.Prisma.ModelName = {
     FileChunk: 'FileChunk',
     Chat: 'Chat',
     Message: 'Message',
+    AgentTask: 'AgentTask',
     ChatSummary: 'ChatSummary',
     Transaction: 'Transaction',
     Plans: 'Plans',

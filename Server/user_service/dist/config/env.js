@@ -16,6 +16,7 @@ const schema = zod_1.z.object({
     RAG_SERVICE_URL: zod_1.z.string().url(),
     AGENT_SERVICE_URL: zod_1.z.string().url().default("http://localhost:4000"),
     AGENT_SERVICE_API_KEY: zod_1.z.string().min(1).optional(),
+    RABBITMQ_URL: zod_1.z.string().url(),
     FRONTEND_ALLOWED_ORIGINS: zod_1.z
         .string()
         .transform((value) => value

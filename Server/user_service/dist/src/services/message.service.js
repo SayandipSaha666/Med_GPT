@@ -12,6 +12,80 @@ const prisma_1 = require("../lib/prisma");
 const RAG_SERVICE_URL = env_1.env.RAG_SERVICE_URL || "http://localhost:8000";
 class MessageService {
     /**
+     * Persist a user turn and assistant placeholder, then let the RabbitMQ
+     * publisher dispatch the durable task in the background.
+     */
+    async enqueueMessage(userId, chatId, content, fileIds = []) {
+        const chat = await chat_repository_1.chatRepository.findById(chatId);
+        if (!chat || chat.userId !== userId)
+            throw new Error("Chat not found");
+        const memoryContext = await compaction_service_1.compactionService.getChatMemoryContext(chatId);
+        const context = {
+            userId,
+            chatId,
+            conversationHistory: memoryContext.recentMessages,
+            chatSummary: memoryContext.chatSummaryText,
+        };
+        let taskId = "";
+        let userMessageId = 0;
+        let assistantMessageId = 0;
+        await prisma_1.prisma.$transaction(async (tx) => {
+            const debit = await tx.user.updateMany({
+                where: { id: userId, credits: { gte: 1 } },
+                data: { credits: { decrement: 1 } },
+            });
+            if (debit.count === 0)
+                throw new Error("Insufficient credits");
+            const userMessage = await tx.message.create({
+                data: { chatId, role: "user", content },
+            });
+            userMessageId = userMessage.id;
+            const attached = await tx.file.updateMany({
+                where: {
+                    id: { in: fileIds },
+                    userId,
+                },
+                data: {
+                    messageId: userMessage.id,
+                },
+            });
+            if (attached.count !== fileIds.length) {
+                throw new Error("One or more files are invalid");
+            }
+            const assistantMessage = await tx.message.create({
+                data: {
+                    chatId,
+                    role: "assistant",
+                    content: "",
+                    metadata: { generationStatus: "queued", progressMessage: "Waiting for an available agent…" },
+                },
+            });
+            assistantMessageId = assistantMessage.id;
+            const task = await tx.agentTask.create({
+                data: {
+                    chatId,
+                    userId,
+                    userMessageId: userMessage.id,
+                    assistantMessageId: assistantMessage.id,
+                    input: content,
+                    context: JSON.parse(JSON.stringify(context)),
+                },
+            });
+            taskId = task.id;
+            await tx.message.update({
+                where: { id: assistantMessage.id },
+                data: { metadata: { taskId, generationStatus: "queued", progressMessage: "Waiting for an available agent…" } },
+            });
+        });
+        const [userMessage, assistantMessage] = await Promise.all([
+            message_repository_1.messageRepository.findById(userMessageId),
+            message_repository_1.messageRepository.findById(assistantMessageId),
+        ]);
+        if (!userMessage || !assistantMessage)
+            throw new Error("Unable to load queued messages");
+        return { userMessage, assistantMessage, taskId };
+    }
+    /**
      * Sends a message and generates an AI response using the multi-agent pipeline.
      * Automatically triggers compaction when the conversation reaches threshold.
      * Feeds structured summary + recent messages to provide full context to agents.
@@ -147,7 +221,19 @@ class MessageService {
                 idsToDelete.push(nextAssistant.id);
             }
         }
-        await message_repository_1.messageRepository.deleteManyByIds(idsToDelete);
+        await prisma_1.prisma.$transaction(async (tx) => {
+            const task = await tx.agentTask.findFirst({
+                where: { userMessageId: messageId, userId, chatId, status: { in: ["queued", "running"] } },
+                select: { id: true },
+            });
+            if (task) {
+                await tx.agentTask.updateMany({
+                    where: { id: task.id, status: { in: ["queued", "running"] } },
+                    data: { status: "cancelled", leaseExpiresAt: null, completedAt: new Date() },
+                });
+            }
+            await tx.message.deleteMany({ where: { id: { in: idsToDelete } } });
+        });
         return { deletedIds: idsToDelete };
     }
     /**

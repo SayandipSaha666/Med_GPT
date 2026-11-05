@@ -156,7 +156,6 @@ export class MessageController {
             metadata: { taskId: task.id, generationStatus: "cancelled", progressMessage: "Response generation stopped." },
           },
         });
-        await tx.user.update({ where: { id: userId }, data: { credits: { increment: 1 } } });
         return true;
       });
 

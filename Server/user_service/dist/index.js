@@ -15,6 +15,7 @@ const chat_routes_1 = __importDefault(require("./src/routes/chat.routes"));
 const file_route_1 = __importDefault(require("./src/routes/file.route"));
 const billing_routes_1 = __importDefault(require("./src/routes/billing.routes"));
 const env_1 = require("./config/env");
+const agent_task_publisher_1 = require("./src/services/agent-task.publisher");
 const app = (0, express_1.default)();
 const allowedOrigins = env_1.env.FRONTEND_ALLOWED_ORIGINS;
 app.use((0, cors_1.default)({
@@ -63,6 +64,7 @@ app.use("/api", (_req, res) => {
 const startServer = async () => {
     try {
         await (0, prisma_1.connectDB)();
+        (0, agent_task_publisher_1.startAgentTaskPublisher)();
         app.listen(PORT, () => {
             console.log(`User service running on port ${PORT}`);
         });

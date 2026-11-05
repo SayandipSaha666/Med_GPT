@@ -17,6 +17,9 @@ router.get("/:id", chatController_1.chatController.getChat);
 router.delete("/:id", chatController_1.chatController.deleteChat);
 router.put("/update/:id", chatController_1.chatController.updateChatTitle);
 // Message routes (non-streaming)
+router.post("/:id/tasks", auth_middleware_1.authMiddleware, messageController_1.messageController.enqueueMessage);
+router.get("/:id/tasks/:taskId/stream", auth_middleware_1.authMiddleware, messageController_1.messageController.streamAgentTask);
+router.post("/:id/tasks/:taskId/cancel", auth_middleware_1.authMiddleware, messageController_1.messageController.cancelAgentTask);
 router.post("/:id/message", auth_middleware_1.authMiddleware, messageController_1.messageController.sendMessage);
 router.put("/:id/message/:messageId", auth_middleware_1.authMiddleware, messageController_1.messageController.editMessage);
 router.delete("/:id/message/:messageId", auth_middleware_1.authMiddleware, messageController_1.messageController.deleteMessage);

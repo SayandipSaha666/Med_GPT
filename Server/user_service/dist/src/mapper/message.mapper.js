@@ -12,5 +12,7 @@ function toMessage(m) {
         files: m.files.map(file_mapper_1.toFileAttachment),
         sources: m.sources ?? [],
         toolCalls: m.toolCalls ?? [],
+        agentType: m.agentType,
+        metadata: m.metadata,
     };
 }
