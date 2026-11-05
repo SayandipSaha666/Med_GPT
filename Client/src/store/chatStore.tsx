@@ -1,9 +1,9 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, type Dispatch, type SetStateAction } from 'react';
 import { T_Chat } from '../types/chat';
 
 interface IChatContext {
   chats: T_Chat[];
-  setChats: (chats: T_Chat[]) => void;
+  setChats: Dispatch<SetStateAction<T_Chat[]>>;
   currentChat: T_Chat | null;
   setCurrentChat: (chat: T_Chat | null) => void;
 }
@@ -14,16 +14,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [chats, setChatsState] = useState<T_Chat[]>([]);
   const [currentChat, setCurrentChatState] = useState<T_Chat | null>(null);
 
-  const setChats = (newChats: T_Chat[]) => {
-    setChatsState(newChats);
-  };
-
   const setCurrentChat = (chat: T_Chat | null) => {
     setCurrentChatState(chat);
   };
 
   return (
-    <ChatContext.Provider value={{ chats, setChats, currentChat, setCurrentChat }}>
+    <ChatContext.Provider value={{ chats, setChats: setChatsState, currentChat, setCurrentChat }}>
       {children}
     </ChatContext.Provider>
   );

@@ -21,6 +21,8 @@ model User {
   planId         Int             @default(1)
   plan           Plans           @relation(fields: [planId], references: [id], onDelete: Restrict)
   chats          Chat[]
+  chatPins       ChatPin[]
+  chatFolders    ChatFolder[]
   transactions   Transaction[]
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @default(now()) @updatedAt
@@ -87,10 +89,54 @@ model Chat {
   messages  Message[]
   agentTasks AgentTask[]
   summary   ChatSummary?
+  pin       ChatPin?
+  folderAssignments ChatFolderAssignment[]
   createdAt DateTime     @default(now())
   updatedAt DateTime     @default(now()) @updatedAt
 
   @@map("chats")
+}
+
+model ChatPin {
+  id       Int      @id @default(autoincrement())
+  chatId   Int      @unique @map("chat_id")
+  chat     Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  userId   Int      @map("user_id")
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pinnedAt DateTime @default(now()) @map("pinned_at")
+
+  @@index([userId, pinnedAt])
+  @@map("chat_pins")
+}
+
+model ChatFolder {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  icon      String?  @default("folder")
+  color     String?  @default("#3b82f6")
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  assignments ChatFolderAssignment[]
+
+  @@index([userId, sortOrder])
+  @@map("chat_folders")
+}
+
+model ChatFolderAssignment {
+  id        Int        @id @default(autoincrement())
+  chatId    Int        @map("chat_id")
+  chat      Chat       @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  folderId  Int        @map("folder_id")
+  folder    ChatFolder @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  sortOrder Int        @default(0) @map("sort_order")
+
+  @@unique([chatId, folderId])
+  @@index([folderId, sortOrder])
+  @@map("chat_folder_assignments")
 }
 
 model Message {

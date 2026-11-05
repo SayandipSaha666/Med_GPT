@@ -74,8 +74,8 @@ export function Credits() {
         if (status?.isPaid) {
           toast.success('🎉 Credits added to your account successfully!');
           const updatedUser = await getMeQuery.refetch();
-          if (updatedUser.data) {
-            setUser(updatedUser.data);
+          if (updatedUser.data?.success) {
+            setUser(updatedUser.data.data);
           }
           setPurchasingId(null);
           return;

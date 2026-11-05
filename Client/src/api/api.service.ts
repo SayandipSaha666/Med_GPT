@@ -3,6 +3,8 @@ import { chatService } from './chats/chats.service';
 import { billingService } from './billing/billing.service';
 import { profileService } from './profile/profile.service';
 import { fileService } from './files/files.service';
+import { chatPinsService } from './chatPins/chatPins.service';
+import { chatFoldersService } from './chatFolders/chatFolders.service';
 
 export const ApiService = {
   auth: authService,
@@ -10,4 +12,6 @@ export const ApiService = {
   billing: billingService,
   profile: profileService,
   files: fileService,
+  chatPins: chatPinsService,
+  chatFolders: chatFoldersService,
 };

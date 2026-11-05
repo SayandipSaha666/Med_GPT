@@ -105,7 +105,14 @@ function useGetMe() {
           { signal: controller.signal }
         );
         clearTimeout(timeoutId);
-        return response.data;
+        return {
+          ...response.data,
+          data: {
+            ...response.data.data,
+            id: String(response.data.data.id),
+            credits: Number(response.data.data.credits),
+          },
+        };
       } catch (error) {
         clearTimeout(timeoutId);
         throw error;

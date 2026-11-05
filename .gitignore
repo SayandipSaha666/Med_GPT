@@ -23,6 +23,7 @@ agent.md
 AGENTS.md
 skills-lock.json
 .gitignore
+docs/
 
 # Ignore Python cache directories inside the RAG service
 /Server/RAG_Service/**/__pycache__/

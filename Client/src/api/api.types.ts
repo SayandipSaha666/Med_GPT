@@ -92,6 +92,22 @@ export interface T_Chat {
   updatedAt: string;
 }
 
+export interface T_ChatPin {
+  chatId: number;
+  pinnedAt: string;
+}
+
+export interface T_ChatFolder {
+  id: number;
+  name: string;
+  icon: string | null;
+  color: string | null;
+  sortOrder: number;
+  chatIds: number[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type T_Create_Chat_Response = T_Chat;
 
 export interface T_Send_Message_Response {
@@ -102,7 +118,7 @@ export interface T_Send_Message_Response {
 
 // Billing types
 export interface T_Plan {
-  id: string;
+  id: number;
   name: string;
   price: number;
   credits: number;

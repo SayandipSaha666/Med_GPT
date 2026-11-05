@@ -9,9 +9,12 @@ import { ApiService } from '../api/api.service';
 import { useChatAttachments } from '../hooks/useChatAttachments';
 import type { T_FileAttachment } from '../api/api.types';
 import toast from 'react-hot-toast';
+import { useQueryClient } from '@tanstack/react-query';
+import type { T_Api_Success_Res, T_User } from '../api/api.types';
 
 export function ChatDetails() {
   const { theme } = useTheme();
+  const queryClient = useQueryClient();
   const { setChats } = useChat();
   const [selectedChat, setSelectedChat] = useState<any>(null);
   const [isSending, setIsSending] = useState(false);
@@ -173,6 +176,13 @@ export function ChatDetails() {
       messages: [...(prev?.messages || []), newUserMessage],
     }));
     setIsSending(true);
+    const previousUser = queryClient.getQueryData<T_Api_Success_Res<T_User>>(['getMe']);
+    if (previousUser && previousUser.data.credits >= 1) {
+      queryClient.setQueryData<T_Api_Success_Res<T_User>>(['getMe'], {
+        ...previousUser,
+        data: { ...previousUser.data, credits: previousUser.data.credits - 1 },
+      });
+    }
     const controller = new AbortController();
     abortControllerRef.current = controller;
     let taskAccepted = false;
@@ -199,6 +209,7 @@ export function ChatDetails() {
       activeAssistantMessageIdRef.current = queued.assistantMessage.id;
       observedTaskIdsRef.current.add(queued.taskId);
       taskAccepted = true;
+      void queryClient.invalidateQueries({ queryKey: ['getMe'] });
       setSelectedChat((prev: any) => ({
         ...prev,
         messages: [
@@ -230,6 +241,10 @@ export function ChatDetails() {
 
       await watchAgentTask(queued.taskId, queued.assistantMessage.id, controller.signal);
     } catch (error: any) {
+      if (!taskAccepted && previousUser) {
+        queryClient.setQueryData(['getMe'], previousUser);
+        void queryClient.invalidateQueries({ queryKey: ['getMe'] });
+      }
       if (error?.name === 'CanceledError' || error?.code === 'ERR_CANCELED') {
         // User intentionally stopped generation
         return;

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import moment from 'moment';
 import { useLocation, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -10,6 +11,10 @@ import { useTheme } from '../../store/themeStore';
 import { ChatModal, ModalMode } from '../modals/ChatModal';
 
 import type { T_Chat } from '../../api/api.types';
+import { chatKeys } from '../../api/chats/chats.service';
+import { pinKeys } from '../../api/chatPins/chatPins.service';
+import { folderKeys } from '../../api/chatFolders/chatFolders.service';
+import broadcastChannel from '../../lib/broadcastChannel';
 
 interface SidebarProps {
   isMenuOpen: boolean;
@@ -28,9 +33,14 @@ export function Sidebar({
   // Modal state for New Chat, Edit Title, Delete Chat
   const [modalMode, setModalMode] = useState<ModalMode>(null);
   const [activeChat, setActiveChat] = useState<{ id: number; title: string } | null>(null);
+  const [showFolderForm, setShowFolderForm] = useState(false);
+  const [folderName, setFolderName] = useState('');
+  const [editingFolderId, setEditingFolderId] = useState<number | null>(null);
+  const [collapsedFolderIds, setCollapsedFolderIds] = useState<number[]>([]);
 
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
 
   // Chat API hooks
   const {
@@ -43,6 +53,33 @@ export function Sidebar({
   const createChatMutation = useCreateChat();
   const deleteChatMutation = useDeleteChat();
   const updateChatTitleMutation = useUpdateChatTitle();
+  const { data: pins = [] } = ApiService.chatPins.usePins();
+  const { data: folders = [] } = ApiService.chatFolders.useFolders();
+  const pinChatMutation = ApiService.chatPins.usePinChat();
+  const unpinChatMutation = ApiService.chatPins.useUnpinChat();
+  const createFolderMutation = ApiService.chatFolders.useCreateFolder();
+  const updateFolderMutation = ApiService.chatFolders.useUpdateFolder();
+  const deleteFolderMutation = ApiService.chatFolders.useDeleteFolder();
+  const addChatMutation = ApiService.chatFolders.useAddChat();
+  const removeChatMutation = ApiService.chatFolders.useRemoveChat();
+
+  useEffect(() => {
+    const unsubscribers = [
+      broadcastChannel.onChatDeleted((chatId) => {
+        queryClient.setQueryData<T_Chat[]>(chatKeys.all, (old) => old?.filter((chat) => chat.id !== chatId));
+        queryClient.removeQueries({ queryKey: chatKeys.detail(chatId), exact: true });
+        void queryClient.invalidateQueries({ queryKey: chatKeys.all });
+        void queryClient.invalidateQueries({ queryKey: pinKeys.all });
+        void queryClient.invalidateQueries({ queryKey: folderKeys.all });
+        if (window.location.pathname === `/main/chat/${chatId}`) navigate('/main/chat');
+      }),
+      broadcastChannel.onChatPinned(() => { void queryClient.invalidateQueries({ queryKey: pinKeys.all }); }),
+      broadcastChannel.onChatUnpinned(() => { void queryClient.invalidateQueries({ queryKey: pinKeys.all }); }),
+      broadcastChannel.onChatMovedToFolder(() => { void queryClient.invalidateQueries({ queryKey: folderKeys.all }); }),
+      broadcastChannel.onFoldersChanged(() => { void queryClient.invalidateQueries({ queryKey: folderKeys.all }); }),
+    ];
+    return () => unsubscribers.forEach((unsubscribe) => unsubscribe());
+  }, [navigate, queryClient]);
 
   // Logout hook
   const logoutMutation = ApiService.auth.useLogout();
@@ -138,6 +175,7 @@ export function Sidebar({
   const handleLogout = () => {
     logoutMutation.mutate(undefined, {
       onSuccess: () => {
+        queryClient.clear();
         setUser(null);
         toast.success('Signed out successfully. See you soon! 👋');
         navigate('/auth');
@@ -170,6 +208,37 @@ export function Sidebar({
         (Number.isNaN(dateA) ? 0 : dateA)
       );
     });
+
+  const pinnedIds = new Set(pins.map((pin) => pin.chatId));
+  const pinnedChats = pins.map((pin) => processedChats.find((chat) => chat.id === pin.chatId)).filter((chat): chat is T_Chat => Boolean(chat));
+
+  const openChat = (chatId: number) => {
+    navigate(`/main/chat/${chatId}`);
+    if (window.innerWidth < 768) setIsMenuOpen(false);
+  };
+
+  const saveFolder = (event: React.FormEvent) => {
+    event.preventDefault();
+    const name = folderName.trim();
+    if (!name) return;
+    const options = {
+      onSuccess: () => {
+        toast.success(editingFolderId ? 'Folder renamed' : 'Folder created');
+        setFolderName('');
+        setEditingFolderId(null);
+        setShowFolderForm(false);
+      },
+      onError: (error: Error) => toast.error(error.message || 'Could not save folder'),
+    };
+    if (editingFolderId) updateFolderMutation.mutate({ folderId: editingFolderId, name }, options);
+    else createFolderMutation.mutate({ name }, options);
+  };
+
+  const togglePin = (event: React.MouseEvent, chatId: number) => {
+    event.stopPropagation();
+    const mutation = pinnedIds.has(chatId) ? unpinChatMutation : pinChatMutation;
+    mutation.mutate(chatId, { onError: (error) => toast.error(error.message || 'Could not update pin') });
+  };
 
   /* -------------------- CHAT DISPLAY TITLE -------------------- */
   const getDisplayTitle = (chat: T_Chat) => {
@@ -354,16 +423,59 @@ export function Sidebar({
 
         {/* Chat History Section */}
         <div className="flex-1 mt-3 flex flex-col min-h-0 overflow-hidden">
-          <div className="flex items-center justify-between px-1 mb-2 shrink-0">
-            <span className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-              Recent Chats
-            </span>
-            <span className="text-[11px] font-medium text-purple-600 dark:text-purple-400 bg-purple-100/60 dark:bg-purple-950/60 px-2 py-0.5 rounded-full">
-              {processedChats.length}
-            </span>
-          </div>
-
           <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 pb-2 scrollbar-thin scrollbar-thumb-purple-200 dark:scrollbar-thumb-purple-900">
+            {pinnedChats.length > 0 && (
+              <section className="mb-4" aria-label="Pinned chats">
+                <h3 className="px-1 mb-2 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Pinned chats</h3>
+                {pinnedChats.map((chat) => (
+                  <div key={`pin-${chat.id}`} className="flex items-center gap-1 rounded-lg bg-purple-100/60 dark:bg-purple-950/40">
+                    <button onClick={() => openChat(chat.id)} className="min-w-0 flex-1 truncate px-3 py-2 text-left text-xs font-medium text-purple-800 dark:text-purple-200" title={getDisplayTitle(chat)}>
+                      <span aria-hidden="true">📌 </span>{getDisplayTitle(chat)}
+                    </button>
+                    <button onClick={(event) => togglePin(event, chat.id)} className="px-2 text-xs text-purple-700 dark:text-purple-300" aria-label={`Unpin ${getDisplayTitle(chat)}`} title="Unpin chat">×</button>
+                  </div>
+                ))}
+              </section>
+            )}
+
+            <section className="mb-4" aria-label="Project folders">
+              <div className="flex items-center justify-between px-1 mb-2">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Projects</h3>
+                <button onClick={() => { setEditingFolderId(null); setFolderName(''); setShowFolderForm(true); }} className="text-xs font-semibold text-purple-600 dark:text-purple-300" aria-label="Create project folder">+ New folder</button>
+              </div>
+              {showFolderForm && (
+                <form onSubmit={saveFolder} className="flex gap-1 mb-2">
+                  <input autoFocus value={folderName} onChange={(event) => setFolderName(event.target.value)} maxLength={80} placeholder="Folder name" aria-label="Folder name" className="min-w-0 flex-1 rounded-lg border border-purple-200 bg-white px-2 py-1.5 text-xs text-gray-900 dark:border-purple-800 dark:bg-[#201c30] dark:text-white" />
+                  <button type="submit" disabled={!folderName.trim() || createFolderMutation.isPending || updateFolderMutation.isPending} className="rounded-lg bg-purple-600 px-2 text-xs text-white disabled:opacity-50">Save</button>
+                  <button type="button" onClick={() => { setShowFolderForm(false); setEditingFolderId(null); }} className="px-1 text-xs text-gray-500" aria-label="Cancel folder edit">×</button>
+                </form>
+              )}
+              {folders.map((folder) => {
+                const folderChats = processedChats.filter((chat) => folder.chatIds.includes(chat.id));
+                const collapsed = collapsedFolderIds.includes(folder.id);
+                return (
+                  <div key={folder.id} className="mb-1 rounded-lg border border-purple-100/60 dark:border-purple-900/40">
+                    <div className="flex items-center gap-1 px-2 py-1.5">
+                      <button onClick={() => setCollapsedFolderIds((old) => collapsed ? old.filter((id) => id !== folder.id) : [...old, folder.id])} className="min-w-0 flex-1 truncate text-left text-xs font-semibold text-gray-700 dark:text-gray-200" aria-expanded={!collapsed}>
+                        <span aria-hidden="true">{collapsed ? '▸' : '▾'} 📁 </span>{folder.name} <span className="text-gray-400">({folderChats.length})</span>
+                      </button>
+                      <button onClick={() => { setEditingFolderId(folder.id); setFolderName(folder.name); setShowFolderForm(true); }} className="text-[11px] text-gray-500 hover:text-purple-600" aria-label={`Rename ${folder.name}`}>Edit</button>
+                      <button onClick={() => { if (window.confirm(`Delete folder "${folder.name}"? Chats will remain available.`)) deleteFolderMutation.mutate(folder.id, { onError: (error) => toast.error(error.message) }); }} className="text-[11px] text-gray-500 hover:text-red-600" aria-label={`Delete ${folder.name}`}>Delete</button>
+                    </div>
+                    {!collapsed && folderChats.map((chat) => (
+                      <div key={`${folder.id}-${chat.id}`} className="flex items-center gap-1 border-t border-purple-100/40 pl-4 dark:border-purple-900/30">
+                        <button onClick={() => openChat(chat.id)} className="min-w-0 flex-1 truncate py-1.5 text-left text-xs text-gray-600 dark:text-gray-300" title={getDisplayTitle(chat)}>{getDisplayTitle(chat)}</button>
+                        <button onClick={() => removeChatMutation.mutate({ folderId: folder.id, chatId: chat.id }, { onError: (error) => toast.error(error.message) })} className="px-2 text-xs text-gray-400 hover:text-red-600" aria-label={`Remove ${getDisplayTitle(chat)} from ${folder.name}`} title="Remove from folder">×</button>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </section>
+            <div className="flex items-center justify-between px-1 mb-2">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Recent chats</h3>
+              <span className="text-[11px] font-medium text-purple-600 dark:text-purple-400 bg-purple-100/60 dark:bg-purple-950/60 px-2 py-0.5 rounded-full">{processedChats.length}</span>
+            </div>
             {/* Loading */}
             {isChatsLoading && (
               <div className="space-y-2 p-2">
@@ -466,6 +578,33 @@ export function Sidebar({
                         transition-opacity shrink-0
                       "
                     >
+                      <button
+                        onClick={(event) => togglePin(event, chat.id)}
+                        disabled={pinChatMutation.isPending || unpinChatMutation.isPending}
+                        className={`p-1 text-xs rounded-lg hover:bg-purple-100 dark:hover:bg-purple-950/50 ${pinnedIds.has(chat.id) ? 'text-purple-700 dark:text-purple-300' : 'text-gray-400'}`}
+                        title={pinnedIds.has(chat.id) ? 'Unpin chat' : 'Pin chat'}
+                        aria-label={`${pinnedIds.has(chat.id) ? 'Unpin' : 'Pin'} ${displayTitle}`}
+                      >
+                        {pinnedIds.has(chat.id) ? '📌' : 'Pin'}
+                      </button>
+                      {folders.length > 0 && (
+                        <select
+                          value=""
+                          onClick={(event) => event.stopPropagation()}
+                          onChange={(event) => {
+                            event.stopPropagation();
+                            const folderId = Number(event.target.value);
+                            if (folderId) addChatMutation.mutate({ folderId, chatId: chat.id }, { onError: (error) => toast.error(error.message) });
+                          }}
+                          disabled={addChatMutation.isPending}
+                          aria-label={`Add ${displayTitle} to project folder`}
+                          title="Add to project folder"
+                          className="max-w-14 rounded-lg bg-transparent text-[10px] text-gray-500 dark:text-gray-400"
+                        >
+                          <option value="">Folder</option>
+                          {folders.filter((folder) => !folder.chatIds.includes(chat.id)).map((folder) => <option key={folder.id} value={folder.id}>{folder.name}</option>)}
+                        </select>
+                      )}
                       {/* Rename / Edit */}
                       <button
                         onClick={(e) => openEditModal(e, chat)}

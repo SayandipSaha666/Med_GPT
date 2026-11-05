@@ -5,137 +5,137 @@
  * for syncing data across browser tabs.
  */
 
-type ChannelMessage<T extends string> =
-  | { type: T; payload?: unknown }
+type ChannelPayload =
   | { type: 'credit-update'; credits: number }
   | { type: 'chat-deleted'; chatId: number }
   | { type: 'chat-pinned'; chatId: number }
   | { type: 'chat-unpinned'; chatId: number }
-  | { type: 'chat-moved-to-folder'; chatId: number; folderId: number };
+  | { type: 'chat-moved-to-folder'; chatId: number; folderId: number }
+  | { type: 'folders-changed' };
+type ChannelMessage = ChannelPayload & { userId: string };
 
-class BroadcastChannelWrapper<T extends string> {
+class BroadcastChannelWrapper {
   private channel: BroadcastChannel;
-  private callbacks: Map<string, (data: ChannelMessage<T>) => void> = new Map();
+  private callbacks: Set<(data: ChannelMessage) => void> = new Set();
+  private userId: string | null = null;
 
-  constructor(private channelName: string) {
+  constructor(channelName: string) {
     this.channel = new BroadcastChannel(channelName);
     this.setupMessageHandler();
   }
 
   private setupMessageHandler() {
     this.channel.onmessage = (event: MessageEvent) => {
-      const data: ChannelMessage<T> = event.data;
+      const data: ChannelMessage = event.data;
+      if (!data || typeof data !== 'object' || !('type' in data) || !this.userId || data.userId !== this.userId) return;
       this.callbacks.forEach((callback) => callback(data));
     };
   }
 
-  /**
-   * Send a message to all other tabs
-   */
-  send(type: T, payload?: unknown): void {
-    this.channel.postMessage({ type, payload });
+  setUserId(userId: string | null): void {
+    this.userId = userId;
+  }
+
+  private post(message: ChannelPayload): void {
+    if (this.userId) this.channel.postMessage({ ...message, userId: this.userId });
   }
 
   /**
    * Update credits across all tabs
    */
   sendCreditUpdate(credits: number): void {
-    this.channel.postMessage({ type: 'credit-update', credits });
+    this.post({ type: 'credit-update', credits });
   }
 
   /**
    * Notify other tabs that a chat was deleted
    */
   sendChatDeleted(chatId: number): void {
-    this.channel.postMessage({ type: 'chat-deleted', chatId });
+    this.post({ type: 'chat-deleted', chatId });
   }
 
   /**
    * Notify other tabs that a chat was pinned
    */
   sendChatPinned(chatId: number): void {
-    this.channel.postMessage({ type: 'chat-pinned', chatId });
+    this.post({ type: 'chat-pinned', chatId });
   }
 
   /**
    * Notify other tabs that a chat was unpinned
    */
   sendChatUnpinned(chatId: number): void {
-    this.channel.postMessage({ type: 'chat-unpinned', chatId });
+    this.post({ type: 'chat-unpinned', chatId });
   }
 
   /**
    * Notify other tabs that a chat was moved to a folder
    */
   sendChatMovedToFolder(chatId: number, folderId: number): void {
-    this.channel.postMessage({ type: 'chat-moved-to-folder', chatId, folderId });
+    this.post({ type: 'chat-moved-to-folder', chatId, folderId });
   }
 
-  /**
-   * Listen for messages of a specific type
-   */
-  on(type: T, callback: (data: ChannelMessage<T>) => void): () => void {
-    this.callbacks.set(type, callback);
-    return () => this.callbacks.delete(type);
+  sendFoldersChanged(): void {
+    this.post({ type: 'folders-changed' });
   }
 
   /**
    * Listen for credit updates
    */
   onCreditUpdate(callback: (credits: number) => void): () => void {
-    const handler = (data: ChannelMessage<T>) => {
+    const handler = (data: ChannelMessage) => {
       if (data.type === 'credit-update' && typeof data.credits === 'number') {
         callback(data.credits);
       }
     };
-    this.callbacks.set('credit-update', handler);
-    return () => this.callbacks.delete('credit-update');
+    this.callbacks.add(handler);
+    return () => this.callbacks.delete(handler);
   }
 
   /**
    * Listen for chat deleted events
    */
   onChatDeleted(callback: (chatId: number) => void): () => void {
-    const handler = (data: ChannelMessage<T>) => {
+    const handler = (data: ChannelMessage) => {
       if (data.type === 'chat-deleted' && typeof data.chatId === 'number') {
         callback(data.chatId);
       }
     };
-    this.callbacks.set('chat-deleted', handler);
-    return () => this.callbacks.delete('chat-deleted');
+    this.callbacks.add(handler);
+    return () => this.callbacks.delete(handler);
   }
 
   /**
    * Listen for chat pinned events
    */
   onChatPinned(callback: (chatId: number) => void): () => void {
-    const handler = (data: ChannelMessage<T>) => {
+    const handler = (data: ChannelMessage) => {
       if (data.type === 'chat-pinned' && typeof data.chatId === 'number') {
         callback(data.chatId);
       }
     };
-    this.callbacks.set('chat-pinned', handler);
-    return () => this.callbacks.delete('chat-pinned');
+    this.callbacks.add(handler);
+    return () => this.callbacks.delete(handler);
   }
 
   /**
    * Listen for chat unpinned events
    */
   onChatUnpinned(callback: (chatId: number) => void): () => void {
-    const handler = (data: ChannelMessage<T>) => {
+    const handler = (data: ChannelMessage) => {
       if (data.type === 'chat-unpinned' && typeof data.chatId === 'number') {
         callback(data.chatId);
       }
     };
-    this.callbacks.set('chat-unpinned', handler);
-    return () => this.callbacks.delete('chat-unpinned');
+    this.callbacks.add(handler);
+    return () => this.callbacks.delete(handler);
   }
 
   /**
    * Listen for chat moved to folder events
    */
   onChatMovedToFolder(callback: (chatId: number, folderId: number) => void): () => void {
-    const handler = (data: ChannelMessage<T>) => {
+    const handler = (data: ChannelMessage) => {
       if (
         data.type === 'chat-moved-to-folder' &&
         typeof data.chatId === 'number' &&
@@ -144,8 +144,14 @@ class BroadcastChannelWrapper<T extends string> {
         callback(data.chatId, data.folderId);
       }
     };
-    this.callbacks.set('chat-moved-to-folder', handler);
-    return () => this.callbacks.delete('chat-moved-to-folder');
+    this.callbacks.add(handler);
+    return () => this.callbacks.delete(handler);
+  }
+
+  onFoldersChanged(callback: () => void): () => void {
+    const handler = (data: ChannelMessage) => { if (data.type === 'folders-changed') callback(); };
+    this.callbacks.add(handler);
+    return () => this.callbacks.delete(handler);
   }
 
   /**
@@ -158,6 +164,6 @@ class BroadcastChannelWrapper<T extends string> {
 }
 
 // Create a singleton instance for the app
-const broadcastChannel = new BroadcastChannelWrapper<'credit-update' | 'chat-deleted' | 'chat-pinned' | 'chat-unpinned' | 'chat-moved-to-folder'>('medgpt-sync');
+const broadcastChannel = new BroadcastChannelWrapper('medgpt-sync');
 
 export default broadcastChannel;

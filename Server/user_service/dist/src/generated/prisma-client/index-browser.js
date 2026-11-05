@@ -133,6 +133,28 @@ exports.Prisma.ChatScalarFieldEnum = {
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
 };
+exports.Prisma.ChatPinScalarFieldEnum = {
+    id: 'id',
+    chatId: 'chatId',
+    userId: 'userId',
+    pinnedAt: 'pinnedAt'
+};
+exports.Prisma.ChatFolderScalarFieldEnum = {
+    id: 'id',
+    userId: 'userId',
+    name: 'name',
+    icon: 'icon',
+    color: 'color',
+    sortOrder: 'sortOrder',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+};
+exports.Prisma.ChatFolderAssignmentScalarFieldEnum = {
+    id: 'id',
+    chatId: 'chatId',
+    folderId: 'folderId',
+    sortOrder: 'sortOrder'
+};
 exports.Prisma.MessageScalarFieldEnum = {
     id: 'id',
     chatId: 'chatId',
@@ -338,6 +360,9 @@ exports.Prisma.ModelName = {
     File: 'File',
     FileChunk: 'FileChunk',
     Chat: 'Chat',
+    ChatPin: 'ChatPin',
+    ChatFolder: 'ChatFolder',
+    ChatFolderAssignment: 'ChatFolderAssignment',
     Message: 'Message',
     AgentTask: 'AgentTask',
     ChatSummary: 'ChatSummary',

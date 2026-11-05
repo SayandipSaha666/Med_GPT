@@ -7,10 +7,14 @@ const express_1 = __importDefault(require("express"));
 const auth_middleware_1 = require("../middleware/auth.middleware");
 const chatController_1 = require("../controllers/chatController");
 const messageController_1 = require("../controllers/messageController");
+const chatPin_routes_1 = __importDefault(require("./chatPin.routes"));
+const chatFolder_routes_1 = __importDefault(require("./chatFolder.routes"));
 const router = express_1.default.Router();
 // Auth middleware is applied at the router level in index.js
 // so req.user is available in all these handlers
 // Chat routes
+router.use("/pins", chatPin_routes_1.default);
+router.use("/folders", chatFolder_routes_1.default);
 router.post("/create", chatController_1.chatController.createChat);
 router.get("/all", chatController_1.chatController.getChats);
 router.get("/:id", chatController_1.chatController.getChat);

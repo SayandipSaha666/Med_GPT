@@ -7,8 +7,11 @@ import {
   T_Create_Chat_Response,
   T_Api_Success_Res,
   T_Send_Message_Response,
+  T_User,
 } from '../api.types';
 import broadcastChannel from '../../lib/broadcastChannel';
+import { pinKeys } from '../chatPins/chatPins.service';
+import { folderKeys } from '../chatFolders/chatFolders.service';
 
 /**
  * Centralized query keys.
@@ -161,6 +164,8 @@ export const useDeleteChat = () => {
 
       // Broadcast to other tabs so they can sync
       broadcastChannel.sendChatDeleted(chatId);
+      void queryClient.invalidateQueries({ queryKey: pinKeys.all });
+      void queryClient.invalidateQueries({ queryKey: folderKeys.all });
 
       // Reconcile the list with the backend.
       await queryClient.invalidateQueries({
@@ -252,7 +257,8 @@ export const useSendMessage = () => {
   return useMutation<
     T_Send_Message_Response,
     Error,
-    T_Send_Message_Variables
+    T_Send_Message_Variables,
+    { previousUser?: T_Api_Success_Res<T_User>; chatId: number }
   >({
     mutationKey: ['sendMessage'],
 
@@ -276,15 +282,12 @@ export const useSendMessage = () => {
       // Rollback function returned for error recovery
       await queryClient.cancelQueries({ queryKey: ['getMe'] });
 
-      const previousUser = queryClient.getQueryData<{ success: boolean; data: any }>(['getMe']);
+      const previousUser = queryClient.getQueryData<T_Api_Success_Res<T_User>>(['getMe']);
 
-      if (previousUser?.data?.credits) {
-        queryClient.setQueryData<{ success: boolean; data: any }>(['getMe'], {
-          success: true,
-          data: {
-            ...previousUser.data,
-            credits: previousUser.data.credits - 1,
-          },
+      if (previousUser && previousUser.data.credits >= 1) {
+        queryClient.setQueryData<T_Api_Success_Res<T_User>>(['getMe'], {
+          ...previousUser,
+          data: { ...previousUser.data, credits: previousUser.data.credits - 1 },
         });
       }
 
@@ -306,10 +309,10 @@ export const useSendMessage = () => {
       ]);
     },
 
-    onError: async (_error, { chatId }, context) => {
+    onError: async (_error, _variables, context) => {
       // Rollback: restore previous user data
       if (context?.previousUser) {
-        queryClient.setQueryData<{ success: boolean; data: any }>(['getMe'], context.previousUser);
+        queryClient.setQueryData<T_Api_Success_Res<T_User>>(['getMe'], context.previousUser);
       }
       // Reconcile with server state
       await queryClient.invalidateQueries({ queryKey: ['getMe'] });

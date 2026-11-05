@@ -2,6 +2,8 @@ import express from "express";
 import { authMiddleware } from "../middleware/auth.middleware";
 import { chatController } from "../controllers/chatController";
 import { messageController } from "../controllers/messageController";
+import chatPinRouter from "./chatPin.routes";
+import chatFolderRouter from "./chatFolder.routes";
 
 const router = express.Router();
 
@@ -9,6 +11,8 @@ const router = express.Router();
 // so req.user is available in all these handlers
 
 // Chat routes
+router.use("/pins", chatPinRouter);
+router.use("/folders", chatFolderRouter);
 router.post("/create", chatController.createChat);
 router.get("/all", chatController.getChats);
 router.get("/:id", chatController.getChat);
