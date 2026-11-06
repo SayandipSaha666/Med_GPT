@@ -53,6 +53,10 @@ export interface T_UploadedFile {
   createdAt: string;
 }
 
+export type T_MessageSource =
+  | { type: 'web'; index: number; title: string; snippet?: string; url: string; domain: string; faviconUrl?: string; publishedAt?: string }
+  | { type: 'file'; index: number; title: string; snippet?: string; fileId: string; fileName: string; url: string; mime: string; chunkIdx?: number };
+
 export interface T_FileAttachment {
   id: string;
   name: string;
@@ -61,13 +65,14 @@ export interface T_FileAttachment {
   url?: string;
   status: 'uploading' | 'ready' | 'error';
   progress: number;
+  backendStatus?: 'PROCESSING' | 'READY' | 'FAILED';
   error?: string;
   file?: File;
 }
 
 // Chat types
 export interface T_Message {
-  id?: string;
+  id?: number | string;
   role: 'user' | 'assistant' | 'system';
   content: string;
   timestamp: string | Date;
@@ -79,7 +84,10 @@ export interface T_Message {
     sizeBytes: number;
     url: string;
     status?: string;
+    createdAt?: string;
+    errorMessage?: string | null;
   }>;
+  sources?: T_MessageSource[];
   agentType?: string | null;
   metadata?: Record<string, unknown> | null;
 }

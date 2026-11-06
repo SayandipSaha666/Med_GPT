@@ -1,0 +1,520 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-06T12:36:28Z",
+  "title": "Design System: MedGPT",
+  "extensions": {
+    "colorMeta": {
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Mineral Canvas",
+        "canonical": "#f8f9f7",
+        "tonalRamp": [
+          "#b5b6b5",
+          "#7c7d7c",
+          "#3e3e3e",
+          "#f8f9f7",
+          "#fafbf9",
+          "#fcfcfb",
+          "#fdfdfd",
+          "#fefefe"
+        ]
+      },
+      "rail": {
+        "role": "neutral",
+        "displayName": "Quiet Rail",
+        "canonical": "#f1f4f1",
+        "tonalRamp": [
+          "#b0b2b0",
+          "#797a79",
+          "#3c3d3c",
+          "#f1f4f1",
+          "#f5f7f5",
+          "#f8faf8",
+          "#fbfcfb",
+          "#fefefe"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Paper Surface",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#bababa",
+          "#808080",
+          "#404040",
+          "#ffffff",
+          "#ffffff",
+          "#ffffff",
+          "#ffffff",
+          "#ffffff"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Slate Ink",
+        "canonical": "#172826",
+        "tonalRamp": [
+          "#111d1c",
+          "#0c1413",
+          "#060a0a",
+          "#172826",
+          "#566261",
+          "#909897",
+          "#c0c5c4",
+          "#e7e9e8"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted Slate",
+        "canonical": "#53635f",
+        "tonalRamp": [
+          "#3d4845",
+          "#2a3230",
+          "#151918",
+          "#53635f",
+          "#828d8a",
+          "#adb4b2",
+          "#d0d5d4",
+          "#edefee"
+        ]
+      },
+      "faint": {
+        "role": "neutral",
+        "displayName": "Faint Slate",
+        "canonical": "#586b63",
+        "tonalRamp": [
+          "#404e48",
+          "#2c3632",
+          "#161b19",
+          "#586b63",
+          "#85938d",
+          "#afb8b4",
+          "#d2d7d5",
+          "#eef0ef"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Fine Rule",
+        "canonical": "#dce5df",
+        "tonalRamp": [
+          "#a1a7a3",
+          "#6e7370",
+          "#373938",
+          "#dce5df",
+          "#e5ece8",
+          "#eef3f0",
+          "#f6f8f6",
+          "#fbfcfc"
+        ]
+      },
+      "teal": {
+        "role": "primary",
+        "displayName": "Deep Teal",
+        "canonical": "#176b63",
+        "tonalRamp": [
+          "#114e48",
+          "#0c3632",
+          "#061b19",
+          "#176b63",
+          "#56938d",
+          "#90b8b4",
+          "#c0d7d5",
+          "#e7f0ef"
+        ]
+      },
+      "teal-hover": {
+        "role": "primary",
+        "displayName": "Deep Teal Hover",
+        "canonical": "#0d554e",
+        "tonalRamp": [
+          "#0a3e39",
+          "#072b27",
+          "#031514",
+          "#0d554e",
+          "#4f837e",
+          "#8baeaa",
+          "#bdd1cf",
+          "#e6eded"
+        ]
+      },
+      "teal-soft": {
+        "role": "primary",
+        "displayName": "Soft Teal",
+        "canonical": "#e5f3ef",
+        "tonalRamp": [
+          "#a7b2af",
+          "#737a78",
+          "#393d3c",
+          "#e5f3ef",
+          "#ecf6f3",
+          "#f3f9f7",
+          "#f8fcfb",
+          "#fcfefd"
+        ]
+      },
+      "user-surface": {
+        "role": "neutral",
+        "displayName": "User Wash",
+        "canonical": "#edf4f0",
+        "tonalRamp": [
+          "#adb2af",
+          "#777a78",
+          "#3b3d3c",
+          "#edf4f0",
+          "#f2f7f4",
+          "#f6faf8",
+          "#fafcfb",
+          "#fdfefd"
+        ]
+      },
+      "focus": {
+        "role": "primary",
+        "displayName": "Focus Teal",
+        "canonical": "#258f83",
+        "tonalRamp": [
+          "#1b6960",
+          "#134842",
+          "#092421",
+          "#258f83",
+          "#60ada5",
+          "#97c9c4",
+          "#c4e1dd",
+          "#e8f3f2"
+        ]
+      },
+      "error": {
+        "role": "error",
+        "displayName": "Error Red",
+        "canonical": "#9d3c39",
+        "tonalRamp": [
+          "#732c2a",
+          "#4f1e1d",
+          "#270f0e",
+          "#9d3c39",
+          "#b8716f",
+          "#d0a2a0",
+          "#e4cac9",
+          "#f5ebea"
+        ]
+      },
+      "night-canvas": {
+        "role": "neutral",
+        "displayName": "Charcoal Canvas",
+        "canonical": "#121b1a",
+        "tonalRamp": [
+          "#0d1413",
+          "#090e0d",
+          "#050707",
+          "#121b1a",
+          "#525958",
+          "#8d9291",
+          "#bfc1c1",
+          "#e6e7e7"
+        ]
+      },
+      "night-rail": {
+        "role": "neutral",
+        "displayName": "Charcoal Rail",
+        "canonical": "#192522",
+        "tonalRamp": [
+          "#121b19",
+          "#0d1311",
+          "#060909",
+          "#192522",
+          "#57605e",
+          "#919795",
+          "#c1c4c3",
+          "#e7e8e8"
+        ]
+      },
+      "night-surface": {
+        "role": "neutral",
+        "displayName": "Charcoal Surface",
+        "canonical": "#1c2926",
+        "tonalRamp": [
+          "#141e1c",
+          "#0e1513",
+          "#070a0a",
+          "#1c2926",
+          "#596361",
+          "#929897",
+          "#c2c5c4",
+          "#e7e9e8"
+        ]
+      },
+      "night-ink": {
+        "role": "neutral",
+        "displayName": "Night Ink",
+        "canonical": "#edf5f1",
+        "tonalRamp": [
+          "#adb3b0",
+          "#777b79",
+          "#3b3d3c",
+          "#edf5f1",
+          "#f2f8f5",
+          "#f6faf8",
+          "#fafcfb",
+          "#fdfefe"
+        ]
+      },
+      "night-muted": {
+        "role": "neutral",
+        "displayName": "Night Muted",
+        "canonical": "#bbcac3",
+        "tonalRamp": [
+          "#89948f",
+          "#5e6562",
+          "#2f3331",
+          "#bbcac3",
+          "#cdd8d3",
+          "#dee6e2",
+          "#edf1ef",
+          "#f8f9f9"
+        ]
+      },
+      "night-faint": {
+        "role": "neutral",
+        "displayName": "Night Faint",
+        "canonical": "#96aaa1",
+        "tonalRamp": [
+          "#6e7c76",
+          "#4b5551",
+          "#262b28",
+          "#96aaa1",
+          "#b2c1ba",
+          "#cdd6d2",
+          "#e3e8e6",
+          "#f4f6f5"
+        ]
+      },
+      "night-border": {
+        "role": "neutral",
+        "displayName": "Night Rule",
+        "canonical": "#354640",
+        "tonalRamp": [
+          "#27332f",
+          "#1b2320",
+          "#0d1210",
+          "#354640",
+          "#6c7874",
+          "#9ea6a3",
+          "#c8cdcb",
+          "#eaeceb"
+        ]
+      },
+      "night-teal": {
+        "role": "primary",
+        "displayName": "Night Teal",
+        "canonical": "#75d3c2",
+        "tonalRamp": [
+          "#569a8e",
+          "#3b6a61",
+          "#1d3531",
+          "#75d3c2",
+          "#9adfd3",
+          "#bdeae2",
+          "#daf3ee",
+          "#f1faf9"
+        ]
+      },
+      "night-teal-hover": {
+        "role": "primary",
+        "displayName": "Night Teal Hover",
+        "canonical": "#9de1d5",
+        "tonalRamp": [
+          "#73a49c",
+          "#4f716b",
+          "#273835",
+          "#9de1d5",
+          "#b8e9e0",
+          "#d0f1eb",
+          "#e4f7f4",
+          "#f5fcfb"
+        ]
+      },
+      "night-teal-soft": {
+        "role": "primary",
+        "displayName": "Night Teal Soft",
+        "canonical": "#203d36",
+        "tonalRamp": [
+          "#172d27",
+          "#101f1b",
+          "#080f0e",
+          "#203d36",
+          "#5c726c",
+          "#94a29f",
+          "#c3cac9",
+          "#e8ebea"
+        ]
+      },
+      "night-user-surface": {
+        "role": "neutral",
+        "displayName": "Night User Wash",
+        "canonical": "#233a33",
+        "tonalRamp": [
+          "#1a2a25",
+          "#121d1a",
+          "#090f0d",
+          "#233a33",
+          "#5f6f6a",
+          "#96a19d",
+          "#c3cac8",
+          "#e8eaea"
+        ]
+      },
+      "night-error": {
+        "role": "error",
+        "displayName": "Night Error",
+        "canonical": "#f2aaa4",
+        "tonalRamp": [
+          "#b17c78",
+          "#795552",
+          "#3d2b29",
+          "#f2aaa4",
+          "#f6c1bd",
+          "#f9d6d3",
+          "#fbe8e6",
+          "#fef6f6"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Empty-state question."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Conversation top bar."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Answer reading text."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Controls and supporting labels."
+      }
+    },
+    "shadows": [
+      {
+        "name": "composer-ambient",
+        "value": "0 8px 27px -20px #29463b70",
+        "purpose": "Soft elevation of the fixed composer."
+      },
+      {
+        "name": "menu-control",
+        "value": "0 5px 16px -11px #1b3d31",
+        "purpose": "Collapsed navigation menu control."
+      }
+    ],
+    "motion": [
+      {
+        "name": "activity-pulse",
+        "value": "1.4s ease-in-out infinite",
+        "purpose": "Generation status dot opacity pulse; suppressed under reduced motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "mobile",
+        "value": "767px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary New Chat Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main conversation creation action in the rail.",
+      "html": "<button class=\"ds-primary\">New Chat</button>",
+      "css": ".ds-primary{background:#176b63;color:#fff;border:0;border-radius:9px;padding:11px 16px;font:650 14px ui-sans-serif,system-ui,sans-serif;cursor:pointer}.ds-primary:hover{background:#0d554e}.ds-primary:focus-visible{outline:2px solid var(--med-focus,#258f83);outline-offset:2px}"
+    },
+    {
+      "name": "Quiet Action",
+      "kind": "button",
+      "refersTo": "button-quiet",
+      "description": "Secondary action used around the conversation.",
+      "html": "<button class=\"ds-quiet\">New conversation</button>",
+      "css": ".ds-quiet{background:transparent;color:var(--med-accent,#176b63);border:0;border-radius:8px;padding:8px 10px;font:650 12px ui-sans-serif,system-ui,sans-serif;cursor:pointer}.ds-quiet:hover{background:var(--med-accent-soft,#e5f3ef)}.ds-quiet:focus-visible{outline:2px solid var(--med-focus,#258f83);outline-offset:2px}"
+    },
+    {
+      "name": "Composer",
+      "kind": "input",
+      "refersTo": "composer",
+      "description": "The fixed question composer beneath the reading column.",
+      "html": "<div class=\"ds-composer\"><label for=\"ds-question\">Your message</label><textarea id=\"ds-question\" placeholder=\"Ask a health question…\"></textarea><button type=\"button\">Send</button></div>",
+      "css": ".ds-composer{background:var(--med-surface,#fff);color:var(--med-ink,#172826);border:1px solid #b8cdc2;border-radius:17px;padding:16px 17px 12px;box-shadow:0 8px 27px -20px #29463b70;display:flex;flex-direction:column;gap:10px}.ds-composer:focus-within{border-color:var(--med-focus,#258f83);box-shadow:0 0 0 3px color-mix(in srgb,var(--med-focus,#258f83) 13%,transparent)}.ds-composer label{font:650 11px ui-sans-serif,system-ui,sans-serif}.ds-composer textarea{border:0;outline:0;resize:vertical;min-height:45px;background:transparent;color:inherit;font:15px/1.6 ui-sans-serif,system-ui,sans-serif}.ds-composer button{align-self:end;background:var(--med-accent,#176b63);color:var(--med-surface,#fff);border:0;border-radius:10px;padding:8px 12px;cursor:pointer}.ds-composer button:hover{background:var(--med-accent-hover,#0d554e)}.ds-composer button:focus-visible{outline:2px solid var(--med-focus,#258f83);outline-offset:2px}"
+    },
+    {
+      "name": "Conversation Row",
+      "kind": "nav",
+      "description": "A quiet chat destination with a selected wash.",
+      "html": "<nav class=\"ds-nav\"><a href=\"#conversation\" class=\"ds-row\">Understanding a blood test</a></nav>",
+      "css": ".ds-nav{background:var(--med-rail,#f1f4f1);padding:8px}.ds-row{display:block;color:var(--med-ink,#172826);text-decoration:none;border-radius:8px;padding:11px 12px;font:560 13px ui-sans-serif,system-ui,sans-serif}.ds-row:hover{background:var(--med-surface,#fff)}.ds-row:focus-visible{outline:2px solid var(--med-focus,#258f83);outline-offset:2px}.ds-row[aria-current=page]{background:var(--med-accent-soft,#e5f3ef)}"
+    },
+    {
+      "name": "Source Row",
+      "kind": "card",
+      "refersTo": "source-row",
+      "description": "Numbered supporting source attached to an answer.",
+      "html": "<a class=\"ds-source\" href=\"#source\"><span class=\"ds-index\">1</span><span><strong>Complete blood count overview</strong><small>Medical source</small></span></a>",
+      "css": ".ds-source{display:flex;align-items:flex-start;gap:10px;padding:11px 12px;background:var(--med-surface,#fff);border:1px solid var(--med-border,#dce5df);border-radius:9px;color:var(--med-ink,#172826);text-decoration:none;font:12px ui-sans-serif,system-ui,sans-serif}.ds-source:hover{border-color:var(--med-accent,#176b63);background:var(--med-accent-soft,#e5f3ef)}.ds-source:focus-visible{outline:2px solid var(--med-focus,#258f83);outline-offset:2px}.ds-index{display:grid;place-items:center;width:22px;height:22px;border-radius:6px;background:var(--med-accent-soft,#e5f3ef);color:var(--med-accent,#176b63);font-weight:700}.ds-source strong,.ds-source small{display:block}.ds-source small{margin-top:3px;color:var(--med-muted,#53635f)}"
+    },
+    {
+      "name": "User Message",
+      "kind": "card",
+      "description": "A user question on a distinct pale surface.",
+      "html": "<article class=\"ds-user\">What can a high neutrophil count mean?</article>",
+      "css": ".ds-user{background:var(--med-user,#edf4f0);color:var(--med-ink,#172826);border-radius:11px;padding:15px 18px 9px;font:15px/1.72 ui-sans-serif,system-ui,sans-serif}"
+    },
+    {
+      "name": "Theme Switch",
+      "kind": "button",
+      "description": "Light and dark appearance control in the conversation rail.",
+      "html": "<button class=\"ds-switch\" type=\"button\" role=\"switch\" aria-checked=\"true\" aria-label=\"Dark mode\"><span></span></button>",
+      "css": ".ds-switch{width:44px;height:24px;border:0;border-radius:999px;background:var(--med-accent,#176b63);padding:2px;cursor:pointer}.ds-switch span{display:block;width:20px;height:20px;border-radius:50%;background:var(--med-surface,#fff);margin-left:auto}.ds-switch:hover{background:var(--med-accent-hover,#0d554e)}.ds-switch:focus-visible{outline:2px solid var(--med-focus,#258f83);outline-offset:2px;box-shadow:0 0 0 2px var(--med-focus,#258f83)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Calm Research Desk",
+    "overview": "The conversation workspace gives health information room to be read. A pale mineral canvas, restrained teal controls, and a centered document column make the answer and its supporting material the focus. The MedGPT name and existing logo anchor the navigation rail. Dark mode keeps the same hierarchy with charcoal surfaces and lighter teal.\n\nThe interface is spacious at the page level and compact inside controls. Questions, answers, attached files, and actual sources remain visibly distinct. The composer stays available below the reading area, with the medical safety sentence beneath it.",
+    "keyCharacteristics": [
+      "A quiet rail beside a single reading column.",
+      "Teal for actions, links, citations, and selected states.",
+      "Fine rules and soft surface changes for separation.",
+      "Matching light and dark semantic roles."
+    ],
+    "rules": [
+      {
+        "name": "The Semantic Pair Rule",
+        "body": "A new workspace surface must use the same role in both themes; do not keep a light surface color in dark mode.",
+        "section": "colors"
+      },
+      {
+        "name": "The Reading Measure Rule",
+        "body": "Keep answer prose within (70ch) even when the outer reading column is wider.",
+        "section": "typography"
+      },
+      {
+        "name": "The Quiet Surface Rule",
+        "body": "Use borders and tonal layers for reading surfaces; reserve soft elevation for the composer and the floating menu control.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do keep the reading column centered and the composer aligned beneath it.",
+      "Do use the semantic color pair for every new light and dark workspace element.",
+      "Do show source rows only from actual source data, with citation numbers linked to those rows.",
+      "Do retain a visible focus outline and the safety sentence below the composer."
+    ],
+    "donts": [
+      "Don't turn the assistant's reading text into a filled message card; the current answer rests on the canvas.",
+      "Don't add broad elevation to the rail, source list, or answer body; their separation is tonal and ruled.",
+      "Don't make a decorative color or a source claim compete with the health information."
+    ]
+  }
+}

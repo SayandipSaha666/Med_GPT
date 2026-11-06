@@ -2,6 +2,7 @@
 declare module 'moment' {
   interface Moment {
     fromNow(): string;
+    format(pattern: string): string;
   }
   function moment(input?: string | number | Date | Moment): Moment;
   namespace moment {
@@ -33,6 +34,8 @@ declare module '*.svg' {
   const source: string;
   export default source;
 }
+
+declare module '*.css';
 
 // Vite client type declarations
 interface ImportMetaEnv {

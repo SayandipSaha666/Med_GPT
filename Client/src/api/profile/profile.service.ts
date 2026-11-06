@@ -1,6 +1,6 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { api, API_ROUTES } from '../index';
-import { T_Api_Success_Res, T_Update_Profile_Data, T_User } from '../api.types';
+import { T_Api_Success_Res, T_Update_Profile_Data } from '../api.types';
 
 function useUpdateProfile() {
   return useMutation({

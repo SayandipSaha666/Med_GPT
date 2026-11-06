@@ -2,7 +2,6 @@ import React, { useRef } from 'react';
 import toast from 'react-hot-toast';
 import {
   ALLOWED_MIME_TYPES,
-  ACCEPTED_FILE_EXTENSIONS,
   MAX_FILE_SIZE_BYTES,
   MAX_FILE_SIZE_MB,
   formatBytes,
@@ -63,10 +62,12 @@ export function FileIcon({ mime }: { mime: string }) {
 export function AttachmentChip({
   attachment,
   onRemove,
+  onRetry,
   disabled,
 }: {
   attachment: T_FileAttachment;
   onRemove: (id: string) => void;
+  onRetry?: (id: string) => void;
   disabled?: boolean;
 }) {
   const { openPreview } = useFilePreview();
@@ -131,7 +132,7 @@ export function AttachmentChip({
 
           {attachment.status === 'ready' && (
             <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
-              • Uploaded
+              • {attachment.backendStatus === 'PROCESSING' ? 'Processing' : attachment.backendStatus === 'FAILED' ? 'Processing failed' : 'Uploaded'}
             </span>
           )}
 
@@ -153,6 +154,13 @@ export function AttachmentChip({
             </svg>
           </div>
         ) : (
+          <>
+          {attachment.status === 'error' && onRetry && (
+            <button type="button" disabled={disabled} onClick={(event) => { event.stopPropagation(); onRetry(attachment.id); }}
+              className="px-1 text-[11px] font-semibold text-red-600 dark:text-red-300" aria-label={`Retry ${attachment.name}`}>
+              Retry
+            </button>
+          )}
           <button
             type="button"
             disabled={disabled}
@@ -172,6 +180,7 @@ export function AttachmentChip({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
+          </>
         )}
       </div>
     </div>

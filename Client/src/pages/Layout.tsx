@@ -16,8 +16,28 @@ export function Layout() {
     }
   }, [location.pathname]);
 
+  useEffect(() => {
+    if (!isMenuOpen || window.innerWidth >= 768) return;
+    const navigation = document.querySelector<HTMLElement>('[aria-label="Conversation navigation"]');
+    navigation?.querySelector<HTMLButtonElement>('[aria-label="Close sidebar"]')?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsMenuOpen(false);
+      if (event.key !== 'Tab' || !navigation) return;
+      const focusables = Array.from(navigation.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), select:not(:disabled), [tabindex="0"]'));
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      requestAnimationFrame(() => document.querySelector<HTMLButtonElement>('[aria-label="Open Sidebar"]')?.focus());
+    };
+  }, [isMenuOpen]);
+
   return (
-    <div className="flex flex-1 h-screen w-screen overflow-hidden bg-[#faf9fc] dark:bg-[#0f0e17] text-gray-900 dark:text-gray-100 transition-colors duration-300 relative">
+    <div className="med-shell flex flex-1 h-screen w-screen overflow-hidden relative">
       <Sidebar isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
 
       {/* Main Content Area */}
@@ -27,17 +47,19 @@ export function Layout() {
           <div className="absolute top-3 left-3 z-30">
             <button
               onClick={() => setIsMenuOpen(true)}
-              className="
+              className="med-menu-button
                 flex items-center gap-2 p-2.5 px-3 rounded-xl
                 bg-white/80 dark:bg-[#1a1727]/80 backdrop-blur-md
                 border border-purple-200/70 dark:border-purple-900/50
                 text-gray-700 dark:text-gray-200
                 hover:bg-purple-50 dark:hover:bg-purple-950/40 hover:text-purple-600 dark:hover:text-purple-300
                 shadow-md shadow-purple-500/5 hover:shadow-purple-500/15
-                transition-all duration-200 active:scale-95 cursor-pointer
+                transition-colors duration-150 cursor-pointer
               "
               title="Open Sidebar"
               aria-label="Open Sidebar"
+              aria-controls="med-conversation-navigation"
+              aria-expanded={isMenuOpen}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"

@@ -1,5 +1,4 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { ThemeToggle } from './ThemeToggle';
 import { assets } from '../../assets/assets';
 
@@ -8,8 +7,7 @@ interface HeaderProps {
   onMenuToggle?: () => void;
 }
 
-export function Header({ isMenuOpen, onMenuToggle }: HeaderProps) {
-  const navigate = useNavigate();
+export function Header({ onMenuToggle }: HeaderProps) {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 transition-colors duration-300">

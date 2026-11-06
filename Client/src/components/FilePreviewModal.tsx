@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useFilePreview } from '../store/previewStore';
 import { formatBytes, getFileCategory } from '../api/files/files.service';
 import toast from 'react-hot-toast';

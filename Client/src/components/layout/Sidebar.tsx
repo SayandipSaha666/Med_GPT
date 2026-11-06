@@ -270,12 +270,16 @@ export function Sidebar({
   return (
     <>
       <div
+        id="med-conversation-navigation"
+        role="navigation"
+        aria-label="Conversation navigation"
+        inert={!isMenuOpen}
         className={`
-          flex flex-col h-screen w-72 md:w-80 shrink-0
+          med-sidebar flex flex-col h-screen w-72 md:w-80 shrink-0
           bg-[#faf9fc]/90 dark:bg-[#14121e]/95
           text-gray-900 dark:text-white
           border-r border-purple-100 dark:border-purple-950/60
-          backdrop-blur-2xl transition-all duration-300 ease-in-out
+          backdrop-blur-2xl transition-transform duration-200 ease-out
           z-40 p-4 select-none
           max-md:fixed max-md:top-0 max-md:left-0 max-md:bottom-0 max-md:shadow-2xl
           ${!isMenuOpen ? 'max-md:-translate-x-full md:hidden' : 'translate-x-0'}
@@ -287,7 +291,7 @@ export function Sidebar({
             onClick={() => navigate('/main/chat')}
             className="flex items-center gap-3 cursor-pointer group"
           >
-            <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-blue-600 p-0.5 shadow-md shadow-purple-500/20 group-hover:scale-105 transition-transform">
+            <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950 p-0.5 group-hover:scale-105 transition-transform">
               <div className="w-full h-full bg-white dark:bg-gray-900 rounded-[10px] flex items-center justify-center p-1">
                 <img
                   src={
@@ -303,7 +307,7 @@ export function Sidebar({
 
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="text-xl font-extrabold bg-gradient-to-r from-purple-700 via-indigo-600 to-blue-600 dark:from-purple-300 dark:via-purple-100 dark:to-blue-300 bg-clip-text text-transparent tracking-tight">
+                <span className="text-xl font-extrabold text-gray-900 dark:text-white tracking-tight">
                   MedGPT
                 </span>
                 <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
@@ -350,11 +354,10 @@ export function Sidebar({
             onClick={openNewChatModal}
             disabled={createChatMutation.isPending}
             className="
-              flex items-center justify-center gap-2.5 w-full py-2.5 px-4
+              med-sidebar-new flex items-center justify-center gap-2.5 w-full py-2.5 px-4
               text-white font-semibold text-sm
-              bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600
-              hover:from-purple-700 hover:via-indigo-700 hover:to-blue-700
-              active:scale-[0.98] transition-all duration-200
+              bg-teal-700 hover:bg-teal-800
+              transition-colors duration-150
               rounded-xl shadow-lg shadow-purple-600/25 hover:shadow-purple-600/40
               disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer
             "
@@ -381,7 +384,7 @@ export function Sidebar({
         {/* Search Conversations */}
         <div
           className="
-            flex items-center gap-2.5 px-3 py-2 mt-3
+            med-sidebar-search flex items-center gap-2.5 px-3 py-2 mt-3
             border border-purple-100 dark:border-purple-900/40
             rounded-xl shrink-0
             bg-white/80 dark:bg-[#1c1929]/80 backdrop-blur-sm
@@ -531,25 +534,34 @@ export function Sidebar({
                 return (
                   <div
                     key={chat.id}
+                    role="link"
+                    tabIndex={0}
+                    aria-label={`Open ${displayTitle}`}
                     onClick={() => {
                       navigate(`/main/chat/${chat.id}`);
                       if (window.innerWidth < 768) {
                         setIsMenuOpen(false);
                       }
                     }}
+                    onKeyDown={(event) => {
+                      if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
+                        event.preventDefault();
+                        openChat(chat.id);
+                      }
+                    }}
                     className={`
-                      group relative p-2.5 px-3 rounded-xl cursor-pointer
+                      med-chat-row group relative p-2.5 px-3 rounded-xl cursor-pointer
                       flex items-center justify-between gap-2
                       border transition-all duration-200
                       ${isActive
-                        ? 'bg-gradient-to-r from-purple-500/15 to-blue-500/15 border-purple-400/60 dark:border-purple-600/60 shadow-sm shadow-purple-500/10'
+                        ? 'bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800'
                         : 'bg-white/60 dark:bg-[#1a1727]/60 border-purple-100/60 dark:border-purple-950/40 hover:bg-white dark:hover:bg-[#201c30] hover:border-purple-300 dark:hover:border-purple-800 hover:shadow-sm'
                       }
                     `}
                   >
                     {/* Active indicator bar */}
                     {isActive && (
-                      <div className="absolute left-0 top-2 bottom-2 w-1 bg-gradient-to-b from-purple-500 to-blue-500 rounded-r-full" />
+                      <div className="absolute left-0 top-2 bottom-2 w-1 bg-teal-700 dark:bg-teal-300 rounded-r-full" />
                     )}
 
                     <div className="flex-1 min-w-0 pl-1">
@@ -671,7 +683,7 @@ export function Sidebar({
         {/* Footer Area: Dark/Light Switch, Credits, User & Logout */}
         <div className="shrink-0 space-y-2.5 pt-3 border-t border-purple-100/70 dark:border-purple-900/30">
           {/* Dedicated Dark / Light Theme Toggle Switch */}
-          <div className="p-2.5 rounded-xl bg-white/70 dark:bg-[#1a1727]/70 border border-purple-100 dark:border-purple-950/60 flex items-center justify-between">
+          <div className="med-sidebar-theme p-2.5 rounded-xl bg-white/70 dark:bg-[#1a1727]/70 border border-purple-100 dark:border-purple-950/60 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-300">
                 {theme === 'dark' ? (
@@ -703,7 +715,7 @@ export function Sidebar({
               className={`
                 relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent
                 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-[#14121e]
-                ${theme === 'dark' ? 'bg-gradient-to-r from-purple-600 to-blue-600' : 'bg-gray-200'}
+                ${theme === 'dark' ? 'bg-teal-600' : 'bg-gray-200'}
               `}
             >
               <span
@@ -736,11 +748,10 @@ export function Sidebar({
               }
             }}
             className="
-              flex items-center justify-between p-2.5
+              med-sidebar-credits flex items-center justify-between p-2.5
               border border-purple-200/70 dark:border-purple-900/40
               rounded-xl cursor-pointer
-              bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-blue-500/10
-              hover:from-purple-500/20 hover:to-blue-500/20
+              bg-teal-50 dark:bg-teal-950/40 hover:bg-teal-100 dark:hover:bg-teal-950/60
               transition-all
             "
           >
@@ -777,7 +788,7 @@ export function Sidebar({
               }
             }}
             className="
-              flex items-center gap-2.5 p-2
+              med-sidebar-account flex items-center gap-2.5 p-2
               border border-purple-100 dark:border-purple-950/60
               rounded-xl cursor-pointer
               bg-white/70 dark:bg-[#1a1727]/70

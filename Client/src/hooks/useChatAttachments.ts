@@ -44,7 +44,8 @@ export function useChatAttachments() {
                   mime: uploaded.mime,
                   name: uploaded.name,
                   sizeBytes: uploaded.sizeBytes,
-                  status: 'ready',
+                  status: uploaded.status === 'FAILED' ? 'error' : 'ready',
+                  backendStatus: uploaded.status,
                   progress: 100,
                 }
                 : att
@@ -85,6 +86,13 @@ export function useChatAttachments() {
     setAttachments([]);
   }, []);
 
+  const retryAttachment = useCallback((id: string) => {
+    const attachment = attachments.find((item) => item.id === id && item.status === 'error');
+    if (!attachment?.file) return;
+    setAttachments((previous) => previous.filter((item) => item.id !== id));
+    addFiles([attachment.file]);
+  }, [attachments, addFiles]);
+
   const readyAttachments = attachments.filter((att) => att.status === 'ready' && !!att.url);
   const isUploading = attachments.some((att) => att.status === 'uploading');
 
@@ -94,6 +102,7 @@ export function useChatAttachments() {
     isUploading,
     addFiles,
     removeAttachment,
+    retryAttachment,
     clearAttachments,
   };
 }

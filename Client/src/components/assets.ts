@@ -1,2 +1,2 @@
 // Updated assets import path for migrated components
-export { default as assets } from '../assets/assets';
+export { assets } from '../assets/assets';

@@ -1,6 +1,4 @@
-import React from 'react';
 import { useTheme } from '../../store/themeStore';
-import { assets } from '../../assets/assets';
 
 export function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
