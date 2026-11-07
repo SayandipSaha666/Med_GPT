@@ -8,4 +8,5 @@ exports.FolderBody = zod_1.z.object({
     name: zod_1.z.string().trim().min(1).max(80),
     icon: zod_1.z.string().trim().max(40).optional(),
     color: zod_1.z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+    parentId: zod_1.z.number().int().positive().nullable().optional(),
 });

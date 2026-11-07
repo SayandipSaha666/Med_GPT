@@ -146,6 +146,7 @@ exports.Prisma.ChatFolderScalarFieldEnum = {
     icon: 'icon',
     color: 'color',
     sortOrder: 'sortOrder',
+    parentId: 'parentId',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
 };
@@ -166,6 +167,11 @@ exports.Prisma.MessageScalarFieldEnum = {
     agentType: 'agentType',
     confidence: 'confidence',
     metadata: 'metadata'
+};
+exports.Prisma.MessageKnowledgeResourceScalarFieldEnum = {
+    messageId: 'messageId',
+    knowledgeEntryId: 'knowledgeEntryId',
+    position: 'position'
 };
 exports.Prisma.AgentTaskScalarFieldEnum = {
     id: 'id',
@@ -364,6 +370,7 @@ exports.Prisma.ModelName = {
     ChatFolder: 'ChatFolder',
     ChatFolderAssignment: 'ChatFolderAssignment',
     Message: 'Message',
+    MessageKnowledgeResource: 'MessageKnowledgeResource',
     AgentTask: 'AgentTask',
     ChatSummary: 'ChatSummary',
     Transaction: 'Transaction',

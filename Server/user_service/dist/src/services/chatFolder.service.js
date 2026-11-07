@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.chatFolderService = void 0;
 const prisma_1 = require("../lib/prisma");
 const chatFolder_repository_1 = require("../repositories/chatFolder.repository");
+const folder_hierarchy_1 = require("./folder-hierarchy");
 function toDto(folder) {
     const { assignments, ...fields } = folder;
     return { ...fields, chatIds: assignments.map((assignment) => assignment.chatId) };
@@ -18,10 +19,13 @@ exports.chatFolderService = {
         return (await chatFolder_repository_1.chatFolderRepository.list(userId)).map(toDto);
     },
     async create(userId, input) {
+        if (input.parentId != null)
+            await ownedFolder(input.parentId, userId);
         return toDto(await chatFolder_repository_1.chatFolderRepository.create(userId, input));
     },
     async update(folderId, userId, input) {
         await ownedFolder(folderId, userId);
+        await (0, folder_hierarchy_1.assertValidFolderParent)(folderId, input.parentId, (id) => ownedFolder(id, userId));
         return toDto(await chatFolder_repository_1.chatFolderRepository.update(folderId, input));
     },
     async delete(folderId, userId) {
@@ -33,7 +37,7 @@ exports.chatFolderService = {
         const chat = await prisma_1.prisma.chat.findFirst({ where: { id: chatId, userId }, select: { id: true } });
         if (!chat)
             throw new Error("Chat not found");
-        await chatFolder_repository_1.chatFolderRepository.addChat(folderId, chatId);
+        await chatFolder_repository_1.chatFolderRepository.moveChat(folderId, chatId);
         return toDto((await chatFolder_repository_1.chatFolderRepository.find(folderId, userId)));
     },
     async removeChat(folderId, chatId, userId) {

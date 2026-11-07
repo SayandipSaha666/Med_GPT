@@ -15,6 +15,7 @@ import { chatKeys } from '../../api/chats/chats.service';
 import { pinKeys } from '../../api/chatPins/chatPins.service';
 import { folderKeys } from '../../api/chatFolders/chatFolders.service';
 import broadcastChannel from '../../lib/broadcastChannel';
+import { FolderTree } from './FolderTree';
 
 interface SidebarProps {
   isMenuOpen: boolean;
@@ -36,6 +37,8 @@ export function Sidebar({
   const [showFolderForm, setShowFolderForm] = useState(false);
   const [folderName, setFolderName] = useState('');
   const [editingFolderId, setEditingFolderId] = useState<number | null>(null);
+  const [parentFolderId, setParentFolderId] = useState<number | null>(null);
+  const [newChatFolderId, setNewChatFolderId] = useState<number | null>(null);
   const [collapsedFolderIds, setCollapsedFolderIds] = useState<number[]>([]);
 
   const navigate = useNavigate();
@@ -149,6 +152,7 @@ export function Sidebar({
   /* -------------------- NEW CHAT -------------------- */
   const openNewChatModal = () => {
     setActiveChat(null);
+    setNewChatFolderId(null);
     setModalMode('create');
   };
 
@@ -156,7 +160,11 @@ export function Sidebar({
     createChatMutation.mutate(
       { title },
       {
-        onSuccess: (newChat) => {
+        onSuccess: async (newChat) => {
+          if (newChatFolderId !== null) {
+            try { await addChatMutation.mutateAsync({ folderId: newChatFolderId, chatId: newChat.id }); }
+            catch (error) { toast.error(error instanceof Error ? error.message : 'Chat created, but could not place it in the folder'); }
+          }
           toast.success(`Chat "${title}" created! 💬`);
           setModalMode(null);
           navigate(`/main/chat/${newChat.id}`);
@@ -211,6 +219,17 @@ export function Sidebar({
 
   const pinnedIds = new Set(pins.map((pin) => pin.chatId));
   const pinnedChats = pins.map((pin) => processedChats.find((chat) => chat.id === pin.chatId)).filter((chat): chat is T_Chat => Boolean(chat));
+  const canBeParent = (candidateId: number) => {
+    if (!editingFolderId) return true;
+    let cursor: number | null = candidateId;
+    const seen = new Set<number>();
+    while (cursor !== null && !seen.has(cursor)) {
+      if (cursor === editingFolderId) return false;
+      seen.add(cursor);
+      cursor = folders.find((folder) => folder.id === cursor)?.parentId ?? null;
+    }
+    return true;
+  };
 
   const openChat = (chatId: number) => {
     navigate(`/main/chat/${chatId}`);
@@ -226,12 +245,13 @@ export function Sidebar({
         toast.success(editingFolderId ? 'Folder renamed' : 'Folder created');
         setFolderName('');
         setEditingFolderId(null);
+        setParentFolderId(null);
         setShowFolderForm(false);
       },
       onError: (error: Error) => toast.error(error.message || 'Could not save folder'),
     };
-    if (editingFolderId) updateFolderMutation.mutate({ folderId: editingFolderId, name }, options);
-    else createFolderMutation.mutate({ name }, options);
+    if (editingFolderId) updateFolderMutation.mutate({ folderId: editingFolderId, name, parentId: parentFolderId }, options);
+    else createFolderMutation.mutate({ name, parentId: parentFolderId }, options);
   };
 
   const togglePin = (event: React.MouseEvent, chatId: number) => {
@@ -289,6 +309,10 @@ export function Sidebar({
         <div className="flex items-center justify-between pb-3 border-b border-purple-100/70 dark:border-purple-900/30">
           <div
             onClick={() => navigate('/main/chat')}
+            onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); navigate('/main/chat'); } }}
+            role="link"
+            tabIndex={0}
+            aria-label="MedGPT, open new conversation"
             className="flex items-center gap-3 cursor-pointer group"
           >
             <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950 p-0.5 group-hover:scale-105 transition-transform">
@@ -433,9 +457,9 @@ export function Sidebar({
                 {pinnedChats.map((chat) => (
                   <div key={`pin-${chat.id}`} className="flex items-center gap-1 rounded-lg bg-purple-100/60 dark:bg-purple-950/40">
                     <button onClick={() => openChat(chat.id)} className="min-w-0 flex-1 truncate px-3 py-2 text-left text-xs font-medium text-purple-800 dark:text-purple-200" title={getDisplayTitle(chat)}>
-                      <span aria-hidden="true">📌 </span>{getDisplayTitle(chat)}
+                      <span aria-hidden="true">• </span>{getDisplayTitle(chat)}
                     </button>
-                    <button onClick={(event) => togglePin(event, chat.id)} className="px-2 text-xs text-purple-700 dark:text-purple-300" aria-label={`Unpin ${getDisplayTitle(chat)}`} title="Unpin chat">×</button>
+                    <button onClick={(event) => togglePin(event, chat.id)} className="px-2 text-xs text-purple-700 dark:text-purple-300" aria-label={`Unpin ${getDisplayTitle(chat)}`} title="Unpin chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-3.5 h-3.5" aria-hidden="true"><path d="M5 5l14 14M19 5 5 19" /></svg></button>
                   </div>
                 ))}
               </section>
@@ -444,36 +468,30 @@ export function Sidebar({
             <section className="mb-4" aria-label="Project folders">
               <div className="flex items-center justify-between px-1 mb-2">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Projects</h3>
-                <button onClick={() => { setEditingFolderId(null); setFolderName(''); setShowFolderForm(true); }} className="text-xs font-semibold text-purple-600 dark:text-purple-300" aria-label="Create project folder">+ New folder</button>
+                <button onClick={() => { setEditingFolderId(null); setParentFolderId(null); setFolderName(''); setShowFolderForm(true); }} className="text-xs font-semibold text-purple-600 dark:text-purple-300" aria-label="Create project folder">+ New folder</button>
               </div>
               {showFolderForm && (
-                <form onSubmit={saveFolder} className="flex gap-1 mb-2">
+                <form onSubmit={saveFolder} className="grid gap-1 mb-2">
                   <input autoFocus value={folderName} onChange={(event) => setFolderName(event.target.value)} maxLength={80} placeholder="Folder name" aria-label="Folder name" className="min-w-0 flex-1 rounded-lg border border-purple-200 bg-white px-2 py-1.5 text-xs text-gray-900 dark:border-purple-800 dark:bg-[#201c30] dark:text-white" />
-                  <button type="submit" disabled={!folderName.trim() || createFolderMutation.isPending || updateFolderMutation.isPending} className="rounded-lg bg-purple-600 px-2 text-xs text-white disabled:opacity-50">Save</button>
-                  <button type="button" onClick={() => { setShowFolderForm(false); setEditingFolderId(null); }} className="px-1 text-xs text-gray-500" aria-label="Cancel folder edit">×</button>
+                  <label className="text-xs text-gray-500">Inside folder
+                    <select value={parentFolderId ?? ''} onChange={(event) => setParentFolderId(event.target.value ? Number(event.target.value) : null)} className="w-full rounded-lg border border-purple-200 bg-white px-2 py-1.5 text-xs text-gray-900 dark:border-purple-800 dark:bg-[#201c30] dark:text-white">
+                      <option value="">Top level</option>
+                      {folders.filter((folder) => canBeParent(folder.id)).map((folder) => <option key={folder.id} value={folder.id}>{folder.name}</option>)}
+                    </select>
+                  </label>
+                  <div className="flex gap-2"><button type="submit" disabled={!folderName.trim() || createFolderMutation.isPending || updateFolderMutation.isPending} className="rounded-lg bg-purple-600 px-2 py-1.5 text-xs text-white disabled:opacity-50">Save</button>
+                  <button type="button" onClick={() => { setShowFolderForm(false); setEditingFolderId(null); setParentFolderId(null); }} className="px-1 text-xs text-gray-500" aria-label="Cancel folder edit">Cancel</button></div>
                 </form>
               )}
-              {folders.map((folder) => {
-                const folderChats = processedChats.filter((chat) => folder.chatIds.includes(chat.id));
-                const collapsed = collapsedFolderIds.includes(folder.id);
-                return (
-                  <div key={folder.id} className="mb-1 rounded-lg border border-purple-100/60 dark:border-purple-900/40">
-                    <div className="flex items-center gap-1 px-2 py-1.5">
-                      <button onClick={() => setCollapsedFolderIds((old) => collapsed ? old.filter((id) => id !== folder.id) : [...old, folder.id])} className="min-w-0 flex-1 truncate text-left text-xs font-semibold text-gray-700 dark:text-gray-200" aria-expanded={!collapsed}>
-                        <span aria-hidden="true">{collapsed ? '▸' : '▾'} 📁 </span>{folder.name} <span className="text-gray-400">({folderChats.length})</span>
-                      </button>
-                      <button onClick={() => { setEditingFolderId(folder.id); setFolderName(folder.name); setShowFolderForm(true); }} className="text-[11px] text-gray-500 hover:text-purple-600" aria-label={`Rename ${folder.name}`}>Edit</button>
-                      <button onClick={() => { if (window.confirm(`Delete folder "${folder.name}"? Chats will remain available.`)) deleteFolderMutation.mutate(folder.id, { onError: (error) => toast.error(error.message) }); }} className="text-[11px] text-gray-500 hover:text-red-600" aria-label={`Delete ${folder.name}`}>Delete</button>
-                    </div>
-                    {!collapsed && folderChats.map((chat) => (
-                      <div key={`${folder.id}-${chat.id}`} className="flex items-center gap-1 border-t border-purple-100/40 pl-4 dark:border-purple-900/30">
-                        <button onClick={() => openChat(chat.id)} className="min-w-0 flex-1 truncate py-1.5 text-left text-xs text-gray-600 dark:text-gray-300" title={getDisplayTitle(chat)}>{getDisplayTitle(chat)}</button>
-                        <button onClick={() => removeChatMutation.mutate({ folderId: folder.id, chatId: chat.id }, { onError: (error) => toast.error(error.message) })} className="px-2 text-xs text-gray-400 hover:text-red-600" aria-label={`Remove ${getDisplayTitle(chat)} from ${folder.name}`} title="Remove from folder">×</button>
-                      </div>
-                    ))}
-                  </div>
-                );
-              })}
+              <FolderTree folders={folders} chats={processedChats} collapsedIds={collapsedFolderIds} activePath={location.pathname}
+                onToggle={(id) => setCollapsedFolderIds((old) => old.includes(id) ? old.filter((item) => item !== id) : [...old, id])}
+                onOpenFolder={(id) => { navigate(`/main/folder/${id}`); if (window.innerWidth < 768) setIsMenuOpen(false); }}
+                onOpenChat={openChat}
+                onNewChat={(id) => { setCollapsedFolderIds((old) => old.filter((item) => item !== id)); setActiveChat(null); setNewChatFolderId(id); setModalMode('create'); }}
+                onNewChild={(id) => { setCollapsedFolderIds((old) => old.filter((item) => item !== id)); setEditingFolderId(null); setParentFolderId(id); setFolderName(''); setShowFolderForm(true); }}
+                onRename={(folder) => { setEditingFolderId(folder.id); setParentFolderId(folder.parentId); setFolderName(folder.name); setShowFolderForm(true); }}
+                onDelete={(folder) => { if (window.confirm(`Delete folder "${folder.name}"? Chats will remain available.`)) deleteFolderMutation.mutate(folder.id, { onSuccess: () => { if (location.pathname === `/main/folder/${folder.id}`) navigate('/main/chat'); }, onError: (error) => toast.error(error.message) }); }}
+                onRemoveChat={(folderId, chatId) => removeChatMutation.mutate({ folderId, chatId }, { onError: (error) => toast.error(error.message) })} />
             </section>
             <div className="flex items-center justify-between px-1 mb-2">
               <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Recent chats</h3>
@@ -585,7 +603,7 @@ export function Sidebar({
                     {/* Action buttons on hover */}
                     <div
                       className="
-                        flex items-center gap-1
+                        med-chat-actions flex items-center gap-1
                         opacity-100 sm:opacity-0 sm:group-hover:opacity-100
                         transition-opacity shrink-0
                       "
@@ -597,24 +615,28 @@ export function Sidebar({
                         title={pinnedIds.has(chat.id) ? 'Unpin chat' : 'Pin chat'}
                         aria-label={`${pinnedIds.has(chat.id) ? 'Unpin' : 'Pin'} ${displayTitle}`}
                       >
-                        {pinnedIds.has(chat.id) ? '📌' : 'Pin'}
+                        {pinnedIds.has(chat.id) ? 'Unpin' : 'Pin'}
                       </button>
                       {folders.length > 0 && (
                         <select
-                          value=""
+                          value={folders.find((folder) => folder.chatIds.includes(chat.id))?.id ?? ''}
                           onClick={(event) => event.stopPropagation()}
                           onChange={(event) => {
                             event.stopPropagation();
                             const folderId = Number(event.target.value);
                             if (folderId) addChatMutation.mutate({ folderId, chatId: chat.id }, { onError: (error) => toast.error(error.message) });
+                            else {
+                              const current = folders.find((folder) => folder.chatIds.includes(chat.id));
+                              if (current) removeChatMutation.mutate({ folderId: current.id, chatId: chat.id }, { onError: (error) => toast.error(error.message) });
+                            }
                           }}
                           disabled={addChatMutation.isPending}
                           aria-label={`Add ${displayTitle} to project folder`}
                           title="Add to project folder"
                           className="max-w-14 rounded-lg bg-transparent text-[10px] text-gray-500 dark:text-gray-400"
                         >
-                          <option value="">Folder</option>
-                          {folders.filter((folder) => !folder.chatIds.includes(chat.id)).map((folder) => <option key={folder.id} value={folder.id}>{folder.name}</option>)}
+                          <option value="">No folder</option>
+                          {folders.map((folder) => <option key={folder.id} value={folder.id}>{folder.name}</option>)}
                         </select>
                       )}
                       {/* Rename / Edit */}
@@ -747,6 +769,10 @@ export function Sidebar({
                 setIsMenuOpen(false);
               }
             }}
+            onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); navigate('/main/credits'); } }}
+            role="link"
+            tabIndex={0}
+            aria-label="Open credits"
             className="
               med-sidebar-credits flex items-center justify-between p-2.5
               border border-purple-200/70 dark:border-purple-900/40
@@ -787,6 +813,10 @@ export function Sidebar({
                 setIsMenuOpen(false);
               }
             }}
+            onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); navigate(user ? '/main/profile' : '/auth'); } }}
+            role="link"
+            tabIndex={0}
+            aria-label={user ? 'Open profile' : 'Sign in'}
             className="
               med-sidebar-account flex items-center gap-2.5 p-2
               border border-purple-100 dark:border-purple-950/60

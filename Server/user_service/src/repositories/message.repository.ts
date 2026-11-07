@@ -1,12 +1,21 @@
 import { prisma } from "../lib/prisma";
 import type { Message } from "../dto/message.dto";
 import { toMessage } from "../mapper/message.mapper";
+import { matchedKnowledgeResourceIds } from "./knowledge-resource-association";
+
+const include = {
+  files: true,
+  knowledgeResources: {
+    include: { knowledgeEntry: true },
+    orderBy: { position: "asc" as const },
+  },
+};
 
 export class MessageRepository {
   async findById(id: number): Promise<Message | null> {
     const msg = await prisma.message.findUnique({
       where: { id },
-      include: { files: true },
+      include,
     });
     return msg ? toMessage(msg) : null;
   }
@@ -15,10 +24,25 @@ export class MessageRepository {
     chatId: number;
     role: "user" | "assistant";
     content: string;
+    knowledgeEntryIds?: string[];
   }): Promise<Message> {
+    const { knowledgeEntryIds, ...messageData } = data;
+    const distinctIds = [...new Set(knowledgeEntryIds ?? [])];
+    const existingEntries = distinctIds.length ? await prisma.knowledgeEntry.findMany({
+      where: { id: { in: distinctIds } }, select: { id: true },
+    }) : [];
+    const linkedIds = matchedKnowledgeResourceIds(distinctIds, new Set(existingEntries.map((entry) => entry.id)));
     const msg = await prisma.message.create({
-      data,
-      include: { files: true },
+      data: {
+        ...messageData,
+        knowledgeResources: {
+          create: linkedIds.map((knowledgeEntryId, position) => ({
+            position,
+            knowledgeEntry: { connect: { id: knowledgeEntryId } },
+          })),
+        },
+      },
+      include,
     });
     return toMessage(msg);
   }
@@ -26,7 +50,7 @@ export class MessageRepository {
   async findManyByChatId(chatId: number): Promise<Message[]> {
     const msgs = await prisma.message.findMany({
       where: { chatId },
-      include: { files: true },
+      include,
       orderBy: { timestamp: "asc" },
     });
     return msgs.map(toMessage);
@@ -35,7 +59,7 @@ export class MessageRepository {
   async findUniqueWhere(where: { id: number }): Promise<Message | null> {
     const msg = await prisma.message.findUnique({
       where,
-      include: { files: true },
+      include,
     });
     return msg ? toMessage(msg) : null;
   }
@@ -69,7 +93,7 @@ export class MessageRepository {
     const msg = await prisma.message.update({
       where: { id },
       data: { content },
-      include: { files: true },
+      include,
     });
     return toMessage(msg);
   }
@@ -82,7 +106,7 @@ export class MessageRepository {
         role: "assistant",
       },
       orderBy: { id: "asc" },
-      include: { files: true },
+      include,
     });
     return msg ? toMessage(msg) : null;
   }

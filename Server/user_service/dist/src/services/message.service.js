@@ -126,6 +126,7 @@ class MessageService {
         // Generate AI response with full conversation context
         let assistantContent = "Sorry, I couldn't generate a response. Please try again.";
         let sources = [];
+        let knowledgeEntryIds = [];
         let agentType = "unknown";
         let confidence = 0;
         try {
@@ -145,6 +146,7 @@ class MessageService {
             });
             assistantContent = agentResult.content;
             sources = agentResult.sources || [];
+            knowledgeEntryIds = agentResult.knowledgeEntryIds || [];
             agentType = agentResult.agentType || "unknown";
             confidence = agentResult.confidence || 0;
             // Deduct credits
@@ -159,6 +161,7 @@ class MessageService {
             chatId,
             role: "assistant",
             content: assistantContent,
+            knowledgeEntryIds,
         });
         // Update message with agent type and confidence
         await message_repository_1.messageRepository.updateAgentMetadata(assistantMessage.id, {
@@ -264,6 +267,7 @@ class MessageService {
         let assistantContent = "Sorry, I couldn't generate a response. Please try again.";
         let agentType = "unknown";
         let confidence = 0;
+        let knowledgeEntryIds = [];
         try {
             const agentResult = await agent_client_1.agentClient.generate(content, {
                 userId,
@@ -274,6 +278,7 @@ class MessageService {
             assistantContent = agentResult.content;
             agentType = agentResult.agentType || "unknown";
             confidence = agentResult.confidence || 0;
+            knowledgeEntryIds = agentResult.knowledgeEntryIds || [];
         }
         catch (error) {
             console.error("Agent pipeline error during edit resubmit:", error);
@@ -282,6 +287,7 @@ class MessageService {
             chatId,
             role: "assistant",
             content: assistantContent,
+            knowledgeEntryIds,
         });
         await message_repository_1.messageRepository.updateAgentMetadata(assistantMessage.id, {
             agentType,

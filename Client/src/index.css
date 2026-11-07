@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;0,900;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
@@ -8,75 +8,75 @@
 
 :root {
   /* Core brand palette */
-  --primary: #9333ea;
-  --primary-hover: #7e22ce;
-  --primary-light: #c084fc;
-  --primary-glow: rgba(147, 51, 234, 0.15);
+  --primary: #176b63;
+  --primary-hover: #0d554e;
+  --primary-light: #75d3c2;
+  --primary-glow: rgba(23, 107, 99, 0.15);
   
-  --secondary: #2563eb;
-  --secondary-hover: #1d4ed8;
-  --secondary-light: #60a5fa;
+  --secondary: #53635f;
+  --secondary-hover: #172826;
+  --secondary-light: #bbcac3;
 
-  --accent-purple: #a855f7;
-  --accent-blue: #3b82f6;
-  --accent-emerald: #10b981;
+  --accent-purple: #176b63;
+  --accent-blue: #176b63;
+  --accent-emerald: #176b63;
 
   /* Light Theme Surfaces & Text */
-  --bg-app: #faf9fc;
+  --bg-app: #f8f9f7;
   --bg-surface: #ffffff;
-  --bg-surface-elevated: #f3f0f7;
+  --bg-surface-elevated: #f1f4f1;
   --bg-card: rgba(255, 255, 255, 0.85);
   --bg-card-hover: rgba(255, 255, 255, 0.98);
   
-  --text-primary: #1f1d2b;
-  --text-secondary: #64748b;
-  --text-muted: #94a3b8;
+  --text-primary: #172826;
+  --text-secondary: #53635f;
+  --text-muted: #586b63;
   
-  --border-subtle: #f1eef6;
-  --border-default: #e4dff0;
-  --border-hover: #c4b5fd;
+  --border-subtle: #e8eee9;
+  --border-default: #dce5df;
+  --border-hover: #9bbdb2;
 
-  --shadow-color: 270 20% 50%;
-  --shadow-elevation: 0 10px 30px -10px rgba(147, 51, 234, 0.08);
+  --shadow-color: 165 20% 30%;
+  --shadow-elevation: 0 10px 30px -10px rgba(23, 107, 99, 0.08);
 
   --scrollbar-track: transparent;
-  --scrollbar-thumb: #d8d2e8;
-  --scrollbar-thumb-hover: #b8aed4;
+  --scrollbar-thumb: #c5d8cf;
+  --scrollbar-thumb-hover: #9bbdb2;
 }
 
 /* Dark Mode Theme Tokens */
 .dark {
   /* Dark Theme Surfaces & Text */
-  --bg-app: #0e0d16;
-  --bg-surface: #151322;
-  --bg-surface-elevated: #1a172a;
-  --bg-card: rgba(22, 19, 36, 0.8);
-  --bg-card-hover: rgba(28, 24, 46, 0.95);
+  --bg-app: #121b1a;
+  --bg-surface: #1c2926;
+  --bg-surface-elevated: #233a33;
+  --bg-card: #1c2926;
+  --bg-card-hover: #233a33;
 
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --text-primary: #edf5f1;
+  --text-secondary: #bbcac3;
+  --text-muted: #96aaa1;
 
-  --border-subtle: rgba(168, 85, 247, 0.12);
-  --border-default: rgba(168, 85, 247, 0.22);
-  --border-hover: rgba(168, 85, 247, 0.5);
+  --border-subtle: #2b3c36;
+  --border-default: #354640;
+  --border-hover: #547367;
 
-  --primary-glow: rgba(168, 85, 247, 0.25);
+  --primary-glow: rgba(117, 211, 194, 0.18);
   --shadow-elevation: 0 12px 35px -10px rgba(0, 0, 0, 0.6);
 
   --scrollbar-track: transparent;
-  --scrollbar-thumb: #2d2645;
-  --scrollbar-thumb-hover: #483d6e;
+  --scrollbar-thumb: #354640;
+  --scrollbar-thumb-hover: #547367;
 }
 
 /* Base resets & typography */
 * {
-  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   box-sizing: border-box;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Outfit', 'Roboto', sans-serif;
+  font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
 }
 
 body {

@@ -16,6 +16,10 @@ async function handle(req, res, next, action, status = 200) {
             res.status(404).json({ success: false, message: error.message });
             return;
         }
+        if (error instanceof Error && error.message === "Invalid folder hierarchy") {
+            res.status(400).json({ success: false, message: error.message });
+            return;
+        }
         next(error);
     }
 }

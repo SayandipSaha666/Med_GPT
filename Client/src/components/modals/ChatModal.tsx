@@ -25,12 +25,15 @@ export function ChatModal({
 }: ChatModalProps) {
   const [title, setTitle] = useState(initialTitle);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (isOpen) {
       setTitle(initialTitle || (mode === 'create' ? 'New Consultation' : ''));
       setTimeout(() => {
-        if (inputRef.current && mode !== 'delete') {
+        if (mode === 'delete') closeRef.current?.focus();
+        else if (inputRef.current) {
           inputRef.current.focus();
           inputRef.current.select();
         }
@@ -43,6 +46,13 @@ export function ChatModal({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen && !isLoading) {
         onClose();
+      }
+      if (e.key === 'Tab' && isOpen && dialogRef.current) {
+        const focusables = Array.from(dialogRef.current.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled)'));
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -65,10 +75,10 @@ export function ChatModal({
   };
 
   const quickSuggestions = [
-    '🩺 Health Checkup & Symptoms',
-    '💊 Medication & Dosage Query',
-    '🧪 Lab Report Analysis',
-    '🥗 Diet & Wellness Advice',
+    'Health checkup and symptoms',
+    'Medication question',
+    'Lab report analysis',
+    'Diet and wellness',
   ];
 
   return (
@@ -81,13 +91,13 @@ export function ChatModal({
 
       {/* Modal Dialog Card */}
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        className="relative w-full max-w-md bg-white dark:bg-[#1a1726] border border-gray-200 dark:border-purple-900/40 rounded-2xl shadow-2xl p-6 overflow-hidden z-10 transition-all transform animate-scale-up"
+        aria-labelledby="chat-dialog-title"
+        className="med-chat-modal relative w-full max-w-md bg-white dark:bg-[#1a1726] border border-gray-200 dark:border-purple-900/40 rounded-2xl shadow-2xl p-6 overflow-hidden z-10 transition-all transform animate-scale-up"
       >
         {/* Glow effect */}
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-36 h-36 bg-purple-500/10 dark:bg-purple-500/20 rounded-full blur-2xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-36 h-36 bg-blue-500/10 dark:bg-blue-500/20 rounded-full blur-2xl pointer-events-none" />
 
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
@@ -148,7 +158,7 @@ export function ChatModal({
               )}
             </div>
             <div>
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+              <h3 id="chat-dialog-title" className="text-lg font-bold text-gray-900 dark:text-white">
                 {mode === 'create'
                   ? 'Start New Chat'
                   : mode === 'edit'
@@ -166,6 +176,7 @@ export function ChatModal({
           </div>
 
           <button
+            ref={closeRef}
             onClick={onClose}
             disabled={isLoading}
             className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"

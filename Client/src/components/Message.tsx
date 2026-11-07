@@ -6,13 +6,14 @@ import toast from 'react-hot-toast';
 import type { T_Message } from '../api/api.types';
 import { formatBytes } from '../api/files/files.service';
 import { useFilePreview } from '../store/previewStore';
-import { safeExternalUrl, SourceList, withCitationLinks } from './SourceList';
+import { KnowledgeResources, safeExternalUrl, SourceList, withCitationLinks } from './SourceList';
 
 export interface MessageProps {
   message: T_Message;
   onEdit?: (messageId: number | string, newContent: string) => Promise<void> | void;
   onDelete?: (messageId: number | string) => Promise<void> | void;
   isSending?: boolean;
+  onOpenResources?: () => void;
 }
 
 function visibleContent(message: T_Message): string {
@@ -48,7 +49,7 @@ function FileRow({ file }: { file: NonNullable<T_Message['files']>[number] }) {
   );
 }
 
-export default function Message({ message, onEdit, onDelete, isSending = false }: MessageProps) {
+export default function Message({ message, onEdit, onDelete, isSending = false, onOpenResources }: MessageProps) {
   const isUser = message.role === 'user';
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(message.content);
@@ -78,7 +79,7 @@ export default function Message({ message, onEdit, onDelete, isSending = false }
   };
 
   return (
-    <article className={`med-message ${isUser ? 'med-message-user' : 'med-message-assistant'}`} aria-label={isUser ? 'Your message' : 'MedGPT response'}>
+    <article id={`message-${id}`} className={`med-message ${isUser ? 'med-message-user' : 'med-message-assistant'}`} aria-label={isUser ? 'Your message' : 'MedGPT response'} onClickCapture={(event) => { if ((event.target as HTMLElement).closest('.med-citation')) onOpenResources?.(); }}>
       <div className="med-message-identity"><span className="med-message-avatar" aria-hidden="true">{isUser ? 'Y' : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 6v12M6 12h12" /></svg>}</span><span>{isUser ? 'You' : 'MedGPT'}</span>
         {message.timestamp && !Number.isNaN(Date.parse(String(message.timestamp))) && <time dateTime={new Date(message.timestamp).toISOString()}>{moment(message.timestamp).format('h:mm A')}</time>}
       </div>
@@ -95,8 +96,8 @@ export default function Message({ message, onEdit, onDelete, isSending = false }
         ) : (
           <div className="med-markdown">
             <Markdown remarkPlugins={[remarkGfm]} urlTransform={safeContentUrl} components={{
-              p: ({ children }) => <p>{withCitationLinks(children, message.sources, id)}</p>,
-              li: ({ children }) => <li>{withCitationLinks(children, message.sources, id)}</li>,
+              p: ({ children }) => <p>{withCitationLinks(children, message.sources, id, message.resources)}</p>,
+              li: ({ children }) => <li>{withCitationLinks(children, message.sources, id, message.resources)}</li>,
               table: ({ children }) => <div className="med-table-scroll"><table>{children}</table></div>,
               a: ({ href, children }) => href ? <a href={href} target={href.startsWith('/') ? undefined : '_blank'} rel={href.startsWith('/') ? undefined : 'noopener noreferrer'}>{children}</a> : <span>{children}</span>,
             }}>{content}</Markdown>
@@ -104,6 +105,7 @@ export default function Message({ message, onEdit, onDelete, isSending = false }
         )}
         {message.files && message.files.length > 0 && <section className="med-message-files" aria-label="Files attached to this message">{message.files.map((file) => <FileRow key={file.id} file={file} />)}</section>}
         {!isUser && <SourceList sources={message.sources} messageId={id} />}
+        {!isUser && <KnowledgeResources resources={message.resources} messageId={id} onOpenPanel={onOpenResources} />}
         {!isEditing && <div className="med-message-actions">
           {isUser ? <>
             {onEdit && message.id != null && <button type="button" onClick={() => { setEditValue(content); setIsEditing(true); }} disabled={isSending}>Edit</button>}

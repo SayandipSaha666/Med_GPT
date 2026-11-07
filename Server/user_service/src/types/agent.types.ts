@@ -29,6 +29,7 @@ export interface AgentResult {
   agentType: string;
   confidence: number;
   sources?: AgentSource[];
+  knowledgeEntryIds?: string[];
   metadata?: Record<string, unknown>;
 }
 

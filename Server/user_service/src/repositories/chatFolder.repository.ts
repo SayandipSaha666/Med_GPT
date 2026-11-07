@@ -9,9 +9,9 @@ export const chatFolderRepository = {
   find: (folderId: number, userId: number) => prisma.chatFolder.findFirst({
     where: { id: folderId, userId }, include,
   }),
-  create: (userId: number, input: { name: string; icon?: string; color?: string }) =>
+  create: (userId: number, input: { name: string; icon?: string; color?: string; parentId?: number | null }) =>
     prisma.chatFolder.create({ data: { userId, ...input }, include }),
-  update: (folderId: number, input: { name: string; icon?: string; color?: string }) =>
+  update: (folderId: number, input: { name: string; icon?: string; color?: string; parentId?: number | null }) =>
     prisma.chatFolder.update({ where: { id: folderId }, data: input, include }),
   delete: (folderId: number) => prisma.chatFolder.delete({ where: { id: folderId } }),
   addChat: (folderId: number, chatId: number) => prisma.chatFolderAssignment.upsert({
@@ -19,5 +19,9 @@ export const chatFolderRepository = {
   }),
   removeChat: (folderId: number, chatId: number) => prisma.chatFolderAssignment.deleteMany({
     where: { chatId, folderId },
+  }),
+  moveChat: (folderId: number, chatId: number) => prisma.$transaction(async (tx) => {
+    await tx.chatFolderAssignment.deleteMany({ where: { chatId } });
+    await tx.chatFolderAssignment.create({ data: { folderId, chatId } });
   }),
 };

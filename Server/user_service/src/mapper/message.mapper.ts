@@ -5,7 +5,11 @@ import type { Source } from "../dto/source.dto";
 import type { ToolCall } from "../dto/tool-call.dto";
 import { toFileAttachment } from "./file.mapper";
 
-export function toMessage(m: DbMessage & { files: DbFile[] }): Message {
+type ResourceRow = { position: number; knowledgeEntry: {
+    id: string; title: string; source: string; sourceUrl: string | null; content: string; createdAt: Date;
+} };
+
+export function toMessage(m: DbMessage & { files: DbFile[]; knowledgeResources?: ResourceRow[] }): Message {
     return {
         id: m.id,
         chatId: m.chatId,
@@ -14,6 +18,14 @@ export function toMessage(m: DbMessage & { files: DbFile[] }): Message {
         timestamp: m.timestamp,
         files: m.files.map(toFileAttachment),
         sources: (m.sources as unknown as Source[]) ?? [],
+        resources: m.knowledgeResources?.map(({ knowledgeEntry }) => ({
+            id: knowledgeEntry.id,
+            title: knowledgeEntry.title,
+            source: knowledgeEntry.source,
+            sourceUrl: knowledgeEntry.sourceUrl,
+            excerpt: knowledgeEntry.content.slice(0, 240),
+            createdAt: knowledgeEntry.createdAt,
+        })) ?? [],
         toolCalls: (m.toolCalls as unknown as ToolCall[]) ?? [],
         agentType: m.agentType,
         metadata: m.metadata as Record<string, unknown> | null,

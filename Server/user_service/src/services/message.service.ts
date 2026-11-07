@@ -148,6 +148,7 @@ export class MessageService {
     // Generate AI response with full conversation context
     let assistantContent = "Sorry, I couldn't generate a response. Please try again.";
     let sources: AgentSource[] = [];
+    let knowledgeEntryIds: string[] = [];
     let agentType = "unknown";
     let confidence = 0;
 
@@ -170,6 +171,7 @@ export class MessageService {
 
       assistantContent = agentResult.content;
       sources = agentResult.sources || [];
+      knowledgeEntryIds = agentResult.knowledgeEntryIds || [];
       agentType = agentResult.agentType || "unknown";
       confidence = agentResult.confidence || 0;
 
@@ -185,6 +187,7 @@ export class MessageService {
       chatId,
       role: "assistant",
       content: assistantContent,
+      knowledgeEntryIds,
     });
 
     // Update message with agent type and confidence
@@ -325,6 +328,7 @@ export class MessageService {
     let assistantContent = "Sorry, I couldn't generate a response. Please try again.";
     let agentType = "unknown";
     let confidence = 0;
+    let knowledgeEntryIds: string[] = [];
 
     try {
       const agentResult = await agentClient.generate(content, {
@@ -337,6 +341,7 @@ export class MessageService {
       assistantContent = agentResult.content;
       agentType = agentResult.agentType || "unknown";
       confidence = agentResult.confidence || 0;
+      knowledgeEntryIds = agentResult.knowledgeEntryIds || [];
     } catch (error) {
       console.error("Agent pipeline error during edit resubmit:", error);
     }
@@ -345,6 +350,7 @@ export class MessageService {
       chatId,
       role: "assistant",
       content: assistantContent,
+      knowledgeEntryIds,
     });
 
     await messageRepository.updateAgentMetadata(assistantMessage.id, {

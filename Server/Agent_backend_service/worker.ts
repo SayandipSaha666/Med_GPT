@@ -2,6 +2,7 @@ import amqp, { type Channel, type ChannelModel, type ConsumeMessage } from "amqp
 import { connectDB, prisma } from "./src/lib/prisma";
 import { streamAgentPipeline } from "./src/agents";
 import type { AgentContext, StreamChunk } from "./src/agents/types";
+import { withKnowledgeResourceCollector } from "./src/agents/tools/knowledge-resource-collector";
 import { env } from "./config/env";
 
 const QUEUE = "medgpt.agent.tasks.v1";
@@ -151,6 +152,8 @@ export async function processTask(taskId: string): Promise<void> {
   try {
     await updateProgress(taskId, current.assistantMessageId, "routing", progressMessage);
 
+    const traversedKnowledgeIds = new Set<string>();
+    await withKnowledgeResourceCollector(traversedKnowledgeIds, async () => {
     for await (const chunk of streamAgentPipeline(current.input, context, abortController.signal)) {
       if (chunk.type === "progress") {
         if (chunk.reset) {
@@ -181,6 +184,7 @@ export async function processTask(taskId: string): Promise<void> {
         await persistPartial(true);
       }
     }
+    });
 
     const latestTask = await prisma.agentTask.findUnique({ where: { id: taskId }, select: { status: true } });
     if (!latestTask || latestTask.status === "cancelled") return;
@@ -210,6 +214,17 @@ export async function processTask(taskId: string): Promise<void> {
           },
         },
       });
+      if (!failed && traversedKnowledgeIds.size) {
+        const existingEntries = await tx.knowledgeEntry.findMany({
+          where: { id: { in: [...traversedKnowledgeIds] } }, select: { id: true },
+        });
+        await tx.messageKnowledgeResource.createMany({
+          data: existingEntries.map((entry, position) => ({
+            messageId: current.assistantMessageId, knowledgeEntryId: entry.id, position,
+          })),
+          skipDuplicates: true,
+        });
+      }
       if (failed) {
         await tx.user.update({ where: { id: current.userId }, data: { credits: { increment: 1 } } });
       }

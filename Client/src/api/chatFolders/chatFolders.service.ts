@@ -4,7 +4,7 @@ import type { T_Api_Success_Res, T_ChatFolder } from '../api.types';
 import broadcastChannel from '../../lib/broadcastChannel';
 
 export const folderKeys = { all: ['chatFolders'] as const };
-type FolderInput = { name: string; icon?: string; color?: string };
+type FolderInput = { name: string; icon?: string; color?: string; parentId?: number | null };
 type Assignment = { folderId: number; chatId: number };
 
 export const chatFoldersService = {
@@ -33,7 +33,7 @@ export const chatFoldersService = {
     const queryClient = useQueryClient();
     return useMutation({
       mutationFn: async (folderId: number) => { await api.delete(API_ROUTES.CHAT_FOLDER(folderId)); return folderId; },
-      onSuccess: (folderId) => { queryClient.setQueryData<T_ChatFolder[]>(folderKeys.all, (old) => old?.filter((folder) => folder.id !== folderId)); broadcastChannel.sendFoldersChanged(); },
+      onSuccess: (folderId) => { queryClient.setQueryData<T_ChatFolder[]>(folderKeys.all, (old) => old?.filter((folder) => folder.id !== folderId).map((folder) => folder.parentId === folderId ? { ...folder, parentId: null } : folder)); void queryClient.invalidateQueries({ queryKey: folderKeys.all }); broadcastChannel.sendFoldersChanged(); },
     });
   },
   useAddChat() {
@@ -41,7 +41,7 @@ export const chatFoldersService = {
     return useMutation({
       mutationFn: async ({ folderId, chatId }: Assignment) =>
         (await api.put<T_Api_Success_Res<T_ChatFolder>>(API_ROUTES.CHAT_FOLDER_CHAT(folderId, chatId))).data.data,
-      onSuccess: (folder, { chatId }) => { queryClient.setQueryData<T_ChatFolder[]>(folderKeys.all, (old) => old?.map((item) => item.id === folder.id ? folder : item)); broadcastChannel.sendChatMovedToFolder(chatId, folder.id); },
+      onSuccess: (folder, { chatId }) => { queryClient.setQueryData<T_ChatFolder[]>(folderKeys.all, (old) => old?.map((item) => item.id === folder.id ? folder : { ...item, chatIds: item.chatIds.filter((id) => id !== chatId) })); void queryClient.invalidateQueries({ queryKey: folderKeys.all }); broadcastChannel.sendChatMovedToFolder(chatId, folder.id); },
     });
   },
   useRemoveChat() {

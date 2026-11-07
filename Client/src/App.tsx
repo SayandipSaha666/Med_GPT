@@ -28,20 +28,17 @@ function AppContent() {
         toastOptions={{
           duration: 3500,
           style: {
-            background: theme === 'dark' ? '#181524' : '#ffffff',
-            color: theme === 'dark' ? '#f3f4f6' : '#1f2937',
-            border: theme === 'dark' ? '1px solid rgba(168, 85, 247, 0.25)' : '1px solid #e5e7eb',
-            borderRadius: '14px',
-            boxShadow: theme === 'dark'
-              ? '0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(168, 85, 247, 0.15)'
-              : '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)',
+            background: theme === 'dark' ? '#1c2926' : '#ffffff',
+            color: theme === 'dark' ? '#edf5f1' : '#172826',
+            border: theme === 'dark' ? '1px solid #354640' : '1px solid #dce5df',
+            borderRadius: '9px',
             fontSize: '13px',
             fontWeight: 500,
             padding: '12px 16px',
           },
           success: {
             iconTheme: {
-              primary: '#10b981',
+              primary: '#176b63',
               secondary: '#ffffff',
             },
           },
@@ -53,7 +50,7 @@ function AppContent() {
           },
         }}
       />
-      <div className="min-h-screen w-screen bg-[#faf9fc] text-[#2D2535] dark:bg-[#0e0d16] dark:text-white transition-colors duration-300">
+      <div className="min-h-screen w-screen bg-[var(--med-bg)] text-[var(--med-ink)]">
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/auth" element={<AuthPage />} />
@@ -64,6 +61,7 @@ function AppContent() {
                 <Route index element={<Chatbox />} />
                 <Route path=":id" element={<ChatDetails />} />
               </Route>
+              <Route path="folder/:folderId" element={<Chatbox />} />
               <Route path="credits" element={<Credits />} />
               <Route path="profile" element={<Profile />} />
             </Route>

@@ -1,6 +1,7 @@
 import { Router, type NextFunction, type Request, type Response } from "express";
 import { z } from "zod";
 import { runAgentPipeline, streamAgentPipeline } from "../index";
+import { withKnowledgeResourceCollector } from "../tools/knowledge-resource-collector";
 import type { AgentContext } from "../types";
 import { env } from "../../../config/env";
 
@@ -63,9 +64,14 @@ agentRouter.post("/respond", async (req: Request, res: Response, next: NextFunct
     }
 
     const { query, context } = validation.data;
-    const result = await runAgentPipeline(query, context as AgentContext);
+    const traversedKnowledgeIds = new Set<string>();
+    const result = await withKnowledgeResourceCollector(traversedKnowledgeIds, () =>
+      runAgentPipeline(query, context as AgentContext));
 
-    res.status(200).json(result);
+    res.status(200).json({
+      ...result,
+      knowledgeEntryIds: result.agentType === "Error" ? [] : [...traversedKnowledgeIds],
+    });
   } catch (error) {
     next(error);
   }

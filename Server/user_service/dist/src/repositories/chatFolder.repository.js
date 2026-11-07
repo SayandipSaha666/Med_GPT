@@ -19,4 +19,8 @@ exports.chatFolderRepository = {
     removeChat: (folderId, chatId) => prisma_1.prisma.chatFolderAssignment.deleteMany({
         where: { chatId, folderId },
     }),
+    moveChat: (folderId, chatId) => prisma_1.prisma.$transaction(async (tx) => {
+        await tx.chatFolderAssignment.deleteMany({ where: { chatId } });
+        await tx.chatFolderAssignment.create({ data: { folderId, chatId } });
+    }),
 };

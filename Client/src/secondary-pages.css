@@ -1,0 +1,45 @@
+.med-page { flex: 1; min-width: 0; min-height: 100dvh; overflow-y: auto; background: var(--med-bg); color: var(--med-ink); font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+.med-page * { box-sizing: border-box; }
+.med-page :focus-visible { outline: 2px solid var(--med-focus); outline-offset: 3px; }
+.med-page button { cursor: pointer; }
+.med-page button:disabled { cursor: not-allowed; opacity: .6; }
+.med-page-inner { width: min(100%, 1080px); margin: 0 auto; padding: 48px 28px 72px; }
+.med-page-narrow { width: min(100%, 760px); }
+.med-eyebrow { color: var(--med-accent); font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.med-display { margin: 0; font-family: Outfit, ui-sans-serif, system-ui, sans-serif; font-size: clamp(34px, 5vw, 58px); line-height: 1.09; letter-spacing: -.04em; font-weight: 640; text-wrap: balance; }
+.med-page-title { margin: 6px 0 0; font-family: Outfit, ui-sans-serif, system-ui, sans-serif; font-size: clamp(27px, 3vw, 38px); line-height: 1.17; letter-spacing: -.038em; font-weight: 640; }
+.med-lead { color: var(--med-muted); font-size: 16px; line-height: 1.7; }
+.med-muted { color: var(--med-muted); }
+.med-faint { color: var(--med-faint); }
+.med-card { background: var(--med-surface); border: 1px solid var(--med-border); border-radius: 12px; }
+.med-card-pad { padding: 24px; }
+.med-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 9px 16px; border: 1px solid var(--med-accent); border-radius: 9px; background: var(--med-accent); color: #fff; font-size: 13px; font-weight: 650; line-height: 1.3; text-decoration: none; transition: background .16s, border-color .16s; }
+.med-button:hover:not(:disabled) { background: var(--med-accent-hover); border-color: var(--med-accent-hover); }
+.dark .med-button { color: #122823; }
+.med-button-secondary { border-color: var(--med-border); background: var(--med-surface); color: var(--med-ink); }
+.med-button-secondary:hover:not(:disabled) { border-color: var(--med-accent); background: var(--med-accent-soft); color: var(--med-accent); }
+.dark .med-button-secondary { color: var(--med-ink); }
+.med-button-quiet { border-color: transparent; background: transparent; color: var(--med-accent); }
+.dark .med-button-quiet { color: var(--med-accent); }
+.med-button-quiet:hover:not(:disabled) { background: var(--med-accent-soft); }
+.med-button-danger { border-color: var(--med-border); background: var(--med-surface); color: var(--med-error); }
+.med-button-danger:hover:not(:disabled) { border-color: var(--med-error); background: var(--med-surface); }
+.med-input { width: 100%; min-height: 43px; padding: 9px 12px; border: 1px solid var(--med-border); border-radius: 8px; background: var(--med-surface); color: var(--med-ink); font: inherit; font-size: 14px; }
+.med-input:focus { border-color: var(--med-focus); outline: 2px solid color-mix(in srgb, var(--med-focus) 20%, transparent); }
+.med-label { display: block; margin-bottom: 6px; font-size: 12px; font-weight: 650; color: var(--med-muted); }
+.med-rule { border-top: 1px solid var(--med-border); }
+.med-feature-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.med-step-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.med-logo-mark { width: 40px; height: 40px; display: grid; place-items: center; padding: 5px; background: var(--med-surface); border: 1px solid var(--med-border); border-radius: 11px; }
+.med-logo-mark img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.med-plan-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: stretch; }
+.med-plan { display: flex; flex-direction: column; min-width: 0; padding: 24px; }
+.med-plan-featured { border-color: var(--med-accent); }
+.med-plan ul { margin: 16px 0 24px; padding: 0; list-style: none; }
+.med-plan li { padding: 7px 0; color: var(--med-muted); font-size: 13px; line-height: 1.5; }
+.med-plan li::before { content: '✓'; color: var(--med-accent); margin-right: 9px; }
+@keyframes med-spin { to { transform: rotate(360deg); } }
+@media (max-width: 800px) { .med-feature-grid, .med-step-grid, .med-plan-grid { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .med-page-inner { padding: 32px 18px 56px; } .med-card-pad, .med-plan { padding: 20px; } }
+@media (max-width: 520px) { .med-home-section-link { display: none; } .med-home-nav .med-button { padding: 8px 10px; font-size: 12px; } }
+@media (prefers-reduced-motion: reduce) { .med-page *, .med-page *::before, .med-page *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }

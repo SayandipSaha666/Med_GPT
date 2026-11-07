@@ -11,6 +11,7 @@
 import { tool } from "@openai/agents";
 import { z } from "zod";
 import { prisma } from "../../lib/prisma";
+import { recordKnowledgeResources } from "./knowledge-resource-collector";
 
 /**
  * Search the knowledge base for relevant medical information.
@@ -94,6 +95,7 @@ export const knowledgeBaseTool = tool({
         orderBy: { createdAt: "desc" },
         take: maxResults,
         select: {
+          id: true,
           title: true,
           content: true,
           source: true,
@@ -109,10 +111,13 @@ export const knowledgeBaseTool = tool({
         return `No knowledge base entries found for "${query}"${department ? ` in ${department}` : ""}. Consider using the web search tool for current information.`;
       }
 
+      recordKnowledgeResources(entries.map((entry) => entry.id));
+
       const formatted = entries.map((entry, i) => {
         const verifiedBadge = entry.isVerified ? " ✅ Verified" : "";
         return (
           `**[${i + 1}] ${entry.title}**${verifiedBadge}\n` +
+          `Citation token: [knowledge:${entry.id}] (use this exact token when citing this entry)\n` +
           `Source: ${entry.source}${entry.sourceUrl ? ` (${entry.sourceUrl})` : ""}\n` +
           `Department: ${entry.department || "General"}\n` +
           `Content: ${entry.content.substring(0, 500)}${entry.content.length > 500 ? "..." : ""}\n` +

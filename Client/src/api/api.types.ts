@@ -57,6 +57,15 @@ export type T_MessageSource =
   | { type: 'web'; index: number; title: string; snippet?: string; url: string; domain: string; faviconUrl?: string; publishedAt?: string }
   | { type: 'file'; index: number; title: string; snippet?: string; fileId: string; fileName: string; url: string; mime: string; chunkIdx?: number };
 
+export interface T_KnowledgeResource {
+  id: string;
+  title: string;
+  source: string;
+  sourceUrl: string | null;
+  excerpt: string;
+  createdAt: string;
+}
+
 export interface T_FileAttachment {
   id: string;
   name: string;
@@ -88,6 +97,7 @@ export interface T_Message {
     errorMessage?: string | null;
   }>;
   sources?: T_MessageSource[];
+  resources?: T_KnowledgeResource[];
   agentType?: string | null;
   metadata?: Record<string, unknown> | null;
 }
@@ -107,6 +117,7 @@ export interface T_ChatPin {
 
 export interface T_ChatFolder {
   id: number;
+  parentId: number | null;
   name: string;
   icon: string | null;
   color: string | null;

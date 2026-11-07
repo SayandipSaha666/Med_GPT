@@ -11,6 +11,9 @@ async function handle(req: Request, res: Response, next: NextFunction, action: F
     if (error instanceof Error && (error.message === "Folder not found" || error.message === "Chat not found")) {
       res.status(404).json({ success: false, message: error.message }); return;
     }
+    if (error instanceof Error && error.message === "Invalid folder hierarchy") {
+      res.status(400).json({ success: false, message: error.message }); return;
+    }
     next(error);
   }
 }

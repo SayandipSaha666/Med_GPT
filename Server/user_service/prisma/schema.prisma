@@ -117,12 +117,16 @@ model ChatFolder {
   icon      String?  @default("folder")
   color     String?  @default("#3b82f6")
   sortOrder Int      @default(0) @map("sort_order")
+  parentId  Int?     @map("parent_id")
+  parent    ChatFolder? @relation("FolderTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children  ChatFolder[] @relation("FolderTree")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   assignments ChatFolderAssignment[]
 
   @@index([userId, sortOrder])
+  @@index([parentId])
   @@map("chat_folders")
 }
 
@@ -149,6 +153,7 @@ model Message {
   sources    Json     @default("[]") // Source[]
   toolCalls  Json     @default("[]") @map("tool_calls") // ToolCall[]
   files      File[]
+  knowledgeResources MessageKnowledgeResource[]
   // NEW: Track which agent handled this message
   agentType  String?  @map("agent_type")
   confidence Float?   @map("confidence")
@@ -158,6 +163,18 @@ model Message {
 
   @@index([chatId, timestamp])
   @@map("messages")
+}
+
+model MessageKnowledgeResource {
+  messageId Int @map("message_id")
+  knowledgeEntryId String @map("knowledge_entry_id")
+  position Int @default(0)
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  knowledgeEntry KnowledgeEntry @relation(fields: [knowledgeEntryId], references: [id], onDelete: Cascade)
+
+  @@id([messageId, knowledgeEntryId])
+  @@index([knowledgeEntryId])
+  @@map("message_knowledge_resources")
 }
 
 /// Durable background agent work. Queue messages contain only this task ID;
@@ -398,6 +415,7 @@ model KnowledgeEntry {
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  messageResources MessageKnowledgeResource[]
 
   @@index([department, source])
   @@map("knowledge_entries")

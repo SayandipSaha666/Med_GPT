@@ -6,6 +6,7 @@ export const FolderBody = z.object({
   name: z.string().trim().min(1).max(80),
   icon: z.string().trim().max(40).optional(),
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+  parentId: z.number().int().positive().nullable().optional(),
 });
 
 export interface ChatFolderDto {
@@ -14,6 +15,7 @@ export interface ChatFolderDto {
   icon: string | null;
   color: string | null;
   sortOrder: number;
+  parentId: number | null;
   chatIds: number[];
   createdAt: Date;
   updatedAt: Date;

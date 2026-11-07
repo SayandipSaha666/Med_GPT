@@ -11,6 +11,14 @@ export interface Message {
   timestamp: Date;
   files: FileResponseDto[];
   sources?: Source[];
+  resources?: Array<{
+    id: string;
+    title: string;
+    source: string;
+    sourceUrl: string | null;
+    excerpt: string;
+    createdAt: Date;
+  }>;
   toolCalls?: ToolCall[];
   agentType?: string | null;
   metadata?: Record<string, unknown> | null;
